@@ -2,6 +2,8 @@
 #include <iostream>
 #include <chrono>
 
+#include <MinHook.h>
+
 #include "core/game_data_manager.h"
 #include "free_camera.h"
 

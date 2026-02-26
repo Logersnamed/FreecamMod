@@ -9,6 +9,10 @@ file(GLOB_RECURSE SRC CONFIGURE_DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h
 )
 
+add_subdirectory(extern)
+
 add_library(${PROJECT_NAME} SHARED ${SRC})
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE extern::all)
