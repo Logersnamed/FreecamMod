@@ -3,26 +3,21 @@
 #include "utils/types.h"
 #include <algorithm>
 
-void FreeCamera::Update(float deltaTime) {
-    GameData::FieldArea* fieldArea = GameDataManager::GetFieldArea();
-    if (!fieldArea) {
-        Sleep(1000);
-        return;
-    }
-
-    GameData::CameraManager* cameraMgr = fieldArea->cameraMgr;
+void FreeCamera::Update(GameData::GameRend* gameRend, float deltaTime) {
+    if (!gameRend) return;
 
     if (f1Key.IsPressedOnce(VK_F1)) {
-        Toggle(cameraMgr);
+        Toggle(gameRend);
     }
 
-    if (!cameraMgr->isFreecamEnabled()) {
+    if (!gameRend->isFreecamEnabled()) {
         return;
     }
 
-    GameData::Camera* csDebugCam = cameraMgr->csDebugCam;
+    GameData::Camera* csPersCam1 = gameRend->csPersCam1;
+    GameData::Camera* csDebugCam = gameRend->csDebugCam;
 
-    CopyRotation(csDebugCam, cameraMgr->csPersCam1);
+    CopyRotation(csDebugCam, csPersCam1);
     HandleMovement(csDebugCam, deltaTime);
 }
 
@@ -53,7 +48,7 @@ void FreeCamera::HandleMovement(GameData::Camera* camera, float deltaTime) {
     camera->fov = std::clamp(camera->fov, 0.0001f, 3.13f);
 }
 
-void FreeCamera::CopyPositionAndFov(GameData::CameraManager* mgr) {
+void FreeCamera::CopyPositionAndFov(GameData::GameRend* mgr) {
     if (!mgr || !mgr->csPersCam1 || !mgr->csDebugCam) return;
 
     std::memcpy(&mgr->csDebugCam->matrix.c3.x, &mgr->csPersCam1->matrix.c3.x, 20);
@@ -69,7 +64,7 @@ void FreeCamera::CopyRotation(GameData::Camera* toCamera, GameData::Camera* from
     std::memcpy(&toCamera->matrix, &fromCamera->matrix, 16 * 3);
 }
 
-void FreeCamera::Toggle(GameData::CameraManager* mgr) {
+void FreeCamera::Toggle(GameData::GameRend* mgr) {
     if (!mgr) return;
 
     GameData::WorldChrMan* worldCharMan = GameDataManager::GetWorldChrMan();

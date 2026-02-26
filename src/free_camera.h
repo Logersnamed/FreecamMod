@@ -4,7 +4,7 @@
 
 class FreeCamera {
 public:
-    void Update(float deltaTime);
+    void Update(GameData::GameRend* gameRend, float deltaTime);
 
 private:
     struct KeyState {
@@ -20,9 +20,9 @@ private:
 
     void HandleMovement(GameData::Camera* camera, float deltaTime);
 
-    void CopyPositionAndFov(GameData::CameraManager* mgr);
+    void CopyPositionAndFov(GameData::GameRend* mgr);
 
     void CopyRotation(GameData::Camera* fromCamera, GameData::Camera* toCamera);
 
-    void Toggle(GameData::CameraManager* mgr);
+    void Toggle(GameData::GameRend* mgr);
 };
