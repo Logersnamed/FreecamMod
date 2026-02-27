@@ -35,7 +35,7 @@ namespace GameData {
 
 	struct FieldArea {
 		char pad1[0x20];
-		GameRend* cameraMgr;			// 0x20
+		GameRend* gameRend;					// 0x20
 	};
 
 	struct ChrIns {
@@ -58,14 +58,14 @@ namespace GameData {
 	static_assert(offsetof(Camera, renderDistance) == 0x5C, "Camera::renderDistance offset incorrect");
 	static_assert(sizeof(Camera) == 0x60, "Camera size incorrect");
 
-	static_assert(offsetof(GameRend, csPersCam0) == 0x18, "CameraManager::csPersCam0 offset incorrect");
-	static_assert(offsetof(GameRend, csPersCam1) == 0x20, "CameraManager::csPersCam1 offset incorrect");
-	static_assert(offsetof(GameRend, csPersCam2) == 0x28, "CameraManager::csPersCam2 offset incorrect");
-	static_assert(offsetof(GameRend, freeCameraMode) == 0xC8, "CameraManager::freeCameraMode offset incorrect");
-	static_assert(offsetof(GameRend, csDebugCam) == 0xD0, "CameraManager::csDebugCam offset incorrect");
-	static_assert(sizeof(GameRend) == 0xD8, "CameraManager size incorrect");
+	static_assert(offsetof(GameRend, csPersCam0) == 0x18, "GameRend::csPersCam0 offset incorrect");
+	static_assert(offsetof(GameRend, csPersCam1) == 0x20, "GameRend::csPersCam1 offset incorrect");
+	static_assert(offsetof(GameRend, csPersCam2) == 0x28, "GameRend::csPersCam2 offset incorrect");
+	static_assert(offsetof(GameRend, freeCameraMode) == 0xC8, "GameRend::freeCameraMode offset incorrect");
+	static_assert(offsetof(GameRend, csDebugCam) == 0xD0, "GameRend::csDebugCam offset incorrect");
+	static_assert(sizeof(GameRend) == 0xD8, "GameRend size incorrect");
 
-	static_assert(offsetof(FieldArea, cameraMgr) == 0x20, "FieldArea::cameraMgr offset incorrect");
+	static_assert(offsetof(FieldArea, gameRend) == 0x20, "FieldArea::gameRend offset incorrect");
 	static_assert(sizeof(FieldArea) == 0x28, "FieldArea size incorrect");
 
 	static_assert(offsetof(ChrIns, noMove) == 0x531, "ChrIns::noMove offset incorrect");

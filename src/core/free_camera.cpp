@@ -1,4 +1,4 @@
-#include "free_camera.h"
+#include "core/free_camera.h"
 #include "core/game_data_manager.h"
 #include "utils/types.h"
 #include <algorithm>

@@ -8,7 +8,7 @@
 #include "utils/time.h"
 
 #include "core/game_data_manager.h"
-#include "free_camera.h"
+#include "core/free_camera.h"
 
 #define HOT_UNLOAD_ENABLED
 
@@ -44,8 +44,8 @@ DWORD WINAPI MainThread(LPVOID lpParam) {
 
 #ifdef HOT_UNLOAD_ENABLED
 	while (isRunning) {
-         if (GetAsyncKeyState(VK_DELETE) & 0x8000) break;
-         Sleep(10);
+         if (GetAsyncKeyState(VK_DELETE)) break;
+         Sleep(1000);
 	}
 
     MH_RemoveHook(MH_ALL_HOOKS);
