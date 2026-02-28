@@ -5,6 +5,8 @@ LONG_PTR UWPH::origWndProc = NULL;
 float UWPH::ScrollDelta = 0;
 
 LRESULT __stdcall UWPH::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) { 
+	std::cout << "Message: " << uMsg << std::endl;
+
 	if (uMsg == WM_MOUSEWHEEL) {
 		ScrollDelta += (float)GET_WHEEL_DELTA_WPARAM(wParam) * 0.008f;
 	}
