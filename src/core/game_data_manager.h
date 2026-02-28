@@ -6,6 +6,7 @@ public:
 	static bool Init();
 	static GameData::FieldArea* GetFieldArea();
 	static GameData::WorldChrMan* GetWorldChrMan();
+	static GameData::ChrIns* GetPlayer();
 
 private:
 	static uintptr_t fieldAreaSig;

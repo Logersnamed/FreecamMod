@@ -3,6 +3,7 @@
 #include <chrono>
 
 #include <MinHook.h>
+#include "universal_wndproc_hook.h"
 #include "utils/memory.h"
 #include "utils/debug.h"
 #include "utils/time.h"
@@ -17,6 +18,7 @@ bool isRunning = true;
 #endif
 
 inline HMODULE g_Module{};
+inline HWND hWnd{};
 
 FreeCamera freeCamera;
 std::chrono::time_point last = std::chrono::high_resolution_clock::now();
@@ -31,8 +33,23 @@ void __fastcall Hook_UpdateCameraMatrix(GameData::GameRend* gameRend, void* rdx,
     freeCamera.Update(gameRend, deltaTime);
 }
 
+void Dispose() {
+    freeCamera.DisableCamera(GameDataManager::GetFieldArea()->gameRend, GameDataManager::GetPlayer());
+
+    MH_RemoveHook(MH_ALL_HOOKS);
+    MH_Uninitialize();
+
+    UWPH::UnhookWndProc(hWnd);
+
+    Sleep(500);
+    FreeLibraryAndExitThread(g_Module, 0);
+}
+
 DWORD WINAPI MainThread(LPVOID lpParam) {
     if (!GameDataManager::Init()) return 0;
+
+	hWnd = FindWindow(NULL, "ELDEN RING™");
+    UWPH::HookWndProc(hWnd);
 
     MH_Initialize();
 
@@ -45,14 +62,10 @@ DWORD WINAPI MainThread(LPVOID lpParam) {
 #ifdef HOT_UNLOAD_ENABLED
 	while (isRunning) {
          if (GetAsyncKeyState(VK_DELETE)) break;
-         Sleep(1000);
+         Sleep(10);
 	}
 
-    MH_RemoveHook(MH_ALL_HOOKS);
-    MH_Uninitialize();
-
-	Sleep(500);
-    FreeLibraryAndExitThread(g_Module, 0);
+	Dispose();
 #endif // HOT_UNLOAD_ENABLED
 
     return 0;
@@ -70,8 +83,7 @@ BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
 #ifdef HOT_UNLOAD_ENABLED
             isRunning = FALSE;
 #else
-            MH_RemoveHook(MH_ALL_HOOKS);
-            MH_Uninitialize();
+            Dispose();
 #endif // HOT_UNLOAD_ENABLED
             break;
     }

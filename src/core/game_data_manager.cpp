@@ -27,3 +27,13 @@ GameData::WorldChrMan* GameDataManager::GetWorldChrMan() {
 
 	return reinterpret_cast<GameData::WorldChrMan*>(fieldAreaPtr);
 }
+
+GameData::ChrIns* GameDataManager::GetPlayer() {
+	GameData::WorldChrMan* worldCharMan = GameDataManager::GetWorldChrMan();
+	if (!worldCharMan) return nullptr;
+
+	GameData::Players* players = worldCharMan->players;
+	if (!players) return nullptr;
+
+	return players->player0;
+}
