@@ -1,15 +1,23 @@
 #include "core/game_data_manager.h"
 #include "utils/memory.h"
+#include "utils/debug.h"
 
 uintptr_t GameDataManager::fieldAreaSig = 0;
 uintptr_t GameDataManager::worldChrManSig = 0;
 
 bool GameDataManager::Init() {
+	Logger::Info("Initializing GameDataManager...");
 	fieldAreaSig = Signature("48 8B 3D ? ? ? ? 49 8B D8 48 8B F2 4C 8B F1 48 85 FF").Scan().Add(3).Rip().As<uint64_t>();
-	if (!fieldAreaSig) return false;
+	if (!fieldAreaSig) {
+		Logger::Error("Failed to find FieldArea signature");
+		return false;
+	}
 
 	worldChrManSig = Signature("48 8B 05 ? ? ? ? 48 85 C0 74 0F 48 39 88").Scan().Add(3).Rip().As<uint64_t>();
-	if (!worldChrManSig) return false;
+	if (!worldChrManSig) {
+		Logger::Error("Failed to find WorldChrMan signature");
+		return false;
+	}
 
 	return true;
 }

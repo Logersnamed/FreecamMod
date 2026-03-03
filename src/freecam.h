@@ -4,6 +4,7 @@
 #include <MinHook.h>
 
 #include "core/free_camera.h"
+#include "core/input.h"
 
 class Freecam {
 public:
@@ -16,10 +17,14 @@ public:
     void Dispose();
     void Update(GameData::GameRend* gameRend);
 
+    HMODULE GetModule() const { return hModule; };
 private:
     HMODULE hModule{};
     HWND hWnd{};
-    FreeCamera freeCamera;
+    FreeCamera freeCamera{};
+    Input input{};
+
+	void ProccesInput(GameData::GameRend* gameRend);
 
     std::chrono::time_point<std::chrono::high_resolution_clock> last;
 
