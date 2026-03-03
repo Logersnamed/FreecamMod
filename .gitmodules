@@ -1,3 +1,6 @@
 [submodule "extern/MinHook"]
 	path = extern/MinHook
 	url = https://github.com/TsudaKageyu/minhook.git
+[submodule "extern/mINI"]
+	path = extern/mINI
+	url = https://github.com/metayeti/mINI.git

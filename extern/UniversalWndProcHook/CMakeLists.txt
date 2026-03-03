@@ -1,2 +1,0 @@
-add_library(universal_wndproc_hook universal_wndproc_hook.cpp)
-target_include_directories(universal_wndproc_hook PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

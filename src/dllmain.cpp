@@ -1,92 +1,25 @@
 #include <windows.h>
-#include <iostream>
-#include <chrono>
-
-#include <MinHook.h>
-#include "universal_wndproc_hook.h"
-#include "utils/memory.h"
+#include "freecam.h"
 #include "utils/debug.h"
-#include "utils/time.h"
-
-#include "core/game_data_manager.h"
-#include "core/free_camera.h"
-
-#define HOT_UNLOAD_ENABLED
-
-#ifdef HOT_UNLOAD_ENABLED
-bool isRunning = true;
-#endif
-
-inline HMODULE g_Module{};
-inline HWND hWnd{};
-
-FreeCamera freeCamera;
-std::chrono::time_point last = std::chrono::high_resolution_clock::now();
-
-using UpdateCameraMatrix = void(__fastcall*)(void*, void*, void*, void*);
-UpdateCameraMatrix originalUpdateCameraMatrix = nullptr;
-
-void __fastcall Hook_UpdateCameraMatrix(GameData::GameRend* gameRend, void* rdx, void* r8, void* r9) {
-    originalUpdateCameraMatrix(gameRend, rdx, r8, r9);
-
-    float deltaTime = Time::GetDeltaTime(std::chrono::high_resolution_clock::now(), &last);
-    freeCamera.Update(gameRend, deltaTime);
-}
-
-void Dispose() {
-    freeCamera.DisableCamera(GameDataManager::GetFieldArea()->gameRend, GameDataManager::GetPlayer());
-
-    MH_RemoveHook(MH_ALL_HOOKS);
-    MH_Uninitialize();
-
-    UWPH::UnhookWndProc(hWnd);
-
-    Sleep(500);
-    FreeLibraryAndExitThread(g_Module, 0);
-}
 
 DWORD WINAPI MainThread(LPVOID lpParam) {
-    if (!GameDataManager::Init()) return 0;
+	Logger::Init();
 
-	hWnd = FindWindow(NULL, "ELDEN RING™");
-    UWPH::HookWndProc(hWnd);
+    Freecam freecam((HMODULE)lpParam, FindWindow(NULL, "ELDEN RING™"));
+    freecam.Run();
 
-    MH_Initialize();
+    Logger::Info("Shutting down..");
+    Logger::Shutdown();
 
-    UpdateCameraMatrix UpdateCameraMatrixFunc = (UpdateCameraMatrix)Signature("4C 8B 49 18 4C 8B D1 8B 42 50 41 89 41 50 8B 42").Scan().As<uint64_t>();
-    if (!UpdateCameraMatrixFunc) return 0;
-
-    if (MH_CreateHook(UpdateCameraMatrixFunc, &Hook_UpdateCameraMatrix, (void**)&originalUpdateCameraMatrix) != MH_STATUS::MH_OK) return 0;
-    if (MH_EnableHook(UpdateCameraMatrixFunc) != MH_OK) return 0;
-
-#ifdef HOT_UNLOAD_ENABLED
-	while (isRunning) {
-         if (GetAsyncKeyState(VK_DELETE)) break;
-         Sleep(10);
-	}
-
-	Dispose();
-#endif // HOT_UNLOAD_ENABLED
-
+    Sleep(500);
+    FreeLibraryAndExitThread(freecam.GetModule(), 0);
     return 0;
 }
 
 BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
-    if (!g_Module) g_Module = module;
-
-    switch (reason) {
-        case (DLL_PROCESS_ATTACH):  
-            DisableThreadLibraryCalls(module);
-            CreateThread(0, 0, &MainThread, 0, 0, NULL);
-            break;
-        case (DLL_PROCESS_DETACH):  
-#ifdef HOT_UNLOAD_ENABLED
-            isRunning = FALSE;
-#else
-            Dispose();
-#endif // HOT_UNLOAD_ENABLED
-            break;
+    if (reason == DLL_PROCESS_ATTACH) {
+        DisableThreadLibraryCalls(module);
+        CreateThread(0, 0, MainThread, module, 0, NULL);
     }
-
-	return TRUE;
+    return TRUE;
 }

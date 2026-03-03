@@ -1,6 +1,6 @@
 # Add libraries with CMakeLists.txt
 add_subdirectory(MinHook)
-add_subdirectory(UniversalWndProcHook)
+add_subdirectory(mINI)
 
 # Link
 add_library(extern_all INTERFACE)
@@ -8,7 +8,7 @@ add_library(extern_all INTERFACE)
 target_link_libraries(extern_all
     INTERFACE
         minhook
-        universal_wndproc_hook
+        mINI
 )
 
 add_library(extern::all ALIAS extern_all)
