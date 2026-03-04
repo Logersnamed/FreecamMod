@@ -23,6 +23,7 @@ bool Input::HookWndProc(HWND hWnd) {
     }
     
     origWndProc = SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)Input::WndProc);
+    return true;
 }
 
 void Input::UnhookWndProc(HWND hWnd) {

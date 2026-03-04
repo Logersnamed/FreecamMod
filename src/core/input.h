@@ -1,9 +1,10 @@
 #pragma once
 #include <windows.h>
+#include <cstdint>
 
 class Input {
 public:
-    enum MouseButton {
+    enum MouseButton : int8_t {
         Left,
         Right,
         Middle,
