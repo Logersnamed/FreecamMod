@@ -10,7 +10,7 @@ public:
     std::string dllPath = "";
     std::string configFilePath = "";
 	const std::string configDirectoryName = "Freecam\\";
-	const std::string configFileName = "freecam.ini";
+	const std::string configFileName = "config.ini";
 
 	bool Initialize(HMODULE hModule) {
 		Logger::Info("Initializing Config...");

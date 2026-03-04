@@ -21,6 +21,6 @@ private:
     static void PrintTime();
 
     static inline bool initialized = false;
-    static inline bool enabled = true;
+    static inline bool enabled = false;
     static inline std::mutex mutex;
 };

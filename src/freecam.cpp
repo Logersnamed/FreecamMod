@@ -21,6 +21,7 @@ void Freecam::ReloadConfig() {
 
     bool fileExists = file.read(ini);
 
+    Logger::Enable(config.Read("mod", "debug", 0, ini));
     freeCamera.SetDefaultSpeed(config.Read("settings", "default camera speed", 10.0f, ini));
     freeCamera.SetSpeedMult(config.Read("settings", "speed multiplier", 2.5f, ini));
     freeCamera.SetZoomSpeed(config.Read("settings", "zoom speed", 0.5f, ini));

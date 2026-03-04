@@ -1,7 +1,7 @@
 #include "utils/debug.h"
 
 void Logger::Init(const char* title) {
-    if (initialized) return;
+    if (initialized || !enabled) return;
 
     AllocConsole();
 
@@ -25,6 +25,7 @@ void Logger::Shutdown() {
 
 void Logger::Enable(bool enable) {
     enabled = enable;
+    Logger::Init();
 }
 
 void Logger::PrintTime() {
