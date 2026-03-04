@@ -65,20 +65,20 @@ void Freecam::Update(GameData::GameRend* gameRend) {
 }
 
 void Freecam::ProccesInput(GameData::GameRend* gameRend) {
-    if (input.IsJustPressed(VK_F1)) freeCamera.Toggle(gameRend);
+    if (actionManager.IsJustPressed(ActionType::Toggle, input)) freeCamera.Toggle(gameRend);
 
     if (input.IsMouseDown(Input::MouseButton::Left)) freeCamera.SetIsSprinting(true);
 
-    if (input.IsPressed('W')) freeCamera.AddVelocity(float3::forward());
-    if (input.IsPressed('S')) freeCamera.AddVelocity(float3::back());
-    if (input.IsPressed('A')) freeCamera.AddVelocity(float3::left());
-    if (input.IsPressed('D')) freeCamera.AddVelocity(float3::right());
+    if (actionManager.IsPressed(ActionType::MoveForward, input)) freeCamera.AddVelocity(float3::forward());
+    if (actionManager.IsPressed(ActionType::MoveBackward, input)) freeCamera.AddVelocity(float3::back());
+    if (actionManager.IsPressed(ActionType::MoveLeft, input)) freeCamera.AddVelocity(float3::left());
+    if (actionManager.IsPressed(ActionType::MoveRight, input)) freeCamera.AddVelocity(float3::right());
 
-    if (input.IsPressed(VK_SPACE)) freeCamera.AddVelocity(float3::up());
-    if (input.IsPressed(VK_SHIFT)) freeCamera.AddVelocity(float3::down());
+    if (actionManager.IsPressed(ActionType::MoveUp, input)) freeCamera.AddVelocity(float3::up());
+    if (actionManager.IsPressed(ActionType::MoveDown, input)) freeCamera.AddVelocity(float3::down());
 
-    if (input.IsPressed(VK_OEM_PLUS)) freeCamera.AddZoomVelocity(-1.0f);
-    if (input.IsPressed(VK_OEM_MINUS)) freeCamera.AddZoomVelocity(1.0f);
+    if (actionManager.IsPressed(ActionType::ZoomIn, input)) freeCamera.AddZoomVelocity(-1.0f);
+    if (actionManager.IsPressed(ActionType::ZoomOut, input)) freeCamera.AddZoomVelocity(1.0f);
     if (input.IsPressed(VK_CONTROL)) freeCamera.AddZoomVelocity(-input.GetScrollDelta());
     else freeCamera.AddSpeed(input.GetScrollDelta());
 }

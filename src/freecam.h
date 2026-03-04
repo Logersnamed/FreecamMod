@@ -5,6 +5,7 @@
 
 #include "core/free_camera.h"
 #include "core/input.h"
+#include "core/action.h"
 
 class Freecam {
 public:
@@ -23,6 +24,7 @@ private:
     HWND hWnd{};
     FreeCamera freeCamera{};
     Input input{};
+	ActionManager actionManager{};
 
 	void ProccesInput(GameData::GameRend* gameRend);
 
