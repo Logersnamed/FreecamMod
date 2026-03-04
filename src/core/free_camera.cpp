@@ -22,7 +22,7 @@ void FreeCamera::HandleMovement(GameData::Camera* camera, float deltaTime) {
 		Logger::Warn("Camera is null in FreeCamera::HandleMovement");
         return;
     }
-    const float cameraSpeed = speed * deltaTime * (isSprinting ? SPEED_MULT : 1);
+    const float cameraSpeed = speed * deltaTime * (isSprinting ? speedMult : 1);
 
     float3 vel(velocity.x, 0, velocity.z);
     if (vel.lengthSquared()) {
@@ -32,7 +32,7 @@ void FreeCamera::HandleMovement(GameData::Camera* camera, float deltaTime) {
     camera->matrix.position() += vel.normalized() * cameraSpeed;
 
     // TODO: make zoom non-linear
-    AddFov(camera, zoomVelocity * ZOOM_SPEED * deltaTime);
+    AddFov(camera, zoomVelocity * zoomSpeed * deltaTime);
 
 	velocity = 0;
     zoomVelocity = 0;
@@ -75,7 +75,7 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend, GameData::ChrIns* player
         return;
     }
     player->noMove = true;
-    speed = DEFAULT_SPEED;
+    speed = defaultSpeed;
 
     CopyPositionAndFov(rend->csDebugCam, rend->csPersCam1);
     CopyRotation(rend->csDebugCam, rend->csPersCam1);

@@ -12,7 +12,10 @@ public:
     void DisableCamera(GameData::GameRend* rend, GameData::ChrIns* player);
     void DisableCamera();
 
+	void SetSpeedMult(float newMult) { speedMult = max(newMult, 0.0f); }
+    void SetDefaultSpeed(float newSpeed) { defaultSpeed = max(newSpeed, 0.0f); }
     void SetSpeed(float newSpeed) { speed = max(newSpeed, 0.0f); }
+	void SetZoomSpeed(float newZoomSpeed) { zoomSpeed = max(newZoomSpeed, 0.0f); }
     void SetFov(GameData::Camera *cam, float newFov) { if (cam) cam->fov = std::clamp(newFov, 0.0001f, 3.13f); }
 	void SetIsSprinting(bool sprinting) { isSprinting = sprinting; }
 
@@ -22,10 +25,10 @@ public:
 	void AddFov(GameData::Camera* cam, float delta) { if (cam) SetFov(cam, cam->fov + delta); }
 
 private:
-    const float SPEED_MULT = 2.5f;
-    const float DEFAULT_SPEED = 10.0f;
-    float speed = DEFAULT_SPEED;
-    float ZOOM_SPEED = 0.5f;
+    float speedMult = 2.5f;
+    float defaultSpeed = 10.0f;
+    float speed = defaultSpeed;
+    float zoomSpeed = 0.5f;
     float3 velocity = float3(0);
     float zoomVelocity = 0.0f;
 	bool isSprinting = false;

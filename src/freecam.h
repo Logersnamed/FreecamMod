@@ -6,6 +6,7 @@
 #include "core/free_camera.h"
 #include "core/input.h"
 #include "core/action.h"
+#include "core/config.h"
 
 class Freecam {
 public:
@@ -19,10 +20,14 @@ public:
     void Update(GameData::GameRend* gameRend);
 
     HMODULE GetModule() const { return hModule; };
+
+    void ReloadConfig();
+
 private:
     HMODULE hModule{};
     HWND hWnd{};
     FreeCamera freeCamera{};
+    Config config{};
     Input input{};
 	ActionManager actionManager{};
 

@@ -1,13 +1,16 @@
 #pragma once
 #include <iostream>
+#include <cstdint>
 #include <unordered_map>
 #include <vector>
 #include <string>
 #include "utils/debug.h"
 #include "core/input.h"
 
-enum class ActionType {
+enum class ActionType : int8_t {
 	Toggle,
+	ReloadConfig,
+	ExitMod,
 	MoveForward,
 	MoveBackward,
 	MoveLeft,
@@ -20,6 +23,11 @@ enum class ActionType {
 };
 
 class Action {
+	ActionType type;
+
+	std::vector<int> keysRequired;
+	std::vector<int> keysRestricted;
+
 public:
 	Action(ActionType type, const std::vector<int>& keysRequired, const std::vector<int>& keysRestricted = {})
 		: type(type), keysRequired(keysRequired), keysRestricted(keysRestricted) {	}
@@ -51,16 +59,12 @@ public:
 		}
 		return true;
 	}
-
-private:
-	ActionType type;
-	std::string name; // TODO
-
-	std::vector<int> keysRequired;
-	std::vector<int> keysRestricted;
 };
 
 class ActionManager {
+	Input* input{};
+	std::unordered_map<ActionType, Action> actionKeyMap{};
+
 public:
 	bool Initialize(Input* input) {
 		if (!input) {
@@ -69,15 +73,17 @@ public:
 		}
 		this->input = input;
 
-		AddAction(ActionType::Toggle, { VK_F1 });
-		AddAction(ActionType::MoveForward, { 'W' });
-		AddAction(ActionType::MoveBackward, { 'S' });
-		AddAction(ActionType::MoveLeft, { 'A' });
-		AddAction(ActionType::MoveRight, { 'D' });
-		AddAction(ActionType::MoveUp, { VK_SPACE });
-		AddAction(ActionType::MoveDown, { VK_SHIFT });
-		AddAction(ActionType::ZoomIn, { VK_OEM_PLUS });
-		AddAction(ActionType::ZoomOut, { VK_OEM_MINUS });
+		BindAction(ActionType::Toggle, { VK_F1 });
+		BindAction(ActionType::ReloadConfig, { VK_RETURN });
+		BindAction(ActionType::ExitMod, { VK_DELETE });
+		BindAction(ActionType::MoveForward, { 'W' });
+		BindAction(ActionType::MoveBackward, { 'S' });
+		BindAction(ActionType::MoveLeft, { 'A' });
+		BindAction(ActionType::MoveRight, { 'D' });
+		BindAction(ActionType::MoveUp, { VK_SPACE });
+		BindAction(ActionType::MoveDown, { VK_SHIFT });
+		BindAction(ActionType::ZoomIn, { VK_OEM_PLUS });
+		BindAction(ActionType::ZoomOut, { VK_OEM_MINUS });
 
 		if (actionKeyMap.size() != static_cast<size_t>(ActionType::Count)) {
 			if (actionKeyMap.size() > static_cast<size_t>(ActionType::Count)) {
@@ -103,11 +109,7 @@ public:
 		return action->second.IsJustPressed(input);
 	}
 
-private:
-	Input* input{};
-	std::unordered_map<ActionType, Action> actionKeyMap{};
-
-	void AddAction(ActionType actionType, const std::vector<int>& keysRequired, const std::vector<int>& keysRestricted = {}) {
-		actionKeyMap.insert({ actionType, Action(actionType, keysRequired, keysRestricted) });
+	void BindAction(ActionType actionType, const std::vector<int>& keysRequired, const std::vector<int>& keysRestricted = {}) {
+		actionKeyMap.insert_or_assign(actionType, Action(actionType, keysRequired, keysRestricted));
 	}
 };

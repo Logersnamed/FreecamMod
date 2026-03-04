@@ -1,11 +1,17 @@
-namespace Time {
-    float GetDeltaTime(std::chrono::steady_clock::time_point now, std::chrono::steady_clock::time_point* last) {
-        std::chrono::duration<float> elapsed = now - *last;
-        *last = now;
+#pragma once
+#include <chrono>
 
-        float deltaTime = elapsed.count();
-        if (deltaTime > 0.1f) deltaTime = 1.0f / 60.0f;
+class Time {
+    using clock = std::chrono::steady_clock;
 
-        return deltaTime;
+public:
+    static float DeltaTime() {
+        static auto last = clock::now();
+
+        auto now = clock::now();
+        std::chrono::duration<float> delta = now - last;
+        last = now;
+
+        return delta.count();
     }
-}
+};
