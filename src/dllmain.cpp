@@ -1,9 +1,11 @@
 #include <windows.h>
-#include "freecam.h"
+
 #include "utils/debug.h"
+#include "freecam.h"
 
 DWORD WINAPI MainThread(LPVOID lpParam) {
-	Logger::Init();
+    Sleep(500);
+    Logger::Init();
 
     Freecam freecam((HMODULE)lpParam, FindWindow(NULL, "ELDEN RING™"));
     freecam.Run();

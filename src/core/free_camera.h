@@ -1,7 +1,8 @@
 #pragma once
-#include "core/game_data.h"
 #include <windows.h>
 #include <algorithm>
+
+#include "core/game_data.h"
 
 class FreeCamera {
 public:
@@ -28,23 +29,13 @@ private:
     float speedMult = 2.5f;
     float defaultSpeed = 10.0f;
     float speed = defaultSpeed;
-    float zoomSpeed = 0.5f;
+    float zoomSpeed = 0.7f;
     float3 velocity = float3(0);
     float zoomVelocity = 0.0f;
 	bool isSprinting = false;
 
-    struct KeyState {
-        bool wasPressed = false;
-
-        bool IsPressedOnce(int vkKey) {
-            bool isPressed = GetAsyncKeyState(vkKey) & 0x8000;
-            bool trigger = isPressed && !wasPressed;
-            wasPressed = isPressed;
-            return trigger;
-        }
-    } f1Key;
-
     void HandleMovement(GameData::Camera* camera, float deltaTime);
     void CopyPositionAndFov(GameData::Camera* toCamera, GameData::Camera* fromCamera);
-    void CopyRotation(GameData::Camera* fromCamera, GameData::Camera* toCamera);
+    void CopyRotation(GameData::Camera* toCamera, GameData::Camera* fromCamera);
+    float ComputeZoomFactor(float fov);
 };

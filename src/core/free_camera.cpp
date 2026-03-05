@@ -1,8 +1,10 @@
 #include "core/free_camera.h"
+
+#include <algorithm>
+
 #include "core/game_data_manager.h"
 #include "utils/types.h"
 #include "utils/debug.h"
-#include <algorithm>
 
 void FreeCamera::Update(GameData::GameRend* gameRend, float deltaTime) {
     if (!gameRend) {
@@ -12,16 +14,15 @@ void FreeCamera::Update(GameData::GameRend* gameRend, float deltaTime) {
     if (!gameRend->isFreecamEnabled()) return;
 
     GameData::Camera* csDebugCam = gameRend->csDebugCam;
+    GameData::Camera* csPersCam1 = gameRend->csPersCam1;
 
-    CopyRotation(csDebugCam, gameRend->csPersCam1);
+    if (!csDebugCam || !csPersCam1) return;
+
+    CopyRotation(csDebugCam, csPersCam1);
     HandleMovement(csDebugCam, deltaTime);
 }
 
 void FreeCamera::HandleMovement(GameData::Camera* camera, float deltaTime) {
-    if (!camera) {
-		Logger::Warn("Camera is null in FreeCamera::HandleMovement");
-        return;
-    }
     const float cameraSpeed = speed * deltaTime * (isSprinting ? speedMult : 1);
 
     float3 vel(velocity.x, 0, velocity.z);
@@ -31,35 +32,38 @@ void FreeCamera::HandleMovement(GameData::Camera* camera, float deltaTime) {
     vel.y += velocity.y;
     camera->matrix.position() += vel.normalized() * cameraSpeed;
 
-    // TODO: make zoom non-linear
-    AddFov(camera, zoomVelocity * zoomSpeed * deltaTime);
+    float maxZoomStep = 0.05f;
+    float zoom = zoomVelocity * zoomSpeed * deltaTime * ComputeZoomFactor(camera->fov);
+    AddFov(camera, std::clamp(zoom, -maxZoomStep, maxZoomStep));
 
-	velocity = 0;
-    zoomVelocity = 0;
+    const float zoomFade = 16.0f;
+    zoomVelocity *= std::exp(-zoomFade * deltaTime);
+    if (std::abs(zoomVelocity) < 0.001f) zoomVelocity = 0;
+
+	velocity = float3(0);
 	isSprinting = false;
 }
 
+float FreeCamera::ComputeZoomFactor(float fov) {
+    const float minFov = 0.0f;
+    const float maxFov = 3.14f;
+
+    float t = (fov - minFov) / (maxFov - minFov);
+    t = std::clamp(t, 0.0f, 1.0f);
+
+    return 1.0f - std::pow(2.0f * t - 1.0f, 2.0f);
+}
+
 void FreeCamera::CopyPositionAndFov(GameData::Camera* toCamera, GameData::Camera* fromCamera) {
-    if (!toCamera || !fromCamera) { 
-		Logger::Warn("Camera is null in FreeCamera::CopyPositionAndFov");
-        return; 
-    }
-    std::memcpy(&toCamera->matrix.c3, &fromCamera->matrix.c3, 20);
+    std::memcpy(&toCamera->matrix.c3, &fromCamera->matrix.c3, sizeof(fromCamera->matrix.c3) + sizeof(fromCamera->fov));
 }
 
 void FreeCamera::CopyRotation(GameData::Camera* toCamera, GameData::Camera* fromCamera) {
-    if (!fromCamera || !toCamera) {
-		Logger::Warn("Camera is null in FreeCamera::CopyRotation");
-        return;
-    }
-    std::memcpy(&toCamera->matrix, &fromCamera->matrix, 16 * 3);
+    std::memcpy(&toCamera->matrix, &fromCamera->matrix, sizeof(float4) * 3);
 }
 
 void FreeCamera::Toggle(GameData::GameRend* rend) {
-    if (!rend) {
-		Logger::Warn("GameRend is null in FreeCamera::Toggle");
-        return;
-    }
+    if (!rend) return;
     GameData::ChrIns* player = GameDataManager::GetPlayer();
     if (!player) {
 		Logger::Warn("Player is null in FreeCamera::Toggle");
@@ -70,25 +74,20 @@ void FreeCamera::Toggle(GameData::GameRend* rend) {
 }
 
 void FreeCamera::EnableCamera(GameData::GameRend* rend, GameData::ChrIns* player) {
-    if (!rend || !player) {
-		Logger::Warn("GameRend or Player is null in FreeCamera::EnableCamera");
-        return;
-    }
+    GameData::Camera* csDebugCam = rend->csDebugCam;
+    GameData::Camera* csPersCam1 = rend->csPersCam1;
+
     player->noMove = true;
     speed = defaultSpeed;
 
-    CopyPositionAndFov(rend->csDebugCam, rend->csPersCam1);
-    CopyRotation(rend->csDebugCam, rend->csPersCam1);
+    CopyPositionAndFov(csDebugCam, csPersCam1);
+    CopyRotation(csDebugCam, csPersCam1);
 
     rend->freeCameraMode = GameData::FreecamMode::EnabledUpdating;
 	Logger::Info("Free camera enabled");
 }
 
 void FreeCamera::DisableCamera(GameData::GameRend* rend, GameData::ChrIns* player) {
-    if (!rend || !player) {
-		Logger::Warn("GameRend or Player is null in FreeCamera::DisableCamera");
-        return;
-    }
     rend->freeCameraMode = GameData::FreecamMode::Disabled;
     player->noMove = false;
 	Logger::Info("Free camera disabled");
@@ -101,5 +100,11 @@ void FreeCamera::DisableCamera() {
         return;
     }
 
-    DisableCamera(fieldArea->gameRend, GameDataManager::GetPlayer());
+	GameData::ChrIns* player = GameDataManager::GetPlayer();
+	if (!player) {
+        Logger::Warn("Player is null in FreeCamera::DisableCamera");
+        return;
+	}
+
+    DisableCamera(fieldArea->gameRend, player);
 }

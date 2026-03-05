@@ -1,42 +1,40 @@
 #include "freecam.h"
+
+#include "MinHook.h"
 #include "mini/ini.h"
+
 #include "core/game_data_manager.h"
 #include "utils/time.h"
 #include "utils/memory.h"
 #include "utils/debug.h"
-#include <iostream>
 
 Freecam* Freecam::instance = nullptr;
 
 Freecam::Freecam(HMODULE hModule, HWND hWnd) : hModule(hModule), hWnd(hWnd) {
     Logger::Info("Starting Freecam...");
     instance = this;
-    last = std::chrono::high_resolution_clock::now();
 }
 
 void Freecam::ReloadConfig() {
 	Logger::Info("Loading config...");
-    mINI::INIFile file(config.configFilePath);
+    config.CreateModDirectory();
+
+    mINI::INIFile file(config.GetConfigFilePath());
     mINI::INIStructure ini;
 
     bool fileExists = file.read(ini);
 
-    Logger::Enable(config.Read("mod", "debug", 0, ini));
-    freeCamera.SetDefaultSpeed(config.Read("settings", "default camera speed", 10.0f, ini));
-    freeCamera.SetSpeedMult(config.Read("settings", "speed multiplier", 2.5f, ini));
-    freeCamera.SetZoomSpeed(config.Read("settings", "zoom speed", 0.5f, ini));
+    Logger::Enable(config.ReadValue("mod", "debug", 0, ini));
+    freeCamera.SetDefaultSpeed(config.ReadValue("settings", "default_camera_speed", 10.0f, ini));
+    freeCamera.SetSpeedMult(config.ReadValue("settings", "speed_multiplier", 2.5f, ini));
+    freeCamera.SetZoomSpeed(config.ReadValue("settings", "zoom_speed", 0.7f, ini));
 
-	actionManager.BindAction(ActionType::Toggle, { config.Read("keybinds", "toggle", VK_F1, ini) });
-	actionManager.BindAction(ActionType::ReloadConfig, { config.Read("keybinds", "reload config", VK_F5, ini) });
-	actionManager.BindAction(ActionType::ExitMod, { config.Read("keybinds", "exit mod", VK_DELETE, ini) });
-	actionManager.BindAction(ActionType::MoveForward, { config.Read("keybinds", "moveForward", 'W', ini)});
-	actionManager.BindAction(ActionType::MoveBackward, { config.Read("keybinds", "moveBackward", 'S', ini)});
-	actionManager.BindAction(ActionType::MoveLeft, { config.Read("keybinds", "moveLeft", 'A', ini) });
-	actionManager.BindAction(ActionType::MoveRight, { config.Read("keybinds", "moveRight", 'D', ini) });
-	actionManager.BindAction(ActionType::MoveUp, { config.Read("keybinds", "moveUp", VK_SPACE, ini) });
-	actionManager.BindAction(ActionType::MoveDown, { config.Read("keybinds", "moveDown", VK_SHIFT, ini) });
-	actionManager.BindAction(ActionType::ZoomIn, { config.Read("keybinds", "zoomIn", VK_OEM_PLUS, ini) });
-	actionManager.BindAction(ActionType::ZoomOut, { config.Read("keybinds", "zoomOut", VK_OEM_MINUS, ini) });
+	const auto& keybinds = config.GetKeybinds();
+    for (const auto& kb : keybinds) {
+        actionManager.BindAction(config.ReadKeybind(
+            kb.section, kb.name, kb.type, kb.defaultKeys, kb.defaultModifiers, ini
+        ));
+    }
 
     if (fileExists) {
         if (!file.write(ini)) Logger::Warn("Failed to write to config file");
@@ -87,8 +85,7 @@ void Freecam::Run() {
     }
 
     while (isRunning) {
-        if (actionManager.IsJustPressed(ActionType::ExitMod)) break;
-		if (actionManager.IsJustPressed(ActionType::ReloadConfig)) ReloadConfig();
+        if (actionManager.IsJustPressed(Action::Type::ExitMod)) break;
         Sleep(10);
     }
 
@@ -96,43 +93,40 @@ void Freecam::Run() {
 }
 
 void Freecam::Update(GameData::GameRend* gameRend) {
-    float deltaTime = Time::DeltaTime();
-    ProccesInput(gameRend);
-    freeCamera.Update(gameRend, deltaTime);
+    ProcessInput(gameRend);
+    freeCamera.Update(gameRend, Time::DeltaTime());
     input.Reset();
 }
 
-void Freecam::ProccesInput(GameData::GameRend* gameRend) {
-    if (actionManager.IsJustPressed(ActionType::Toggle)) {
+void Freecam::ProcessInput(GameData::GameRend* gameRend) {
+    if (actionManager.IsJustPressed(Action::Type::ReloadConfig)) ReloadConfig();
+
+    if (actionManager.IsJustPressed(Action::Type::Toggle)) {
         ReloadConfig();
         freeCamera.Toggle(gameRend);
     }
 
-    if (input.IsMouseDown(Input::MouseButton::Left)) freeCamera.SetIsSprinting(true);
+    freeCamera.SetIsSprinting(actionManager.IsPressed(Action::Type::Sprint));
+    
+    if (actionManager.IsPressed(Action::Type::MoveForward)) freeCamera.AddVelocity(float3::forward());
+    if (actionManager.IsPressed(Action::Type::MoveBackward)) freeCamera.AddVelocity(float3::back());
+    if (actionManager.IsPressed(Action::Type::MoveLeft)) freeCamera.AddVelocity(float3::left());
+    if (actionManager.IsPressed(Action::Type::MoveRight)) freeCamera.AddVelocity(float3::right());
 
-    if (actionManager.IsPressed(ActionType::MoveForward)) freeCamera.AddVelocity(float3::forward());
-    if (actionManager.IsPressed(ActionType::MoveBackward)) freeCamera.AddVelocity(float3::back());
-    if (actionManager.IsPressed(ActionType::MoveLeft)) freeCamera.AddVelocity(float3::left());
-    if (actionManager.IsPressed(ActionType::MoveRight)) freeCamera.AddVelocity(float3::right());
+    if (actionManager.IsPressed(Action::Type::MoveUp)) freeCamera.AddVelocity(float3::up());
+    if (actionManager.IsPressed(Action::Type::MoveDown)) freeCamera.AddVelocity(float3::down());
 
-    if (actionManager.IsPressed(ActionType::MoveUp)) freeCamera.AddVelocity(float3::up());
-    if (actionManager.IsPressed(ActionType::MoveDown)) freeCamera.AddVelocity(float3::down());
+    if (actionManager.IsPressed(Action::Type::ZoomIn)) freeCamera.AddZoomVelocity(-1.0f);
+    if (actionManager.IsPressed(Action::Type::ZoomOut)) freeCamera.AddZoomVelocity(1.0f);
 
-    if (actionManager.IsPressed(ActionType::ZoomIn)) freeCamera.AddZoomVelocity(-1.0f);
-    if (actionManager.IsPressed(ActionType::ZoomOut)) freeCamera.AddZoomVelocity(1.0f);
-    if (input.IsPressed(VK_CONTROL)) freeCamera.AddZoomVelocity(-input.GetScrollDelta());
-    else freeCamera.AddSpeed(input.GetScrollDelta());
+    if (actionManager.IsPressed(Action::Type::ScrollZoomModifier)) freeCamera.AddZoomVelocity(-input.GetScrollDelta());
+    if (actionManager.IsPressed(Action::Type::ScroolCameraSpeedModifier)) freeCamera.AddSpeed(input.GetScrollDelta());
 }
 
 void __fastcall Freecam::Hook_UpdateCameraMatrix(GameData::GameRend* gameRend,void* rdx, void* r8, void* r9) {
     originalUpdateCameraMatrix(gameRend, rdx, r8, r9);
 
-    if (instance) {
-        instance->Update(gameRend);
-    }
-    else {
-		Logger::Warn("Freecam instance is null in Hook_UpdateCameraMatrix");
-    }
+    instance->Update(gameRend);
 }
 
 void Freecam::Dispose() {
@@ -148,4 +142,6 @@ void Freecam::Dispose() {
     MH_Uninitialize();
 
     input.UnhookWndProc(hWnd);
+
+    instance = nullptr;
 }

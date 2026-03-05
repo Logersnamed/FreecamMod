@@ -1,7 +1,11 @@
 #pragma once
-#include "utils/types.h"
 #include <cstddef>
 #include <type_traits>
+
+#include "utils/types.h"
+
+#define ASSERT_OFFSET(type, field, offset) static_assert(offsetof(type, field) == offset, #type "::" #field " offset incorrect")
+#define ASSERT_SIZE(type, size) static_assert(sizeof(type) == size, #type " size incorrect")
 
 namespace GameData {
 	enum FreecamMode {
@@ -30,7 +34,7 @@ namespace GameData {
 		char pad3[0x04];
 		Camera* csDebugCam;					// 0xD0
 
-		inline bool isFreecamEnabled() const { return freeCameraMode; }
+		bool isFreecamEnabled() const { return freeCameraMode != FreecamMode::Disabled; }
 	};
 
 	struct FieldArea {
@@ -53,25 +57,25 @@ namespace GameData {
 	};
 #pragma pack(pop)
 
-	static_assert(offsetof(Camera, matrix) == 0x10, "Camera::matrix offset incorrect");
-	static_assert(offsetof(Camera, fov) == 0x50, "Camera::fov offset incorrect");
-	static_assert(offsetof(Camera, renderDistance) == 0x5C, "Camera::renderDistance offset incorrect");
-	static_assert(sizeof(Camera) == 0x60, "Camera size incorrect");
+	ASSERT_OFFSET(Camera, matrix, 0x10);
+	ASSERT_OFFSET(Camera, fov, 0x50);
+	ASSERT_OFFSET(Camera, renderDistance, 0x5C);
+	ASSERT_SIZE(Camera, 0x60);
+	
+	ASSERT_OFFSET(GameRend, csPersCam0, 0x18);
+	ASSERT_OFFSET(GameRend, csPersCam1, 0x20);
+	ASSERT_OFFSET(GameRend, csPersCam2, 0x28);
+	ASSERT_OFFSET(GameRend, freeCameraMode, 0xC8);
+	ASSERT_OFFSET(GameRend, csDebugCam, 0xD0);
+	ASSERT_SIZE(GameRend, 0xD8);
 
-	static_assert(offsetof(GameRend, csPersCam0) == 0x18, "GameRend::csPersCam0 offset incorrect");
-	static_assert(offsetof(GameRend, csPersCam1) == 0x20, "GameRend::csPersCam1 offset incorrect");
-	static_assert(offsetof(GameRend, csPersCam2) == 0x28, "GameRend::csPersCam2 offset incorrect");
-	static_assert(offsetof(GameRend, freeCameraMode) == 0xC8, "GameRend::freeCameraMode offset incorrect");
-	static_assert(offsetof(GameRend, csDebugCam) == 0xD0, "GameRend::csDebugCam offset incorrect");
-	static_assert(sizeof(GameRend) == 0xD8, "GameRend size incorrect");
+	ASSERT_OFFSET(FieldArea, gameRend, 0x20);
+	ASSERT_SIZE(FieldArea, 0x28);
 
-	static_assert(offsetof(FieldArea, gameRend) == 0x20, "FieldArea::gameRend offset incorrect");
-	static_assert(sizeof(FieldArea) == 0x28, "FieldArea size incorrect");
+	ASSERT_OFFSET(ChrIns, noMove, 0x531);
 
-	static_assert(offsetof(ChrIns, noMove) == 0x531, "ChrIns::noMove offset incorrect");
+	ASSERT_OFFSET(Players, player0, 0x00);
+	ASSERT_SIZE(Players, 0x08);
 
-	static_assert(offsetof(Players, player0) == 0x00, "Players::player0 offset incorrect");
-	static_assert(sizeof(Players) == 0x08, "Players size incorrect");
-
-	static_assert(offsetof(WorldChrMan, players) == 0x10EF8, "WorldChrMan::players offset incorrect");
+	ASSERT_OFFSET(WorldChrMan, players, 0x10EF8);
 }

@@ -1,4 +1,5 @@
 #include "core/game_data_manager.h"
+
 #include "utils/memory.h"
 #include "utils/debug.h"
 
@@ -30,10 +31,10 @@ GameData::FieldArea* GameDataManager::GetFieldArea() {
 }
 
 GameData::WorldChrMan* GameDataManager::GetWorldChrMan() {
-	uintptr_t fieldAreaPtr = Memory::RPM<uintptr_t>(worldChrManSig);
-	if (!fieldAreaPtr) return nullptr;
+	uintptr_t worldChrManPtr = Memory::RPM<uintptr_t>(worldChrManSig);
+	if (!worldChrManPtr) return nullptr;
 
-	return reinterpret_cast<GameData::WorldChrMan*>(fieldAreaPtr);
+	return reinterpret_cast<GameData::WorldChrMan*>(worldChrManPtr);
 }
 
 GameData::ChrIns* GameDataManager::GetPlayer() {
