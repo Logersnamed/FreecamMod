@@ -20,6 +20,24 @@ You can find and change all keybinds in `config.ini`. If you are unsure about ke
    - For other loaders, refer to their documentation.
 5. Launch the game.
 
+## Build
+### Using CMake
+```bash
+git clone --recurse-submodule https://github.com/Logersnamed/FreecamMod.git
+cd FreecamMod
+```
+Configure the project. Optionally you can specify a DLL output folder using DGAME_DIR variable:
+```bash
+cmake -S . -B build [-DGAME_DIR="path/to/modflolder/"]
+```
+Build the project:
+```bash
+cmake --build build --config Release
+```
+The built DLL will be located in: `build/Release/FreecamMod.dll`
+### Using GitHub Actions
+Prebuilt DLLs are available as workflow artifacts. Go to the Actions tab, select the latest run, and download the FreecamMod.dll artifact.
+
 ## Credits & References
 [EROverlay](https://github.com/koalabear420/EROverlay) – Reference and partial code usage  
 [EldenRing-PostureBarMod](https://github.com/Mordrog/EldenRing-PostureBarMod) – Reference  
