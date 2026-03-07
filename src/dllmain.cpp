@@ -5,13 +5,9 @@
 
 DWORD WINAPI MainThread(LPVOID lpParam) {
     Sleep(500);
-    Logger::Init();
 
     Freecam freecam((HMODULE)lpParam, FindWindow(NULL, "ELDEN RING™"));
     freecam.Run();
-
-    Logger::Info("Shutting down..");
-    Logger::Shutdown();
 
     Sleep(500);
     FreeLibraryAndExitThread(freecam.GetModule(), 0);

@@ -1,5 +1,13 @@
 #include "utils/debug.h"
 
+void Logger::InitFile(const std::string& folderPath) {
+    std::filesystem::create_directories(folderPath);
+
+    std::string filename = folderPath + "/log.txt";
+
+    logFile.open(filename, std::ios::out | std::ios::trunc);
+}
+
 void Logger::Init(const char* title) {
     if (initialized || !enabled) return;
 
@@ -18,6 +26,9 @@ void Logger::Init(const char* title) {
 void Logger::Shutdown() {
     if (!initialized)
         return;
+
+    if (logFile.is_open())
+        logFile.close();
 
     FreeConsole();
     initialized = false;
@@ -40,19 +51,29 @@ void Logger::PrintTime() {
 }
 
 void Logger::Print(const char* level, WORD color, const char* fmt, va_list args) {
-    if (!enabled || !initialized)
-        return;
-
     std::lock_guard<std::mutex> lock(mutex);
 
-    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
+    char buffer[2048];
+    vsnprintf(buffer, sizeof(buffer), fmt, args);
 
-    PrintTime();
-    printf("[%s] ", level);
-    vprintf(fmt, args);
-    printf("\n");
+    if (logFile.is_open()) {
+        std::time_t t = std::time(nullptr);
+        std::tm tm;
+        localtime_s(&tm, &t);
 
-    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);
+        logFile << "[" << tm.tm_hour << ":" << tm.tm_min << ":" << tm.tm_sec << "] "
+            << "[" << level << "] " << buffer << std::endl;
+        logFile.flush();
+    }
+
+    if (enabled && initialized) {
+        SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
+
+        PrintTime();
+        printf("[%s] %s\n", level, buffer);
+
+        SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);
+    }
 }
 
 void Logger::Info(const char* fmt, ...) {

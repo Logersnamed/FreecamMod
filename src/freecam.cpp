@@ -101,10 +101,7 @@ void Freecam::Update(GameData::GameRend* gameRend) {
 void Freecam::ProcessInput(GameData::GameRend* gameRend) {
     if (actionManager.IsJustPressed(Action::Type::ReloadConfig)) ReloadConfig();
 
-    if (actionManager.IsJustPressed(Action::Type::Toggle)) {
-        ReloadConfig();
-        freeCamera.Toggle(gameRend);
-    }
+    if (actionManager.IsJustPressed(Action::Type::Toggle)) freeCamera.Toggle(gameRend);
 
     freeCamera.SetIsSprinting(actionManager.IsPressed(Action::Type::Sprint));
     
@@ -144,4 +141,7 @@ void Freecam::Dispose() {
     input.UnhookWndProc(hWnd);
 
     instance = nullptr;
+
+    Logger::Info("Shutting down..");
+    Logger::Shutdown();
 }

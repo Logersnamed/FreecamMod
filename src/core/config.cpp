@@ -1,11 +1,13 @@
 #include "core/config.h"
 
 bool Config::Initialize(HMODULE hModule) {
-    Logger::Info("Initializing Config...");
     if (!findDllPath(hModule)) return false;
-    Logger::Info("DLL Path: %s", dllPath.c_str());
 
     configDirPath = dllPath + configDirectoryName;
+    Logger::InitFile(configDirPath);
+    Logger::Info("Initializing Config...");
+    Logger::Info("DLL Path: %s", dllPath.c_str());
+
     if (configDirPath.empty()) {
         Logger::Error("Failed to determine config directory path");
 		return false;
