@@ -6,11 +6,11 @@
 DWORD WINAPI MainThread(LPVOID lpParam) {
     Sleep(500);
 
-    Freecam freecam((HMODULE)lpParam, FindWindow(NULL, "ELDEN RING™"));
+    Freecam freecam((HMODULE)lpParam);
     freecam.Run();
 
     Sleep(500);
-    FreeLibraryAndExitThread(freecam.GetModule(), 0);
+    FreeLibraryAndExitThread((HMODULE)lpParam, 0);
     return 0;
 }
 

@@ -10,7 +10,7 @@ class Freecam {
 public:
     static Freecam* instance;
 
-    Freecam(HMODULE hModule, HWND hWnd);
+    Freecam(HMODULE hModule);
     bool Initialize();
     void Run();
     void Dispose();
@@ -19,7 +19,6 @@ public:
 
 private:
     HMODULE hModule{};
-    HWND hWnd{};
     FreeCamera freeCamera{};
     Config config{};
     Input input{};

@@ -2,6 +2,7 @@
 
 #include "MinHook.h"
 #include "mini/ini.h"
+#include "ModUtils.h"
 
 #include "core/game_data_manager.h"
 #include "utils/time.h"
@@ -10,7 +11,7 @@
 
 Freecam* Freecam::instance = nullptr;
 
-Freecam::Freecam(HMODULE hModule, HWND hWnd) : hModule(hModule), hWnd(hWnd) {
+Freecam::Freecam(HMODULE hModule) : hModule(hModule) {
     Logger::Info("Starting Freecam...");
     instance = this;
 }
@@ -48,8 +49,16 @@ bool Freecam::Initialize() {
     if (!config.Initialize(hModule)) return false;
     ReloadConfig();
 
+	Logger::Info("Attempting to get window handle...");
+    ModUtils::AttemptToGetWindowHandle();
+	if (!ModUtils::muWindow) {
+        Logger::Error("Failed to obtain window handle");
+		return false;
+    }
+    Logger::Info("Window handle obtained: %p", ModUtils::muWindow);
+
     if (!GameDataManager::Init()) return false;
-    if (!input.HookWndProc(hWnd)) return false;
+    if (!input.HookWndProc(ModUtils::muWindow)) return false;
     if (!actionManager.Initialize(&input)) return false;
 
     Logger::Info("Initializing MinHook...");
@@ -138,7 +147,7 @@ void Freecam::Dispose() {
     MH_RemoveHook(MH_ALL_HOOKS);
     MH_Uninitialize();
 
-    input.UnhookWndProc(hWnd);
+    input.UnhookWndProc(ModUtils::muWindow);
 
     instance = nullptr;
 
