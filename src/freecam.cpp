@@ -29,7 +29,8 @@ void Freecam::ReloadConfig() {
     freeCamera.SetDefaultSpeed(config.ReadValue("settings", "default_camera_speed", 10.0f, ini));
     freeCamera.SetSpeedMult(config.ReadValue("settings", "speed_multiplier", 2.5f, ini));
     freeCamera.SetZoomSpeed(config.ReadValue("settings", "zoom_speed", 0.7f, ini));
-	freeCamera.SetAutoDisableHud(config.ReadValue("settings", "auto_disable_hud", 1, ini));
+	freeCamera.SetAutoDisableHud(config.ReadValue("settings", "hide_hud", 1, ini));
+	freeCamera.SetDisableEnemiesMovement(config.ReadValue("settings", "disable_enemies_movement", 0, ini));
 
 	const auto& keybinds = config.GetKeybinds();
     for (const auto& kb : keybinds) {

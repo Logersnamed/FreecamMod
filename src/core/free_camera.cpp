@@ -64,31 +64,25 @@ void FreeCamera::CopyRotation(GameData::Camera* toCamera, GameData::Camera* from
 
 void FreeCamera::Toggle(GameData::GameRend* rend) {
     if (!rend) return;
-    GameData::ChrIns* player = GameDataManager::GetPlayer();
-    if (!player) {
-		Logger::Warn("Player is null in FreeCamera::Toggle");
-        return;
-    }
 
-    GameData::OptionData* optionData = GameDataManager::GetOptionData();
-    if (!optionData) {
-        Logger::Warn("OptionData is null in FreeCamera::Toggle");
-        return;
-    }
-
-	rend->isFreecamEnabled() ? DisableCamera(rend, player, optionData) : EnableCamera(rend, player, optionData);
+	rend->isFreecamEnabled() ? DisableCamera(rend) : EnableCamera(rend);
 }
 
-void FreeCamera::EnableCamera(GameData::GameRend* rend, GameData::ChrIns* player, GameData::OptionData* optionData) {
+void FreeCamera::EnableCamera(GameData::GameRend* rend) {
     GameData::Camera* csDebugCam = rend->csDebugCam;
     GameData::Camera* csPersCam1 = rend->csPersCam1;
 
     if (autoDisableHud) {
-        savedHudOption = optionData->HUD;
-        optionData->HUD = std::byte(0);
+        GameData::OptionData* optionData = GameDataManager::GetOptionData();
+        if (optionData) {
+            savedHudOption = optionData->HUD;
+            optionData->HUD = std::byte(0);
+        }
     }
 
-    player->noMove = true;
+    if (disableEnemiesMovement) DisableEnemiesMovement(true);
+    FreezePlayer(true);
+
     speed = defaultSpeed;
 
     CopyPositionAndFov(csDebugCam, csPersCam1);
@@ -98,12 +92,19 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend, GameData::ChrIns* player
 	Logger::Info("Free camera enabled");
 }
 
-void FreeCamera::DisableCamera(GameData::GameRend* rend, GameData::ChrIns* player, GameData::OptionData* optionData) {
+void FreeCamera::DisableCamera(GameData::GameRend* rend) {
     rend->freeCameraMode = GameData::FreecamMode::Disabled;
+
     if (autoDisableHud) {
-        optionData->HUD = savedHudOption;
+        GameData::OptionData* optionData = GameDataManager::GetOptionData();
+        if (optionData) {
+            optionData->HUD = savedHudOption;
+        }
     }
-    player->noMove = false;
+
+    if (disableEnemiesMovement) DisableEnemiesMovement(false);
+	FreezePlayer(false);
+
 	Logger::Info("Free camera disabled");
 }
 
@@ -114,17 +115,21 @@ void FreeCamera::DisableCamera() {
         return;
     }
 
-	GameData::ChrIns* player = GameDataManager::GetPlayer();
-	if (!player) {
-        Logger::Warn("Player is null in FreeCamera::DisableCamera");
-        return;
-	}
+    DisableCamera(fieldArea->gameRend);
+}
 
-    GameData::OptionData* optionData = GameDataManager::GetOptionData();
-    if (!optionData) {
-        Logger::Warn("OptionData is null in FreeCamera::Toggle");
-        return;
+void FreeCamera::FreezePlayer(bool enabled) {
+    GameData::ChrIns* player = GameDataManager::GetPlayer();
+    if (player) {
+        player->noMove = enabled;
     }
+}
 
-    DisableCamera(fieldArea->gameRend, player, optionData);
+void FreeCamera::DisableEnemiesMovement(bool enabled) {
+    std::byte* allNoAttack = GameDataManager::GetChrDbgFlag(GameData::ChrDbgFlags::allNoAttack);
+    std::byte* allNoUpdateAI = GameDataManager::GetChrDbgFlag(GameData::ChrDbgFlags::allNoUpdateAI);
+    if (allNoAttack && allNoUpdateAI) {
+        *allNoAttack = std::byte(enabled);
+        *allNoUpdateAI = std::byte(enabled);
+    }
 }

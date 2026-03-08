@@ -7,8 +7,9 @@ public:
 	static GameData::FieldArea* GetFieldArea();
 	static GameData::WorldChrMan* GetWorldChrMan();
 	static GameData::GameDataMan* GetGameDataMan();
-	static GameData::ChrIns* GetPlayer();
 	static GameData::OptionData* GetOptionData();
+	static std::byte* GetChrDbgFlag(GameData::ChrDbgFlags flag);
+	static GameData::ChrIns* GetPlayer();
 
 	struct SigEntry {
 		const char* name;
@@ -21,4 +22,5 @@ private:
 	static uintptr_t fieldAreaSig;
 	static uintptr_t worldChrManSig;
 	static uintptr_t gameDataManSig;
+	static uintptr_t chrDbgFlagsSig;
 };
