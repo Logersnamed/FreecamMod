@@ -42,6 +42,14 @@ void Input::Update(UINT uMsg, WPARAM wParam) {
     int key = -1;
 
     switch (uMsg) {
+        case WM_KILLFOCUS:
+        case WM_ACTIVATEAPP:
+            if (!wParam) {
+                Reset();
+                memset(keyDown, 0, sizeof(keyDown));
+            }
+            return;
+
         case WM_KEYDOWN:
         case WM_SYSKEYDOWN:
             key = (int)wParam;
