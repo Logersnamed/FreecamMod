@@ -24,14 +24,12 @@ void FreeCamera::Update(GameData::GameRend* gameRend, float deltaTime) {
 }
 
 void FreeCamera::HandleMovement(GameData::Camera* camera, float deltaTime) {
-    const float cameraSpeed = speed * deltaTime * (isSprinting ? speedMult : 1);
+    const float cameraSpeed = speed * deltaTime * (isSprinting ? speedMult : 1.0f);
 
-    float3 vel(velocity.x, 0, velocity.z);
-    if (vel.lengthSquared()) {
-        vel = camera->matrix.transform_vector(camera->matrix, vel);
-    }
+    const float3& right = camera->matrix.c0.xyz();
+    const float3& forward = camera->matrix.c2.xyz();
+    float3 vel = right * velocity.x + forward * velocity.z;
     vel.y += velocity.y;
-
     if (vel.lengthSquared() > 1.0f) vel = vel.normalized();
     camera->matrix.position() += vel * cameraSpeed;
 
@@ -40,7 +38,7 @@ void FreeCamera::HandleMovement(GameData::Camera* camera, float deltaTime) {
     AddFov(camera, std::clamp(zoom, -maxZoomStep, maxZoomStep));
 
     const float zoomFadeSpeed = 16.0f;
-    zoomVelocity *= std::exp(-zoomFadeSpeed * deltaTime);
+    zoomVelocity *= 1.0f / (1.0f + zoomFadeSpeed * deltaTime);
     if (std::abs(zoomVelocity) < 0.001f) zoomVelocity = 0;
 
     if (enableSmootherMovement) {
