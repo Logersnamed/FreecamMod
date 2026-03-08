@@ -9,30 +9,25 @@ uintptr_t GameDataManager::gameDataManSig = 0;
 
 bool GameDataManager::Init() {
 	Logger::Info("Initializing GameDataManager...");
-	Logger::Info("Scanning for fieldAreaSig...");
-	fieldAreaSig = Signature("48 8B 3D ? ? ? ? 49 8B D8 48 8B F2 4C 8B F1 48 85 FF").Scan().Add(3).Rip().As<uint64_t>();
-	if (!fieldAreaSig) {
-		Logger::Error("Failed to find FieldArea signature");
-		return false;
-	}
-	Logger::Info("fieldAreaSig: %p", fieldAreaSig);
 
-	Logger::Info("Scanning for worldChrManSig...");
-	worldChrManSig = Signature("48 8B 05 ? ? ? ? 48 85 C0 74 0F 48 39 88").Scan().Add(3).Rip().As<uint64_t>();
-	if (!worldChrManSig) {
-		Logger::Error("Failed to find WorldChrMan signature");
-		return false;
-	}
-	Logger::Info("worldChrManSig: %p", worldChrManSig);
+	SigEntry signatures[] = {
+		{ "fieldAreaSig",   "48 8B 3D ? ? ? ? 49 8B D8 48 8B F2 4C 8B F1 48 85 FF", 3, &fieldAreaSig },
+		{ "worldChrManSig", "48 8B 05 ? ? ? ? 48 85 C0 74 0F 48 39 88",				3, &worldChrManSig },
+		{ "gameDataManSig",	"48 8B 05 ? ? ? ? 48 85 C0 74 05 48 8B 40 58 C3 C3",	3, &gameDataManSig }
+	};
 
-	Logger::Info("Scanning for gameDataMan...");
-	gameDataManSig = Signature("48 8B 05 ? ? ? ? 48 85 C0 74 05 48 8B 40 58 C3 C3").Scan().Add(3).Rip().As<uint64_t>();
-	if (!gameDataManSig) {
-		Logger::Error("Failed to find GameDataManSig signature");
-		return false;
-	}
-	Logger::Info("gameDataManSig: %p", gameDataManSig);
+	for (SigEntry& sig : signatures) {
+		Logger::Info("Scanning for %s, AOB: \"%s\", offset: %d...", sig.name, sig.pattern, sig.offset);
 
+		*sig.result = Signature(sig.pattern).Scan().Add(sig.offset).Rip().As<uint64_t>();
+		if (!*sig.result) {
+			Logger::Error("Failed to find %s", sig.name);
+			return false;
+		}
+
+		Logger::Info("%s: %p", sig.name, *sig.result);
+	}
+	
 	return true;
 }
 

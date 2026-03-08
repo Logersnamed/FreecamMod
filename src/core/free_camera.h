@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cstddef>
 
-#include "core/game_data.h"
+#include "core/game_data/game_data.h"
 
 class FreeCamera {
 public:
