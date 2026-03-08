@@ -5,6 +5,7 @@
 #include "core/game_data_manager.h"
 #include "utils/types.h"
 #include "utils/debug.h"
+#include "utils/math.h"
 
 void FreeCamera::Update(GameData::GameRend* gameRend, float deltaTime) {
     if (!gameRend) {
@@ -30,28 +31,33 @@ void FreeCamera::HandleMovement(GameData::Camera* camera, float deltaTime) {
         vel = camera->matrix.transform_vector(camera->matrix, vel);
     }
     vel.y += velocity.y;
-    camera->matrix.position() += vel.normalized() * cameraSpeed;
+
+    if (vel.lengthSquared() > 1.0f) vel = vel.normalized();
+    camera->matrix.position() += vel * cameraSpeed;
 
     float maxZoomStep = 0.05f;
     float zoom = zoomVelocity * zoomSpeed * deltaTime * ComputeZoomFactor(camera->fov);
     AddFov(camera, std::clamp(zoom, -maxZoomStep, maxZoomStep));
 
-    const float zoomFade = 16.0f;
-    zoomVelocity *= std::exp(-zoomFade * deltaTime);
+    const float zoomFadeSpeed = 16.0f;
+    zoomVelocity *= std::exp(-zoomFadeSpeed * deltaTime);
     if (std::abs(zoomVelocity) < 0.001f) zoomVelocity = 0;
 
-	velocity = float3(0);
+    if (enableSmootherMovement) {
+        const float velocityFadeSpeed = 14.0f;
+        velocity *= fastEase(deltaTime * velocityFadeSpeed);
+        if (velocity.lengthSquared() < 0.001f) velocity = float3(0);
+    }
+    else {
+		velocity = float3(0);
+    }
+
 	isSprinting = false;
 }
 
 float FreeCamera::ComputeZoomFactor(float fov) {
-    const float minFov = 0.0f;
-    const float maxFov = 3.14f;
-
     float t = (fov - minFov) / (maxFov - minFov);
-    t = std::clamp(t, 0.0f, 1.0f);
-
-    return 1.0f - std::pow(2.0f * t - 1.0f, 2.0f);
+    return quadraticEaseOut(t);
 }
 
 void FreeCamera::CopyPositionAndFov(GameData::Camera* toCamera, GameData::Camera* fromCamera) {

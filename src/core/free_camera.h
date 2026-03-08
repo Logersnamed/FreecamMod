@@ -22,6 +22,7 @@ public:
 	void SetIsSprinting(bool sprinting) { isSprinting = sprinting; }
 	void SetAutoDisableHud(bool autoDisable) { autoDisableHud = autoDisable; }
 	void SetDisableEnemiesMovement(bool disable) { disableEnemiesMovement = disable; }
+	void SetEnableSmootherMovement(bool smoother) { enableSmootherMovement = smoother; }
 
 	void AddSpeed(float delta) { SetSpeed(speed + delta); }
 	void AddVelocity(const float3& delta) { velocity += delta; }
@@ -33,12 +34,15 @@ private:
     float defaultSpeed = 10.0f;
     float speed = defaultSpeed;
     float zoomSpeed = 0.7f;
+    const float minFov = 0.0f, maxFov = 3.14f;
+    
     float3 velocity = float3(0);
     float zoomVelocity = 0.0f;
 	bool isSprinting = false;
     std::byte savedHudOption = std::byte(2);
 	bool autoDisableHud = true;
 	bool disableEnemiesMovement = true;
+	bool enableSmootherMovement = true;
 
     void HandleMovement(GameData::Camera* camera, float deltaTime);
     void CopyPositionAndFov(GameData::Camera* toCamera, GameData::Camera* fromCamera);
