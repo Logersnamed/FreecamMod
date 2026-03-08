@@ -90,6 +90,8 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
     FreezePlayer(true);
 
     speed = defaultSpeed;
+    velocity = float3(0);
+    zoomVelocity = 0;
 
     CopyPositionAndFov(csDebugCam, csPersCam1);
     CopyRotation(csDebugCam, csPersCam1);
