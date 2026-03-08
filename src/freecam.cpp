@@ -29,6 +29,7 @@ void Freecam::ReloadConfig() {
     freeCamera.SetDefaultSpeed(config.ReadValue("settings", "default_camera_speed", 10.0f, ini));
     freeCamera.SetSpeedMult(config.ReadValue("settings", "speed_multiplier", 2.5f, ini));
     freeCamera.SetZoomSpeed(config.ReadValue("settings", "zoom_speed", 0.7f, ini));
+	freeCamera.SetAutoDisableHud(config.ReadValue("settings", "auto_disable_hud", 1, ini));
 
 	const auto& keybinds = config.GetKeybinds();
     for (const auto& kb : keybinds) {
@@ -38,7 +39,7 @@ void Freecam::ReloadConfig() {
     }
 
     if (fileExists) {
-        if (!file.write(ini)) Logger::Warn("Failed to write to config file");
+        if (!file.write(ini, true)) Logger::Warn("Failed to write to config file");
     }
     else {
         if (!file.generate(ini, true)) Logger::Warn("Failed to generate config file");

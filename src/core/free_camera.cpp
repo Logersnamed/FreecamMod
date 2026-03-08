@@ -70,12 +70,23 @@ void FreeCamera::Toggle(GameData::GameRend* rend) {
         return;
     }
 
-	rend->isFreecamEnabled() ? DisableCamera(rend, player) : EnableCamera(rend, player);
+    GameData::OptionData* optionData = GameDataManager::GetOptionData();
+    if (!optionData) {
+        Logger::Warn("OptionData is null in FreeCamera::Toggle");
+        return;
+    }
+
+	rend->isFreecamEnabled() ? DisableCamera(rend, player, optionData) : EnableCamera(rend, player, optionData);
 }
 
-void FreeCamera::EnableCamera(GameData::GameRend* rend, GameData::ChrIns* player) {
+void FreeCamera::EnableCamera(GameData::GameRend* rend, GameData::ChrIns* player, GameData::OptionData* optionData) {
     GameData::Camera* csDebugCam = rend->csDebugCam;
     GameData::Camera* csPersCam1 = rend->csPersCam1;
+
+    if (autoDisableHud) {
+        savedHudOption = optionData->HUD;
+        optionData->HUD = std::byte(0);
+    }
 
     player->noMove = true;
     speed = defaultSpeed;
@@ -87,8 +98,11 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend, GameData::ChrIns* player
 	Logger::Info("Free camera enabled");
 }
 
-void FreeCamera::DisableCamera(GameData::GameRend* rend, GameData::ChrIns* player) {
+void FreeCamera::DisableCamera(GameData::GameRend* rend, GameData::ChrIns* player, GameData::OptionData* optionData) {
     rend->freeCameraMode = GameData::FreecamMode::Disabled;
+    if (autoDisableHud) {
+        optionData->HUD = savedHudOption;
+    }
     player->noMove = false;
 	Logger::Info("Free camera disabled");
 }
@@ -106,5 +120,11 @@ void FreeCamera::DisableCamera() {
         return;
 	}
 
-    DisableCamera(fieldArea->gameRend, player);
+    GameData::OptionData* optionData = GameDataManager::GetOptionData();
+    if (!optionData) {
+        Logger::Warn("OptionData is null in FreeCamera::Toggle");
+        return;
+    }
+
+    DisableCamera(fieldArea->gameRend, player, optionData);
 }

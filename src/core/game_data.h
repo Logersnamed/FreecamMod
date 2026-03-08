@@ -1,6 +1,7 @@
 #pragma once
 #include <cstddef>
 #include <type_traits>
+#include <cstddef>
 
 #include "utils/types.h"
 
@@ -55,6 +56,16 @@ namespace GameData {
 		char pad1[0x10EF8];
 		Players* players;					// 0x10EF8
 	};
+
+	struct OptionData {
+		char pad1[0x09];
+		std::byte HUD;						// 0x09
+	};
+
+	struct GameDataMan {
+		char pad1[0x58];
+		OptionData* optionData;				// 0x58
+	};
 #pragma pack(pop)
 
 	ASSERT_OFFSET(Camera, matrix, 0x10);
@@ -78,4 +89,7 @@ namespace GameData {
 	ASSERT_SIZE(Players, 0x08);
 
 	ASSERT_OFFSET(WorldChrMan, players, 0x10EF8);
+
+	ASSERT_OFFSET(OptionData, HUD, 0x09);
+	ASSERT_OFFSET(GameDataMan, optionData, 0x58);
 }
