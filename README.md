@@ -2,6 +2,7 @@
 A [mod](https://www.nexusmods.com/eldenring/mods/9420) that detaches camera from the player in Elden Ring. Currently freezes player while in camera mode.  
 Works with Seamless Co-op, ER Reforged. Tested on EldenModLoader, modengine2, me3.  
 
+![Freecam preview](https://github.com/user-attachments/assets/4d71527d-b1c3-4a38-9593-f1249f2c667e)
 ## Controls
 You can find and change all keybinds in `config.ini`. If you are unsure about key's name use it's *0x* [hex code](https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes)
 - **F1** – Toggle free camera  
@@ -41,9 +42,7 @@ Prebuilt DLLs are available as workflow artifacts. Go to the Actions tab, select
 ## Credits & References
 [EROverlay](https://github.com/koalabear420/EROverlay) – Reference and partial code usage  
 [EldenRing-PostureBarMod](https://github.com/Mordrog/EldenRing-PostureBarMod) – Reference  
+[Techiew ModUtils](https://github.com/techiew/EldenRingMods/blob/master/ModUtils.h) - Elden ring mod utils  
 [The Grand Archives](https://github.com/The-Grand-Archives/Elden-Ring-CT-TGA) - Cheat Table  
 [Universal-WndProc-Hook](https://github.com/M0rtale/Universal-WndProc-Hook) – WndProc hooking library  
 [MinHook](https://github.com/TsudaKageyu/minhook) – Function hooking library  
-
-## Preview
-![Freecam preview](https://github.com/user-attachments/assets/4d71527d-b1c3-4a38-9593-f1249f2c667e)
