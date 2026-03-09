@@ -54,7 +54,7 @@ void FreeCamera::HandleMovement(GameData::Camera* camera, float deltaTime) {
 }
 
 float FreeCamera::ComputeZoomFactor(float fov) {
-    float t = (fov - minFov) / (maxFov - minFov);
+    float t = std::clamp((fov - minFov) / (maxFov - minFov), 0.0f, 1.0f);
     return quadraticEaseOut(t);
 }
 

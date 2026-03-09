@@ -1,5 +1,7 @@
 #include "freecam.h"
 
+#include <algorithm>
+
 #include "MinHook.h"
 #include "mini/ini.h"
 #include "ModUtils.h"
@@ -69,14 +71,13 @@ bool Freecam::Initialize() {
         Logger::Error("Failed to initialize MinHook");
         return false;
 	}
-    
+
     Logger::Info("Scanning for UpdateCameraMatrixFunc...");
     UpdateCameraMatrix UpdateCameraMatrixFunc = (UpdateCameraMatrix)Signature("4C 8B 49 18 4C 8B D1 8B 42 50 41 89 41 50 8B 42").Scan().As<uint64_t>();
     if (!UpdateCameraMatrixFunc) {
 		Logger::Error("Failed to find UpdateCameraMatrixFunc");
         return false;
     }
-
 	Logger::Info("Hooking UpdateCameraMatrixFunc at %p...", UpdateCameraMatrixFunc);
     if (MH_CreateHook(UpdateCameraMatrixFunc, &Hook_UpdateCameraMatrix, (void**)&originalUpdateCameraMatrix) != MH_OK) {
 		Logger::Error("Failed to create hook for UpdateCameraMatrixFunc");
@@ -106,7 +107,7 @@ void Freecam::Run() {
 
 void Freecam::Update(GameData::GameRend* gameRend) {
     ProcessInput(gameRend);
-    freeCamera.Update(gameRend, Time::DeltaTime());
+    freeCamera.Update(gameRend, std::clamp(Time::DeltaTime(), 0.0f, 0.4f));
     input.Reset();
 }
 
@@ -135,7 +136,7 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend) {
 void __fastcall Freecam::Hook_UpdateCameraMatrix(GameData::GameRend* gameRend,void* rdx, void* r8, void* r9) {
     originalUpdateCameraMatrix(gameRend, rdx, r8, r9);
 
-    instance->Update(gameRend);
+    if (instance) instance->Update(gameRend);
 }
 
 void Freecam::Dispose() {
@@ -146,10 +147,11 @@ void Freecam::Dispose() {
     freeCamera.DisableCamera();
 
 	Logger::Info("Unhooking UpdateCameraMatrixFunc...");
-	Logger::Info("Uninitializing MinHook...");
     MH_RemoveHook(MH_ALL_HOOKS);
+    Logger::Info("Uninitializing MinHook...");
     MH_Uninitialize();
 
+    Logger::Info("Unhooking WndProc...");
     input.UnhookWndProc(ModUtils::muWindow);
 
     instance = nullptr;
