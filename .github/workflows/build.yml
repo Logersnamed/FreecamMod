@@ -4,6 +4,9 @@ env:
   project_name: Freecam
 
 on:
+  push:
+    branches:
+      - master
   workflow_dispatch:
 
 jobs:
