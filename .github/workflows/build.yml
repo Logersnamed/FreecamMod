@@ -25,8 +25,22 @@ jobs:
     - name: Build
       run: cmake --build build --config Release
 
-    - name: Upload artifact
+    - name: Prepare package
+      shell: powershell
+      run: |
+        New-Item -ItemType Directory -Force -Path package
+        New-Item -ItemType Directory -Force -Path package/Freecam
+
+        Copy-Item build/Release/${{ env.project_name }}.dll package/
+        Copy-Item config/config.ini package/Freecam/
+
+    - name: Create zip
+      shell: powershell
+      run: |
+        Compress-Archive -Path package/* -DestinationPath ${{ env.project_name }}.zip
+
+    - name: Upload zip artifact
       uses: actions/upload-artifact@v4
       with:
         name: ${{ env.project_name }}
-        path: build/Release/${{ env.project_name }}.dll
+        path: ${{ env.project_name }}.zip
