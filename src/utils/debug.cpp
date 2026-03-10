@@ -13,6 +13,13 @@ void Logger::Init(const char* title) {
 
     AllocConsole();
 
+    HANDLE hConsole = GetStdHandle(STD_INPUT_HANDLE);
+    DWORD mode = 0;
+    GetConsoleMode(hConsole, &mode);
+    mode &= ~ENABLE_QUICK_EDIT_MODE;
+    mode |= ENABLE_EXTENDED_FLAGS;
+    SetConsoleMode(hConsole, mode);
+
     FILE* f;
     freopen_s(&f, "CONOUT$", "w", stdout);
     freopen_s(&f, "CONOUT$", "w", stderr);
@@ -61,7 +68,9 @@ void Logger::Print(const char* level, WORD color, const char* fmt, va_list args)
         std::tm tm;
         localtime_s(&tm, &t);
 
-        logFile << "[" << tm.tm_hour << ":" << tm.tm_min << ":" << tm.tm_sec << "] "
+        logFile << "[" << (tm.tm_hour < 10 ? "0" : "") << tm.tm_hour << ":"
+            << (tm.tm_min < 10 ? "0" : "") << tm.tm_min << ":"
+            << (tm.tm_sec < 10 ? "0" : "") << tm.tm_sec << "] "
             << "[" << level << "] " << buffer << std::endl;
         logFile.flush();
     }
