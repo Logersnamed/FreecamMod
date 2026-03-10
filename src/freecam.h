@@ -28,7 +28,8 @@ private:
 
     void Update(GameData::GameRend* gameRend);
 	void ProcessInput(GameData::GameRend* gameRend);
-    void ReloadConfig();
+
+    bool HookFunctions();
 
     using UpdateCameraMatrix = void(__fastcall*)(void*, void*, void*, void*);
     static inline UpdateCameraMatrix originalUpdateCameraMatrix{};

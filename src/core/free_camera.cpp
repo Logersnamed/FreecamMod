@@ -8,12 +8,7 @@
 #include "utils/math.h"
 
 void FreeCamera::Update(GameData::GameRend* gameRend, float deltaTime) {
-    if (!gameRend) {
-        Logger::Warn("GameRend is null in FreeCamera::Update");
-        return;
-    }
-
-    if (!gameRend->isFreecamEnabled()) {
+    if (!gameRend->IsFreecamEnabled()) {
         if (isEnabled) {
 			Logger::Info("Freecam wasn't disabled properly, disabling now...");
             DisableCamera(gameRend);
@@ -74,14 +69,13 @@ void FreeCamera::CopyRotation(GameData::Camera* toCamera, GameData::Camera* from
 }
 
 void FreeCamera::Toggle(GameData::GameRend* rend) {
-    if (!rend) return;
-
-	rend->isFreecamEnabled() ? DisableCamera(rend) : EnableCamera(rend);
+	rend->IsFreecamEnabled() ? DisableCamera(rend) : EnableCamera(rend);
 }
 
 void FreeCamera::EnableCamera(GameData::GameRend* rend) {
     GameData::Camera* csDebugCam = rend->csDebugCam;
     GameData::Camera* csPersCam1 = rend->csPersCam1;
+    if (!csDebugCam || !csPersCam1) return;
 
     if (isHideHud) {
         GameData::OptionData* optionData = GameDataManager::GetOptionData();
@@ -101,13 +95,13 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
     CopyPositionAndFov(csDebugCam, csPersCam1);
     CopyRotation(csDebugCam, csPersCam1);
 
-    rend->freeCameraMode = GameData::FreecamMode::EnabledUpdating;
+	rend->EnableFreecam();
     isEnabled = true;
 	Logger::Info("Free camera enabled");
 }
 
 void FreeCamera::DisableCamera(GameData::GameRend* rend) {
-    rend->freeCameraMode = GameData::FreecamMode::Disabled;
+	rend->DisableFreecam();
 
     if (isHideHud) {
         GameData::OptionData* optionData = GameDataManager::GetOptionData();

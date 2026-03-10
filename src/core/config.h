@@ -7,6 +7,7 @@
 #include "mini/ini.h"
 
 #include "core/input/action.h"
+#include "core/free_camera.h"
 #include "utils/debug.h"
 
 class Config {
@@ -45,6 +46,7 @@ private:
 
 public:
     bool Initialize(HMODULE hModule);
+    void Reload(ActionManager& actionManager, FreeCamera& freeCamera);
 	bool CreateModDirectory();
 
     template<typename T>

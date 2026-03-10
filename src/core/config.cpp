@@ -1,5 +1,6 @@
 #include "core/config.h"
 
+
 bool Config::Initialize(HMODULE hModule) {
     if (!findDllPath(hModule)) return false;
 
@@ -18,6 +19,37 @@ bool Config::Initialize(HMODULE hModule) {
     Logger::Info("Config path: %s", configFilePath.c_str());
 
     return true;
+}
+
+void Config::Reload(ActionManager &actionManager, FreeCamera &freeCamera) {
+    Logger::Info("Loading config...");
+    CreateModDirectory();
+
+    mINI::INIFile file(GetConfigFilePath());
+    mINI::INIStructure ini;
+
+    bool fileExists = file.read(ini);
+
+    Logger::Enable(ReadValue("mod", "debug", 0, ini));
+    freeCamera.SetDefaultSpeed(ReadValue("settings", "default_camera_speed", 10.0f, ini));
+    freeCamera.SetSpeedMult(ReadValue("settings", "speed_multiplier", 2.5f, ini));
+    freeCamera.SetZoomSpeed(ReadValue("settings", "zoom_speed", 0.7f, ini));
+    freeCamera.SetHideHud(ReadValue("settings", "hide_hud", 1, ini));
+    freeCamera.SetFreezeEntities(ReadValue("settings", "freeze_entities", 1, ini));
+    freeCamera.SetSmoothCamera(ReadValue("settings", "smooth_camera", 1, ini));
+
+    for (const auto& kb : keybinds) {
+        actionManager.BindAction(ReadKeybind(
+            kb.section, kb.name, kb.type, kb.defaultKeys, kb.defaultModifiers, ini
+        ));
+    }
+
+    if (fileExists) {
+        if (!file.write(ini, true)) Logger::Warn("Failed to write to config file");
+    }
+    else {
+        if (!file.generate(ini, true)) Logger::Warn("Failed to generate config file");
+    }
 }
 
 bool Config::CreateModDirectory() {

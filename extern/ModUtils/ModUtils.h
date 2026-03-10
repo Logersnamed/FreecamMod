@@ -557,11 +557,11 @@ namespace ModUtils
 			{
 				char buffer[100];
 				GetWindowTextA(muWindow, buffer, 100);
-				Log("Found application window: ", buffer);
+				Logger::Info("Found window handle: %p", ModUtils::muWindow);
 			}
 			else
 			{
-				Log("Failed to get window handle, inputs will be detected globally!");
+				Logger::Error("Failed to get window handle");
 			}
 			hasAttemptedToGetWindowHandle = true;
 		}

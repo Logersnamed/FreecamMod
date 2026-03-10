@@ -8,6 +8,7 @@ DWORD WINAPI MainThread(LPVOID lpParam) {
 
     Freecam freecam((HMODULE)lpParam);
     freecam.Run();
+	freecam.Dispose();
 
     Sleep(500);
     FreeLibraryAndExitThread((HMODULE)lpParam, 0);

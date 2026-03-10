@@ -28,7 +28,9 @@ namespace GameData {
 		char pad3[0x04];
 		Camera* csDebugCam;					// 0xD0
 
-		bool isFreecamEnabled() const { return freeCameraMode != FreecamMode::Disabled; }
+		bool IsFreecamEnabled() const { return freeCameraMode != FreecamMode::Disabled; }
+		void DisableFreecam() { freeCameraMode = FreecamMode::Disabled; }
+		void EnableFreecam() { freeCameraMode = FreecamMode::EnabledUpdating; }
 	};
 
 	struct FieldArea {
