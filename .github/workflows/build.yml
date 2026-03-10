@@ -1,5 +1,8 @@
 name: Build Freecam
 
+permissions:
+  contents: write
+
 env:
   project_name: Freecam
 
