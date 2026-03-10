@@ -11,9 +11,9 @@ bool GameDataManager::Init() {
 	Logger::Info("Initializing GameDataManager...");
 
 	SigEntry signatures[] = {
-		{ "fieldAreaSig",   "48 8B 3D ? ? ? ? 49 8B D8 48 8B F2 4C 8B F1 48 85 FF", 3, &fieldAreaSig },
-		{ "worldChrManSig", "48 8B 05 ? ? ? ? 48 85 C0 74 0F 48 39 88",				3, &worldChrManSig },
-		{ "gameDataManSig",	"48 8B 05 ? ? ? ? 48 85 C0 74 05 48 8B 40 58 C3 C3",	3, &gameDataManSig },
+		{ "fieldAreaSig",   "48 8B 3D ? ? ? ? 49 8B D8 48 8B F2 4C 8B F1 48 85 FF", 3, true, &fieldAreaSig },
+		{ "worldChrManSig", "48 8B 05 ? ? ? ? 48 85 C0 74 0F 48 39 88",				3, true, &worldChrManSig },
+		{ "gameDataManSig",	"48 8B 05 ? ? ? ? 48 85 C0 74 05 48 8B 40 58 C3 C3",	3, false, &gameDataManSig },
 	};
 
 	for (SigEntry& sig : signatures) {
@@ -21,8 +21,13 @@ bool GameDataManager::Init() {
 
 		*sig.result = Signature(sig.pattern).Scan().Add(sig.offset).Rip().As<uint64_t>();
 		if (!*sig.result) {
-			Logger::Error("Failed to find %s", sig.name);
-			return false;
+			if (sig.isObligatory) {
+				Logger::Error("Failed to find %s", sig.name);
+				return false;
+			}
+
+			Logger::Error("Failed to find %s. Some features may won't work", sig.name);
+			continue;
 		}
 
 		Logger::Info("%s: %p", sig.name, *sig.result);

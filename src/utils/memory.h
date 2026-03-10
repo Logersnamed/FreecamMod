@@ -79,6 +79,7 @@ public:
 	template <typename T>
 	constexpr std::enable_if_t<std::is_same_v<T, std::uintptr_t>, T> As()
 	{
+		if (!m_Ptr) return 0;
 		return reinterpret_cast<T>(m_Ptr);
 	}
 
@@ -90,6 +91,7 @@ public:
 	template <typename T>
 	constexpr MemoryHandle Add(T offset)
 	{
+		if (!m_Ptr) return MemoryHandle(nullptr);
 		return MemoryHandle(As<std::uintptr_t>() + offset);
 	}
 
@@ -110,8 +112,7 @@ public:
 	 */
 	constexpr MemoryHandle Rip()
 	{
-		if (!m_Ptr)
-			return nullptr;
+		if (!m_Ptr) return MemoryHandle(nullptr);
 		return Add(As<std::int32_t&>()).Add(4U);
 	}
 
@@ -337,7 +338,7 @@ public:
 			}
 		}
 
-		return {};
+		return MemoryHandle(nullptr);
 	}
 private:
 	std::vector<Element> m_Elements;
