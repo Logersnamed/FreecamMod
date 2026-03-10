@@ -6,7 +6,6 @@
 uintptr_t GameDataManager::fieldAreaSig = 0;
 uintptr_t GameDataManager::worldChrManSig = 0;
 uintptr_t GameDataManager::gameDataManSig = 0;
-uintptr_t GameDataManager::chrDbgFlagsSig = 0;
 
 bool GameDataManager::Init() {
 	Logger::Info("Initializing GameDataManager...");
@@ -15,7 +14,6 @@ bool GameDataManager::Init() {
 		{ "fieldAreaSig",   "48 8B 3D ? ? ? ? 49 8B D8 48 8B F2 4C 8B F1 48 85 FF", 3, &fieldAreaSig },
 		{ "worldChrManSig", "48 8B 05 ? ? ? ? 48 85 C0 74 0F 48 39 88",				3, &worldChrManSig },
 		{ "gameDataManSig",	"48 8B 05 ? ? ? ? 48 85 C0 74 05 48 8B 40 58 C3 C3",	3, &gameDataManSig },
-		{ "chrDbgFlagsSig",	"80 3D ? ? ? ? 00 0F 85 ? ? ? ? 32 C0 48",				2, &chrDbgFlagsSig },
 	};
 
 	for (SigEntry& sig : signatures) {
@@ -52,11 +50,6 @@ GameData::GameDataMan* GameDataManager::GetGameDataMan() {
 	if (!gameDataManPtr) return nullptr;
 
 	return reinterpret_cast<GameData::GameDataMan*>(gameDataManPtr);
-}
-
-std::byte* GameDataManager::GetChrDbgFlag(GameData::ChrDbgFlags flag) {
-	if (!chrDbgFlagsSig) return nullptr;
-	return reinterpret_cast<std::byte*>(chrDbgFlagsSig + (std::uint8_t)flag + 1);
 }
 
 GameData::ChrIns* GameDataManager::GetPlayer() {

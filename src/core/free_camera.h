@@ -19,10 +19,10 @@ public:
     void SetSpeed(float newSpeed) { speed = max(newSpeed, 0.0f); }
 	void SetZoomSpeed(float newZoomSpeed) { zoomSpeed = max(newZoomSpeed, 0.0f); }
     void SetFov(GameData::Camera *cam, float newFov) { if (cam) cam->fov = std::clamp(newFov, 0.0001f, 3.13f); }
-	void SetIsSprinting(bool sprinting) { isSprinting = sprinting; }
-	void SetAutoDisableHud(bool autoDisable) { autoDisableHud = autoDisable; }
-	void SetDisableEnemiesMovement(bool disable) { disableEnemiesMovement = disable; }
-	void SetEnableSmootherMovement(bool smoother) { enableSmootherMovement = smoother; }
+	void SetIsSprinting(bool enabled) { isSprinting = enabled; }
+    void SetHideHud(bool enabled) { isHideHud = enabled; }
+    void SetFreezeEntities(bool enabled) { isFreezeEntities = enabled; }
+    void SetSmoothCamera(bool enabled) { isSmoothCamera = enabled; }
 
 	void AddSpeed(float delta) { SetSpeed(speed + delta); }
 	void AddVelocity(const float3& delta) { velocity += delta; }
@@ -40,9 +40,9 @@ private:
     float zoomVelocity = 0.0f;
 	bool isSprinting = false;
     std::byte savedHudOption = std::byte(2);
-	bool autoDisableHud = true;
-	bool disableEnemiesMovement = true;
-	bool enableSmootherMovement = true;
+	bool isHideHud = true;
+	bool isFreezeEntities = true;
+	bool isSmoothCamera = true;
 
     void HandleMovement(GameData::Camera* camera, float deltaTime);
     void CopyPositionAndFov(GameData::Camera* toCamera, GameData::Camera* fromCamera);
@@ -50,5 +50,5 @@ private:
     float ComputeZoomFactor(float fov);
 
     void FreezePlayer(bool enabled);
-    void DisableEnemiesMovement(bool enabled);
+    void FreezeEntities(bool enabled);
 };
