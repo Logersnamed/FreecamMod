@@ -18,7 +18,9 @@ public:
     void SetDefaultSpeed(float newSpeed) { defaultSpeed = max(newSpeed, 0.0f); }
     void SetSpeed(float newSpeed) { speed = max(newSpeed, 0.0f); }
 	void SetZoomSpeed(float newZoomSpeed) { zoomSpeed = max(newZoomSpeed, 0.0f); }
-    void SetFov(GameData::Camera *cam, float newFov) { if (cam) cam->fov = std::clamp(newFov, 0.0001f, 3.13f); }
+    void SetFov(GameData::Camera *cam, float newFov) { if (cam) cam->fov = std::clamp(newFov, minFov, maxFov); }
+	void SetMinFov(float newMinFov) { minFov = std::clamp(newMinFov, MIN_FOV, MAX_FOV); }
+	void SetMaxFov(float newMaxFov) { maxFov = std::clamp(newMaxFov, MIN_FOV, MAX_FOV); }
 	void SetIsSprinting(bool enabled) { isSprinting = enabled; }
     void SetHideHud(bool enabled) { isHideHud = enabled; }
     void SetFreezeEntities(bool enabled) { isFreezeEntities = enabled; }
@@ -34,7 +36,8 @@ private:
     float defaultSpeed = 10.0f;
     float speed = defaultSpeed;
     float zoomSpeed = 0.7f;
-    const float minFov = 0.0f, maxFov = 3.14f;
+    float minFov = MIN_FOV, maxFov = MAX_FOV;
+	const float MIN_FOV = 0.000126f, MAX_FOV = 3.13f;
     
     float3 velocity = float3(0);
     float zoomVelocity = 0.0f;

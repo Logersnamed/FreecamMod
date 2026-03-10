@@ -30,10 +30,12 @@ void Config::Reload(ActionManager &actionManager, FreeCamera &freeCamera) {
 
     bool fileExists = file.read(ini);
 
-    Logger::Enable(ReadValue("mod", "debug", 0, ini));
+    Logger::Enable(ReadValue("mod", "debug_console", 0, ini));
     freeCamera.SetDefaultSpeed(ReadValue("settings", "default_camera_speed", 10.0f, ini));
     freeCamera.SetSpeedMult(ReadValue("settings", "speed_multiplier", 2.5f, ini));
     freeCamera.SetZoomSpeed(ReadValue("settings", "zoom_speed", 0.7f, ini));
+    freeCamera.SetMinFov(ReadValue("settings", "min_fov(in radians)", 0.0001f, ini));
+    freeCamera.SetMaxFov(ReadValue("settings", "max_fov(in radians)", 2.71f, ini));
     freeCamera.SetHideHud(ReadValue("settings", "hide_hud", 1, ini));
     freeCamera.SetFreezeEntities(ReadValue("settings", "freeze_entities", 1, ini));
     freeCamera.SetSmoothCamera(ReadValue("settings", "smooth_camera", 1, ini));
