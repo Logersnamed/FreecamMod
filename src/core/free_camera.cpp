@@ -12,7 +12,14 @@ void FreeCamera::Update(GameData::GameRend* gameRend, float deltaTime) {
         Logger::Warn("GameRend is null in FreeCamera::Update");
         return;
     }
-    if (!gameRend->isFreecamEnabled()) return;
+
+    if (!gameRend->isFreecamEnabled()) {
+        if (isEnabled) {
+			Logger::Info("Freecam wasn't disabled properly, disabling now...");
+            DisableCamera(gameRend);
+		}
+        return;
+    }
 
     GameData::Camera* csDebugCam = gameRend->csDebugCam;
     GameData::Camera* csPersCam1 = gameRend->csPersCam1;
@@ -95,6 +102,7 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
     CopyRotation(csDebugCam, csPersCam1);
 
     rend->freeCameraMode = GameData::FreecamMode::EnabledUpdating;
+    isEnabled = true;
 	Logger::Info("Free camera enabled");
 }
 
@@ -111,6 +119,7 @@ void FreeCamera::DisableCamera(GameData::GameRend* rend) {
     if (isFreezeEntities) FreezeEntities(false);
 	FreezePlayer(false);
 
+    isEnabled = false;
 	Logger::Info("Free camera disabled");
 }
 

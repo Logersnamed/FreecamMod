@@ -44,6 +44,8 @@ private:
 	bool isFreezeEntities = true;
 	bool isSmoothCamera = true;
 
+    bool isEnabled = false;
+
     void HandleMovement(GameData::Camera* camera, float deltaTime);
     void CopyPositionAndFov(GameData::Camera* toCamera, GameData::Camera* fromCamera);
     void CopyRotation(GameData::Camera* toCamera, GameData::Camera* fromCamera);
