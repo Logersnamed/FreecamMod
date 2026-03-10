@@ -135,6 +135,13 @@ void FreeCamera::FreezePlayer(bool enabled) {
 void FreeCamera::FreezeEntities(bool enabled) {
     GameData::WorldChrMan* world = GameDataManager::GetWorldChrMan();
     if (world) {
+        GameData::Players* players = world->players;
+        if (!players) return;
+        if (!players->IsPlayerAlone()) {
+            Logger::Info("Freezing entities in online is disabled");
+            return;
+        }
+
         size_t length = world->GetEntityListLenght();
 		Logger::Info("Set noUpdate = %d to %zu entities", enabled, length);
         for (size_t i = 0; i < length; i++) {
