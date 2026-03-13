@@ -27,8 +27,8 @@ namespace GameData {
 
 	struct Players {
 		ChrIns* player0;					// 0x00
-		char pad1[0x02];
-		ChrIns* player1;					// 0x0A
+		char pad1[0x08];					
+		ChrIns* player1;					// 0x10
 
 		bool IsPlayerAlone() const { return !player1; }
 	};
@@ -51,7 +51,7 @@ namespace GameData {
 	ASSERT_OFFSET(ChrIns, flags2, 0x531);
 
 	ASSERT_OFFSET(Players, player0, 0x00);
-	ASSERT_OFFSET(Players, player1, 0x0A);
+	ASSERT_OFFSET(Players, player1, 0x10);
 
 	ASSERT_OFFSET(WorldChrMan, players, 0x10EF8);
 	ASSERT_OFFSET(WorldChrMan, begin, 0x1F1B8);

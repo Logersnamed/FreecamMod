@@ -16,49 +16,58 @@ void FreeCamera::Update(GameData::GameRend* gameRend, float deltaTime) {
         return;
     }
 
-    GameData::Camera* csDebugCam = gameRend->csDebugCam;
-    GameData::Camera* csPersCam1 = gameRend->csPersCam1;
+    GameData::Camera* freeCamera = gameRend->csDebugCam;
+    GameData::Camera* playerCamera = gameRend->csPersCam1;
+    if (!freeCamera || !playerCamera) return;
 
-    if (!csDebugCam || !csPersCam1) return;
+    CopyRotation(freeCamera, playerCamera);
+	UpdatePosition(freeCamera, deltaTime);
+	UpdateFov(freeCamera, deltaTime);
 
-    CopyRotation(csDebugCam, csPersCam1);
-    HandleMovement(csDebugCam, deltaTime);
+    UpdateVelocity(deltaTime);
+    UpdateZoomVelocity(deltaTime);
+    isSprinting = false;
 }
 
-void FreeCamera::HandleMovement(GameData::Camera* camera, float deltaTime) {
-    const float cameraSpeed = speed * deltaTime * (isSprinting ? speedMult : 1.0f);
+void FreeCamera::UpdatePosition(GameData::Camera* camera, float dt) {
+    const float cameraSpeed = speed * (isSprinting ? speedMult : 1.0f) * dt;
 
     const float3& right = camera->matrix.c0.xyz();
     const float3& forward = camera->matrix.c2.xyz();
-    float3 vel = right * velocity.x + forward * velocity.z;
-    vel.y += velocity.y;
+    float3 vel = right * velocity.x + forward * velocity.z + float3(0.0f, velocity.y, 0.0f);
+
     if (vel.lengthSquared() > 1.0f) vel = vel.normalized();
+
     camera->matrix.position() += vel * cameraSpeed;
+}
 
+void FreeCamera::UpdateFov(GameData::Camera* camera, float dt) {
     float maxZoomStep = 0.05f;
-    float zoom = zoomVelocity * zoomSpeed * deltaTime * ComputeZoomFactor(camera->fov);
+    float zoom = zoomVelocity * zoomSpeed * ComputeZoomFactor(camera->fov) * dt;
     AddFov(camera, std::clamp(zoom, -maxZoomStep, maxZoomStep));
+}
 
+void FreeCamera::UpdateVelocity(float dt) {
+	if (!isSmoothCamera) {
+        velocity = float3(0);
+        return;
+    }
+
+    const float velocityFadeSpeed = 14.0f;
+    velocity *= Math::fastEase(velocityFadeSpeed * dt);
+    if (velocity.lengthSquared() < 0.001f) velocity = float3(0);
+}
+
+void FreeCamera::UpdateZoomVelocity(float dt) {
     const float zoomFadeSpeed = 16.0f;
-    zoomVelocity *= 1.0f / (1.0f + zoomFadeSpeed * deltaTime);
+    zoomVelocity *= 1.0f / (1.0f + zoomFadeSpeed * dt);
     if (std::abs(zoomVelocity) < 0.001f) zoomVelocity = 0;
-
-    if (isSmoothCamera) {
-        const float velocityFadeSpeed = 14.0f;
-        velocity *= fastEase(deltaTime * velocityFadeSpeed);
-        if (velocity.lengthSquared() < 0.001f) velocity = float3(0);
-    }
-    else {
-		velocity = float3(0);
-    }
-
-	isSprinting = false;
 }
 
 float FreeCamera::ComputeZoomFactor(float fov) {
 	const float min_fov = 0.00001, max_fov = 3.14f;
-    float t = std::clamp((fov - min_fov) / (max_fov - min_fov), 0.0f, 1.0f);
-    return quadraticEaseOut(t);
+    float t = Math::clamp((fov - min_fov) / (max_fov - min_fov));
+    return Math::quadraticEaseOut(t);
 }
 
 void FreeCamera::CopyPositionAndFov(GameData::Camera* toCamera, GameData::Camera* fromCamera) {
@@ -74,9 +83,9 @@ void FreeCamera::Toggle(GameData::GameRend* rend) {
 }
 
 void FreeCamera::EnableCamera(GameData::GameRend* rend) {
-    GameData::Camera* csDebugCam = rend->csDebugCam;
-    GameData::Camera* csPersCam1 = rend->csPersCam1;
-    if (!csDebugCam || !csPersCam1) return;
+    GameData::Camera* freeCamera = rend->csDebugCam;
+    GameData::Camera* playerCamera = rend->csPersCam1;
+    if (!freeCamera || !playerCamera) return;
 
     if (isHideHud) {
         GameData::OptionData* optionData = GameDataManager::GetOptionData();
@@ -91,10 +100,10 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
 
     speed = defaultSpeed;
     velocity = float3(0);
-    zoomVelocity = 0;
+    zoomVelocity = 0.0f;
 
-    CopyPositionAndFov(csDebugCam, csPersCam1);
-    CopyRotation(csDebugCam, csPersCam1);
+    CopyPositionAndFov(freeCamera, playerCamera);
+    CopyRotation(freeCamera, playerCamera);
 
 	rend->EnableFreecam();
     isEnabled = true;
@@ -128,32 +137,32 @@ void FreeCamera::DisableCamera() {
     DisableCamera(fieldArea->gameRend);
 }
 
+void FreeCamera::FreezeEntity(GameData::ChrIns* entity, bool enabled) {
+    entity->flags2.noUpdate = enabled;
+    entity->flags1.noHit = enabled;
+}
+
 void FreeCamera::FreezePlayer(bool enabled) {
     GameData::ChrIns* player = GameDataManager::GetPlayer();
-    if (player) {
-        player->flags2.noUpdate = enabled;
-        player->flags1.noHit = enabled;
-    }
+    if (player) FreezeEntity(player, enabled);
 }
 
 void FreeCamera::FreezeEntities(bool enabled) {
     GameData::WorldChrMan* world = GameDataManager::GetWorldChrMan();
-    if (world) {
-        GameData::Players* players = world->players;
-        if (!players) return;
-        if (!players->IsPlayerAlone()) {
-            Logger::Info("Freezing entities in online is disabled");
-            return;
-        }
+    if (!world) return;
 
-        size_t length = world->GetEntityListLenght();
-		Logger::Info("Set noUpdate = %d to %zu entities", enabled, length);
-        for (size_t i = 0; i < length; i++) {
-            GameData::ChrIns* chr = world->begin[i];
-            if (!chr) continue;
+    GameData::Players* players = world->players;
+    if (!players) return;
 
-            chr->flags2.noUpdate = enabled;
-            chr->flags1.noHit = enabled;
-        }
+    if (!players->IsPlayerAlone()) {
+        Logger::Info("Freezing entities in online is disabled");
+        return;
+    }
+
+    const size_t length = world->GetEntityListLenght();
+	Logger::Info("Set FreezeEntity = %d to %zu entities", enabled, length);
+    for (size_t i = 0; i < length; ++i) {
+        GameData::ChrIns* entity = world->begin[i];
+        if (entity) FreezeEntity(entity, enabled);
     }
 }

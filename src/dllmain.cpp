@@ -1,6 +1,5 @@
 #include <windows.h>
 
-#include "utils/debug.h"
 #include "freecam.h"
 
 DWORD WINAPI MainThread(LPVOID lpParam) {
@@ -20,5 +19,8 @@ BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
         DisableThreadLibraryCalls(module);
         CreateThread(0, 0, MainThread, module, 0, NULL);
     }
+    else if (reason == DLL_PROCESS_DETACH) {
+		if (Freecam::instance) Freecam::instance->Dispose();
+	}
     return TRUE;
 }

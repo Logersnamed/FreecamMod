@@ -116,6 +116,6 @@ void Freecam::Dispose() {
 
     instance = nullptr;
 
-    Logger::Info("Shutting down..");
+    Logger::Info("Shutting down Logger..");
     Logger::Shutdown();
 }

@@ -49,11 +49,16 @@ private:
 
     bool isEnabled = false;
 
-    void HandleMovement(GameData::Camera* camera, float deltaTime);
+    void UpdatePosition(GameData::Camera* camera, float dt);
+    void UpdateFov(GameData::Camera* camera, float dt);
+	void UpdateVelocity(float dt);
+	void UpdateZoomVelocity(float dt);
+
     void CopyPositionAndFov(GameData::Camera* toCamera, GameData::Camera* fromCamera);
     void CopyRotation(GameData::Camera* toCamera, GameData::Camera* fromCamera);
     float ComputeZoomFactor(float fov);
 
+	void FreezeEntity(GameData::ChrIns* entity, bool enabled);
     void FreezePlayer(bool enabled);
     void FreezeEntities(bool enabled);
 };
