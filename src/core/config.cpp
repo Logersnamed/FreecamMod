@@ -1,5 +1,6 @@
 #include "core/config.h"
 
+#include <filesystem>
 
 bool Config::Initialize(HMODULE hModule) {
     if (!findDllPath(hModule)) return false;
@@ -18,6 +19,8 @@ bool Config::Initialize(HMODULE hModule) {
     configFilePath = configDirPath + configFileName;
     Logger::Info("Config path: %s", configFilePath.c_str());
 
+    file = mINI::INIFile(configFilePath);
+
     return true;
 }
 
@@ -25,25 +28,21 @@ void Config::Reload(ActionManager &actionManager, FreeCamera &freeCamera) {
     Logger::Info("Loading config...");
     CreateModDirectory();
 
-    mINI::INIFile file(GetConfigFilePath());
-    mINI::INIStructure ini;
-
+    ini.clear();
     bool fileExists = file.read(ini);
 
-    Logger::Enable(ReadValue("mod", "debug_console", 0, ini));
-    freeCamera.SetDefaultSpeed(ReadValue("settings", "default_camera_speed", 10.0f, ini));
-    freeCamera.SetSpeedMult(ReadValue("settings", "speed_multiplier", 2.5f, ini));
-    freeCamera.SetZoomSpeed(ReadValue("settings", "zoom_speed", 0.7f, ini));
-    freeCamera.SetMinFov(ReadValue("settings", "min_fov(in radians)", 0.0001f, ini));
-    freeCamera.SetMaxFov(ReadValue("settings", "max_fov(in radians)", 2.71f, ini));
-    freeCamera.SetHideHud(ReadValue("settings", "hide_hud", 1, ini));
-    freeCamera.SetFreezeEntities(ReadValue("settings", "freeze_entities", 1, ini));
-    freeCamera.SetSmoothCamera(ReadValue("settings", "smooth_camera", 1, ini));
+    Logger::Enable(ReadValue("mod", "debug_console", 0));
+    freeCamera.SetDefaultSpeed(ReadValue("settings", "default_camera_speed", 10.0f));
+    freeCamera.SetSpeedMult(ReadValue("settings", "speed_multiplier", 2.5f));
+    freeCamera.SetZoomSpeed(ReadValue("settings", "zoom_speed", 0.7f));
+    freeCamera.SetMinFov(ReadValue("settings", "min_fov(in radians)", 0.0001f));
+    freeCamera.SetMaxFov(ReadValue("settings", "max_fov(in radians)", 2.71f));
+    freeCamera.SetHideHud(ReadValue("settings", "hide_hud", 1));
+    freeCamera.SetFreezeEntities(ReadValue("settings", "freeze_entities", 1));
+    freeCamera.SetSmoothCamera(ReadValue("settings", "smooth_camera", 1));
 
-    for (const auto& kb : keybinds) {
-        actionManager.BindAction(ReadKeybind(
-            kb.section, kb.name, kb.type, kb.defaultKeys, kb.defaultModifiers, ini
-        ));
+    for (const Keybind& keybind : keybinds) {
+        actionManager.BindAction(ReadKeybind(keybind));
     }
 
     if (fileExists) {
@@ -63,22 +62,39 @@ bool Config::CreateModDirectory() {
     return true;
 }
 
-Action Config::ReadKeybind(
-    std::string section,
-    std::string name,
-    Action::Type actionType,
-    const std::vector<int>& defaultkeyBind,
-    const std::vector<int>& defaultRestricted,
-    mINI::INIStructure& ini
-) {
+template<typename T>
+T Config::ReadValue(const std::string& section, const std::string& name, T defaultValue) {
     if (ini.has(section)) {
         auto& collection = ini[section];
 
         if (collection.has(name)) {
-            std::vector<int> keyBind;
+			auto& value = collection[name];
+
+            if constexpr (std::is_same_v<T, int>) {
+                return std::stoi(value);
+            }
+            else if constexpr (std::is_same_v<T, float>) {
+                return std::stof(value);
+            }
+            else if constexpr (std::is_same_v<T, bool>) {
+                return std::stoi(value) != 0;
+            }
+        }
+    }
+
+    ini[section][name] = std::to_string(defaultValue);
+    return defaultValue;
+}
+
+Action Config::ReadKeybind(const Keybind& keybind) {
+    if (ini.has(keybind.section)) {
+        auto& collection = ini[keybind.section];
+
+        if (collection.has(keybind.name)) {
+            std::vector<int> keys;
             std::vector<int> restricted;
 
-            std::string keyBindStr = collection[name];
+            std::string keyBindStr = collection[keybind.name];
             std::stringstream ss(keyBindStr);
             std::string token;
 
@@ -101,20 +117,20 @@ Action Config::ReadKeybind(
                     if (isRestricted)
                         restricted.push_back(key);
                     else
-                        keyBind.push_back(key);
+                        keys.push_back(key);
                 }
             }
 
-            return Action(actionType, keyBind, restricted);
+            return Action(keybind.type, keys, restricted);
         }
     }
 
     std::vector<std::string> allTokens;
 
-    for (int k : defaultkeyBind)
+    for (int k : keybind.defaultKeys)
         allTokens.push_back(KeyToString(k));
 
-    for (int k : defaultRestricted)
+    for (int k : keybind.defaultRestricted)
         allTokens.push_back("!" + KeyToString(k));
 
     std::string finalStr;
@@ -124,9 +140,9 @@ Action Config::ReadKeybind(
             finalStr += " + ";
     }
 
-    ini[section][name] = finalStr;
+    ini[keybind.section][keybind.name] = finalStr;
 
-    return Action(actionType, defaultkeyBind, defaultRestricted);
+    return Action(keybind.type, keybind.defaultKeys, keybind.defaultRestricted);
 }
 
 bool Config::findDllPath(HMODULE hModule) {
@@ -145,7 +161,6 @@ bool Config::findDllPath(HMODULE hModule) {
 
     return true;
 }
-
 
 int Config::ParseKey(std::string key) {
     std::transform(key.begin(), key.end(), key.begin(), ::toupper);

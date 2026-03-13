@@ -1,7 +1,6 @@
 #pragma once
 #include <windows.h>
 #include <string>
-#include <filesystem>
 #include <type_traits>
 
 #include "mini/ini.h"
@@ -17,10 +16,18 @@ public:
         const char* name;
         Action::Type type;
         std::vector<int> defaultKeys;
-        std::vector<int> defaultModifiers = {};
+        std::vector<int> defaultRestricted = {};
     };
 
+    bool Initialize(HMODULE hModule);
+    void Reload(ActionManager& actionManager, FreeCamera& freeCamera);
+
+    bool CreateModDirectory();
+
 private:
+    mINI::INIFile file = mINI::INIFile("");
+    mINI::INIStructure ini;
+
     std::string dllPath = "";
     std::string configFilePath = "";
     std::string configDirPath = "";
@@ -44,55 +51,13 @@ private:
         {"keybinds", "scroll_camera_speed_modifier", Action::Type::ScroolCameraSpeedModifier, {}, { VK_CONTROL }},
     };
 
-public:
-    bool Initialize(HMODULE hModule);
-    void Reload(ActionManager& actionManager, FreeCamera& freeCamera);
-	bool CreateModDirectory();
+    bool findDllPath(HMODULE hModule);
 
     template<typename T>
-    T ReadValue(const std::string& section, const std::string& name, T defaultValue, mINI::INIStructure& ini) {
-        if (ini.has(section)) {
-            auto& collection = ini[section];
-            if (collection.has(name)) {
-                if (std::is_same<T, int>::value) {
-                    return std::stoi(collection[name]);
-                }
-                else if (std::is_same<T, float>::value) {
-                    return std::stof(collection[name]);
-                }
-                else {
-                    Logger::Warn("Unsupported config ReadValue type for [%s] %s, using default value", section.c_str(), name.c_str());
-                }
-            }
-        }
+    T ReadValue(const std::string& section, const std::string& name, T defaultValue);
 
-        ini[section][name] = std::to_string(defaultValue);
-        return defaultValue;
-    }
+    Action ReadKeybind(const Keybind& keybind);
 
-    Action ReadKeybind(std::string section, std::string name, Action::Type actionType, const std::vector<int>& defaultkeyBind, mINI::INIStructure& ini) {
-        const std::vector<int> empty;
-        return ReadKeybind(section, name, actionType, defaultkeyBind, empty, ini);
-    }
-
-    Action ReadKeybind(
-        std::string section,
-        std::string name,
-        Action::Type actionType,
-        const std::vector<int>& defaultkeyBind,
-        const std::vector<int>& defaultRestricted,
-        mINI::INIStructure& ini
-    );
-
-    const std::vector<Keybind>& GetKeybinds() const { return keybinds; }
-    const std::string& GetDllPath() const { return dllPath; }
-	const std::string& GetConfigFilePath() const { return configFilePath; }
-	const std::string& GetConfigDirPath() const { return configDirPath; }
-	const std::string& GetConfigDirectoryName() const { return configDirectoryName; }
-	const std::string& GetConfigFileName() const { return configFileName; }
-
-private:
-    bool findDllPath(HMODULE hModule);
     int ParseKey(std::string key);
     std::string KeyToString(int key);
 
