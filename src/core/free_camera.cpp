@@ -96,7 +96,7 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
     }
 
     if (isFreezeEntities) FreezeEntities(true);
-    FreezePlayer(true);
+    if (isFreezePlayer) FreezePlayer(true);
 
     speed = defaultSpeed;
     velocity = float3(0);
@@ -105,7 +105,7 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
     CopyPositionAndFov(freeCamera, playerCamera);
     CopyRotation(freeCamera, playerCamera);
 
-	rend->EnableFreecam();
+	rend->EnableFreecam(isDisablePlayerControls);
     isEnabled = true;
 	Logger::Info("Free camera enabled");
 }
@@ -121,7 +121,7 @@ void FreeCamera::DisableCamera(GameData::GameRend* rend) {
     }
 
     if (isFreezeEntities) FreezeEntities(false);
-	FreezePlayer(false);
+    if (isFreezePlayer) FreezePlayer(false);
 
     isEnabled = false;
 	Logger::Info("Free camera disabled");
@@ -159,10 +159,12 @@ void FreeCamera::FreezeEntities(bool enabled) {
         return;
     }
 
+	GameData::ChrIns* player = players->player0;
+
     const size_t length = world->GetEntityListLenght();
 	Logger::Info("Set FreezeEntity = %d to %zu entities", enabled, length);
     for (size_t i = 0; i < length; ++i) {
         GameData::ChrIns* entity = world->begin[i];
-        if (entity) FreezeEntity(entity, enabled);
+        if (entity && entity != player) FreezeEntity(entity, enabled);
     }
 }

@@ -24,6 +24,8 @@ public:
 	void SetIsSprinting(bool enabled) { isSprinting = enabled; }
     void SetHideHud(bool enabled) { isHideHud = enabled; }
     void SetFreezeEntities(bool enabled) { isFreezeEntities = enabled; }
+	void SetFreezePlayer(bool enabled) { isFreezePlayer = enabled; }
+	void SetDisablePlayerControls(bool enabled) { isDisablePlayerControls = enabled; }
     void SetSmoothCamera(bool enabled) { isSmoothCamera = enabled; }
 
 	void AddSpeed(float delta) { SetSpeed(speed + delta); }
@@ -43,8 +45,11 @@ private:
     float zoomVelocity = 0.0f;
 	bool isSprinting = false;
     std::byte savedHudOption = std::byte(2);
+
 	bool isHideHud = true;
 	bool isFreezeEntities = true;
+	bool isFreezePlayer = true;
+	bool isDisablePlayerControls = true;
 	bool isSmoothCamera = true;
 
     bool isEnabled = false;

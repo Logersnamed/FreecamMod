@@ -2,6 +2,8 @@
 
 #include <filesystem>
 
+#include "utils/math.h"
+
 bool Config::Initialize(HMODULE hModule) {
     if (!findDllPath(hModule)) return false;
 
@@ -32,14 +34,18 @@ void Config::Reload(ActionManager &actionManager, FreeCamera &freeCamera) {
     bool fileExists = file.read(ini);
 
     Logger::Enable(ReadValue("mod", "debug_console", 0));
-    freeCamera.SetDefaultSpeed(ReadValue("settings", "default_camera_speed", 10.0f));
-    freeCamera.SetSpeedMult(ReadValue("settings", "speed_multiplier", 2.5f));
-    freeCamera.SetZoomSpeed(ReadValue("settings", "zoom_speed", 0.7f));
-    freeCamera.SetMinFov(ReadValue("settings", "min_fov(in radians)", 0.0001f));
-    freeCamera.SetMaxFov(ReadValue("settings", "max_fov(in radians)", 2.71f));
-    freeCamera.SetHideHud(ReadValue("settings", "hide_hud", 1));
-    freeCamera.SetFreezeEntities(ReadValue("settings", "freeze_entities", 1));
-    freeCamera.SetSmoothCamera(ReadValue("settings", "smooth_camera", 1));
+
+    freeCamera.SetHideHud(ReadValue("freecam", "hide_hud", 1));
+    freeCamera.SetFreezeEntities(ReadValue("freecam", "freeze_entities", 1));
+    freeCamera.SetFreezePlayer(ReadValue("freecam", "freeze_player", 1));
+    freeCamera.SetDisablePlayerControls(ReadValue("freecam", "disable_player_controls", 1));
+    freeCamera.SetSmoothCamera(ReadValue("freecam", "smooth_camera", 1));
+
+    freeCamera.SetDefaultSpeed(ReadValue("camera_settings", "default_speed", 10.0f));
+    freeCamera.SetSpeedMult(ReadValue("camera_settings", "speed_multiplier", 2.5f));
+    freeCamera.SetZoomSpeed(ReadValue("camera_settings", "zoom_speed", 0.7f));
+    freeCamera.SetMinFov(Math::toRadians(ReadValue("camera_settings", "min_fov", Math::radToDegrees(0.0001f))));
+    freeCamera.SetMaxFov(Math::toRadians(ReadValue("camera_settings", "max_fov", Math::radToDegrees(2.71f))));
 
     for (const Keybind& keybind : keybinds) {
         actionManager.BindAction(ReadKeybind(keybind));

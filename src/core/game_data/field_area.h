@@ -30,7 +30,9 @@ namespace GameData {
 
 		bool IsFreecamEnabled() const { return freeCameraMode != FreecamMode::Disabled; }
 		void DisableFreecam() { freeCameraMode = FreecamMode::Disabled; }
-		void EnableFreecam() { freeCameraMode = FreecamMode::EnabledUpdating; }
+		void EnableFreecam(bool isDisablePlayerControls) { 
+			 freeCameraMode = isDisablePlayerControls ? FreecamMode::EnabledUpdating : FreecamMode::Fixed;
+		}
 	};
 
 	struct FieldArea {

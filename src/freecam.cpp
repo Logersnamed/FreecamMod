@@ -35,7 +35,7 @@ void Freecam::Run() {
     if (!Initialize()) return;
 
     while (isRunning) {
-        if (actionManager.IsJustPressed(Action::Type::ExitMod)) break;
+        if (actionManager.IsPressed(Action::Type::ExitMod)) break;
         Sleep(10);
     }
 }

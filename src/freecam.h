@@ -15,8 +15,6 @@ public:
     void Run();
     void Dispose();
 
-    HMODULE GetModule() const noexcept { return hModule; };
-
 private:
     HMODULE hModule{};
     FreeCamera freeCamera{};
