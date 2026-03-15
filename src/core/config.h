@@ -37,6 +37,7 @@ private:
     const std::vector<Keybind> keybinds = {
         {"keybinds", "toggle", Action::Type::Toggle, { VK_F1 }},
         {"keybinds", "reload_config", Action::Type::ReloadConfig, { VK_F5 }},
+        {"keybinds", "reset_settings", Action::Type::ResetSettings, { 'R'}},
         {"keybinds", "exit_mod", Action::Type::ExitMod, { VK_DELETE }},
         {"keybinds", "move_forward", Action::Type::MoveForward, { 'W' }},
         {"keybinds", "move_backward", Action::Type::MoveBackward, { 'S' }},

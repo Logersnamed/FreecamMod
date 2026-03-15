@@ -3,13 +3,30 @@
 
 namespace GameData {
 #pragma pack(push, 1)
+	struct ChrDataFlags {
+		uint8_t noDead : 1;					// 0
+		uint8_t noDamage : 1;
+		uint8_t unk2 : 1;
+		uint8_t unk3 : 1;
+		uint8_t unk4 : 1;
+		uint8_t unk5 : 1;
+		uint8_t unk6 : 1;
+		uint8_t unk7 : 1;
+	};
+
+	struct ChrData {
+		char pad[0x19B];
+		ChrDataFlags flags;
+	};
+
 	struct ChrBehavior {
 		char pad[0x17C8];
 		float animationSpeed;				// 0x17C8
 	};
 
 	struct ChrModules {
-		char pad[0x28];
+		ChrData* chrData;
+		char pad[0x28 - 8];
 		ChrBehavior* chrBehavior;			// 0x28
 	};
 

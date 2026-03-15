@@ -36,12 +36,14 @@ void Config::Reload(ActionManager &actionManager, FreeCamera &freeCamera) {
     Logger::Enable(ReadValue("mod", "debug_console", 0));
 
     freeCamera.SetHideHud(ReadValue("freecam", "hide_hud", 1));
-    freeCamera.SetFreezeGame(ReadValue("freecam", "freeze_game(beta)", 0));
     freeCamera.SetFreezeEntities(ReadValue("freecam", "freeze_entities", 1));
     freeCamera.SetFreezePlayer(ReadValue("freecam", "freeze_player", 1));
     freeCamera.SetDisablePlayerControls(ReadValue("freecam", "disable_player_controls", 1));
     freeCamera.SetSmoothCamera(ReadValue("freecam", "smooth_camera", 1));
-    freeCamera.SetOnlyFreezeAnim(ReadValue("freecam", "only_freeze_animation", 0));
+
+    freeCamera.SetOnlyFreezeAnim(ReadValue("freecam_beta", "only_freeze_animation", 0));
+    freeCamera.SetFreezeGame(ReadValue("freecam_beta", "freeze_game", 0));
+    freeCamera.SetResetCameraSettings(ReadValue("freecam_beta", "reset_camera_settings", 1));
 
     freeCamera.SetSensitivity(ReadValue("camera_settings", "sensitivity", 0.001f));
     freeCamera.SetDefaultSpeed(ReadValue("camera_settings", "default_speed", 10.0f));

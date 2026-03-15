@@ -44,7 +44,7 @@ void FreeCamera::UpdatePosition(GameData::Camera* camera, float dt) {
 }
 
 void FreeCamera::UpdateRotation(GameData::Camera* freeCamera, GameData::Camera* playerCamera, float dt) {
-    if (!isFreezeGame) {
+    if (!isFreezeGame && isResetCameraSettings) {
         CopyRotation(freeCamera, playerCamera);
         return;
     }
@@ -93,6 +93,19 @@ void FreeCamera::UpdateZoomVelocity(float dt) {
     if (std::abs(zoomVelocity) < 0.001f) zoomVelocity = 0;
 }
 
+void FreeCamera::ResetSettings(GameData::GameRend* gameRend) {
+    GameData::Camera* freeCamera = gameRend->csDebugCam;
+    GameData::Camera* playerCamera = gameRend->csPersCam1;
+    if (!freeCamera || !playerCamera) return;
+    ResetSettings(freeCamera, playerCamera);
+}
+
+void FreeCamera::ResetSettings(GameData::Camera* freeCamera, GameData::Camera* playerCamera) {
+    CopyPositionAndFov(freeCamera, playerCamera);
+    CopyRotation(freeCamera, playerCamera);
+    speed = defaultSpeed;
+}
+
 float FreeCamera::ComputeZoomFactor(float fov) {
 	const float min_fov = 0.00001, max_fov = 3.14f;
     float t = Math::clamp((fov - min_fov) / (max_fov - min_fov));
@@ -124,12 +137,13 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
         }
     }
 
-    speed = defaultSpeed;
     velocity = float3(0);
     zoomVelocity = 0.0f;
 
-    CopyPositionAndFov(freeCamera, playerCamera);
-    CopyRotation(freeCamera, playerCamera);
+    if (isResetCameraSettings || isFristEnabled) {
+        ResetSettings(freeCamera, playerCamera);
+        isFristEnabled = false;
+    }
 
     if (isFreezeGame) {
         GameDataManager::PauseGame(true);
@@ -181,6 +195,8 @@ void FreeCamera::FreezeEntity(GameData::ChrIns* entity, bool enabled) {
         entity->flags2.noUpdate = enabled;
     }
     entity->flags1.noHit = enabled;
+    entity->chrModules->chrData->flags.noDamage = enabled;
+    entity->chrModules->chrData->flags.noDead = enabled;
 }
 
 void FreeCamera::FreezePlayer(bool enabled) {

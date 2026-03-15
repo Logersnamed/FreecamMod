@@ -13,6 +13,7 @@ public:
     void EnableCamera(GameData::GameRend* rend);
     void DisableCamera(GameData::GameRend* rend);
     void DisableCamera();
+    void ResetSettings(GameData::GameRend* gameRend);
 
 	void SetSpeedMult(float newMult) { speedMult = max(newMult, 0.0f); }
     void SetDefaultSpeed(float newSpeed) { defaultSpeed = max(newSpeed, 0.0f); }
@@ -29,6 +30,7 @@ public:
 	void SetDisablePlayerControls(bool enabled) { isDisablePlayerControls = enabled; }
     void SetSmoothCamera(bool enabled) { isSmoothCamera = enabled; }
     void SetOnlyFreezeAnim(bool enabled) { isOnlyFreezeAnim = enabled; }
+    void SetResetCameraSettings(bool enabled) { isResetCameraSettings = enabled; }
 
     void SetSensitivity(float sens) { mouseSensitivity = sens; }
     void SetMouseDeltaX(int x) { mouseDeltaX = x; }
@@ -59,8 +61,10 @@ private:
 	bool isDisablePlayerControls = true;
 	bool isSmoothCamera = true;
     bool isOnlyFreezeAnim = false;
+    bool isResetCameraSettings = false;
 
     bool isEnabled = false;
+    bool isFristEnabled = true;
 
     float mouseSensitivity = 0.001f;
 	float yaw = 0.0f;
@@ -73,6 +77,8 @@ private:
     void UpdateFov(GameData::Camera* camera, float dt);
 	void UpdateVelocity(float dt);
 	void UpdateZoomVelocity(float dt);
+
+    void ResetSettings(GameData::Camera* freeCamera, GameData::Camera* playerCamera);
 
     void CopyPositionAndFov(GameData::Camera* toCamera, GameData::Camera* fromCamera);
     void CopyRotation(GameData::Camera* toCamera, GameData::Camera* fromCamera);

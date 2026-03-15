@@ -12,6 +12,7 @@ public:
 	enum Type : int8_t {
 		Toggle,
 		ReloadConfig,
+		ResetSettings,
 		ExitMod,
 		MoveForward,
 		MoveBackward,
