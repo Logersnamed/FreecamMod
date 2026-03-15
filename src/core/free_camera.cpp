@@ -138,7 +138,12 @@ void FreeCamera::DisableCamera() {
 }
 
 void FreeCamera::FreezeEntity(GameData::ChrIns* entity, bool enabled) {
+    if (isOnlyFreezeAnim) {
+        entity->chrModules->chrBehavior->animationSpeed = !enabled;
+    }
+    else {
     entity->flags2.noUpdate = enabled;
+    }
     entity->flags1.noHit = enabled;
 }
 

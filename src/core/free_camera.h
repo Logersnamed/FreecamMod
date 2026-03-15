@@ -27,6 +27,7 @@ public:
 	void SetFreezePlayer(bool enabled) { isFreezePlayer = enabled; }
 	void SetDisablePlayerControls(bool enabled) { isDisablePlayerControls = enabled; }
     void SetSmoothCamera(bool enabled) { isSmoothCamera = enabled; }
+    void SetOnlyFreezeAnim(bool enabled) { isOnlyFreezeAnim = enabled; }
 
 	void AddSpeed(float delta) { SetSpeed(speed + delta); }
 	void AddVelocity(const float3& delta) { velocity += delta; }
@@ -51,6 +52,7 @@ private:
 	bool isFreezePlayer = true;
 	bool isDisablePlayerControls = true;
 	bool isSmoothCamera = true;
+    bool isOnlyFreezeAnim = false;
 
     bool isEnabled = false;
 

@@ -3,6 +3,16 @@
 
 namespace GameData {
 #pragma pack(push, 1)
+	struct ChrBehavior {
+		char pad[0x17C8];
+		float animationSpeed;				// 0x17C8
+	};
+
+	struct ChrModules {
+		char pad[0x28];
+		ChrBehavior* chrBehavior;			// 0x28
+	};
+
 	struct ChrFlags1 {
 		uint8_t unk0 : 1;					// 0
 		uint8_t unk1 : 1;
@@ -20,7 +30,9 @@ namespace GameData {
 	};
 
 	struct ChrIns {
-		char pad1[0x530];
+		char pad1[0x190];
+		ChrModules* chrModules;				// 0x190
+		char pad2[0x398];
 		ChrFlags1 flags1;					// 0x530
 		ChrFlags2 flags2;					// 0x531
 	};
@@ -44,9 +56,13 @@ namespace GameData {
 	};
 #pragma pack(pop)
 
+	ASSERT_OFFSET(ChrBehavior, animationSpeed, 0x17C8);
+	ASSERT_OFFSET(ChrModules, chrBehavior, 0x28);
+
 	ASSERT_SIZE(ChrFlags1, 1);
 	ASSERT_SIZE(ChrFlags2, 1);
  
+	ASSERT_OFFSET(ChrIns, chrModules, 0x190);
 	ASSERT_OFFSET(ChrIns, flags1, 0x530);
 	ASSERT_OFFSET(ChrIns, flags2, 0x531);
 
