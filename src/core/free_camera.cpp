@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+#include "ModUtils.h"
+
 #include "core/game_data_manager.h"
 #include "utils/types.h"
 #include "utils/debug.h"
@@ -20,8 +22,8 @@ void FreeCamera::Update(GameData::GameRend* gameRend, float deltaTime) {
     GameData::Camera* playerCamera = gameRend->csPersCam1;
     if (!freeCamera || !playerCamera) return;
 
-    CopyRotation(freeCamera, playerCamera);
 	UpdatePosition(freeCamera, deltaTime);
+	UpdateRotation(freeCamera, playerCamera, deltaTime);
 	UpdateFov(freeCamera, deltaTime);
 
     UpdateVelocity(deltaTime);
@@ -39,6 +41,33 @@ void FreeCamera::UpdatePosition(GameData::Camera* camera, float dt) {
     if (vel.lengthSquared() > 1.0f) vel = vel.normalized();
 
     camera->matrix.position() += vel * cameraSpeed;
+}
+
+void FreeCamera::UpdateRotation(GameData::Camera* freeCamera, GameData::Camera* playerCamera, float dt) {
+    if (!isFreezeGame) {
+        CopyRotation(freeCamera, playerCamera);
+        return;
+    }
+    
+    const float sens = mouseSensitivity * freeCamera->fov;
+    yaw += mouseDeltaX * sens;
+    pitch += mouseDeltaY * sens;
+
+    const float limit = 1.55f;
+    pitch = std::clamp(pitch, -limit, limit);
+
+    float cy = std::cos(yaw);
+    float sy = std::sin(yaw);
+    float cp = std::cos(pitch);
+    float sp = std::sin(pitch);
+
+    float3 forward = { sy * cp, -sp, cy * cp };
+    float3 right = { cy, 0.0f, -sy };
+    float3 up = right.cross(forward, right);
+
+    freeCamera->matrix.c0 = float4(right, 0.0f);
+    freeCamera->matrix.c1 = float4(up, 0.0f);
+    freeCamera->matrix.c2 = float4(forward, 0.0f);
 }
 
 void FreeCamera::UpdateFov(GameData::Camera* camera, float dt) {
@@ -95,15 +124,21 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
         }
     }
 
-    if (isFreezeEntities) FreezeEntities(true);
-    if (isFreezePlayer) FreezePlayer(true);
-
     speed = defaultSpeed;
     velocity = float3(0);
     zoomVelocity = 0.0f;
 
     CopyPositionAndFov(freeCamera, playerCamera);
     CopyRotation(freeCamera, playerCamera);
+
+    if (isFreezeGame) {
+        GameDataManager::PauseGame(true);
+        float3 forward = freeCamera->matrix.c2.xyz();
+        yaw = std::atan2(forward.x, forward.z);
+        pitch = std::asin(-forward.y);
+    }
+    if (isFreezeEntities) FreezeEntities(true);
+    if (isFreezePlayer) FreezePlayer(true);
 
 	rend->EnableFreecam(isDisablePlayerControls);
     isEnabled = true;
@@ -120,6 +155,7 @@ void FreeCamera::DisableCamera(GameData::GameRend* rend) {
         }
     }
 
+    if (isFreezeGame) GameDataManager::PauseGame(false);
     if (isFreezeEntities) FreezeEntities(false);
     if (isFreezePlayer) FreezePlayer(false);
 
@@ -142,7 +178,7 @@ void FreeCamera::FreezeEntity(GameData::ChrIns* entity, bool enabled) {
         entity->chrModules->chrBehavior->animationSpeed = !enabled;
     }
     else {
-    entity->flags2.noUpdate = enabled;
+        entity->flags2.noUpdate = enabled;
     }
     entity->flags1.noHit = enabled;
 }

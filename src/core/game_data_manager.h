@@ -10,11 +10,16 @@ public:
 	static GameData::OptionData* GetOptionData();
 	static GameData::ChrIns* GetPlayer();
 
+	static void PauseGame(bool enabled);
+
 private:
+	static bool isGamePaused;
+
 	struct SigEntry {
 		const char* name;
 		const char* pattern;
 		const int offset;
+		bool isRip;
 		bool isObligatory;
 		uintptr_t* result;
 	};
@@ -22,4 +27,5 @@ private:
 	static uintptr_t fieldAreaSig;
 	static uintptr_t worldChrManSig;
 	static uintptr_t gameDataManSig;
+	static uintptr_t gamePauseSig;
 };

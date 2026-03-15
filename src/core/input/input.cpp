@@ -12,7 +12,7 @@ Input::Input() {
 }
 
 LRESULT __stdcall Input::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-	instance->Update(uMsg, wParam);
+	instance->Update(hWnd, uMsg, wParam, lParam);
 
 	return CallWindowProcW((WNDPROC)Input::origWndProc, hWnd, uMsg, wParam, lParam);
 }
@@ -38,7 +38,7 @@ void Input::UnhookWndProc(HWND hWnd) {
     SetWindowLongPtrW(hWnd, GWLP_WNDPROC, origWndProc);
 }
 
-void Input::Update(UINT uMsg, WPARAM wParam) {
+void Input::Update(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     int key = -1;
 
     switch (uMsg) {
@@ -66,6 +66,36 @@ void Input::Update(UINT uMsg, WPARAM wParam) {
         case WM_XBUTTONDOWN: case WM_XBUTTONUP:
             key = (HIWORD(wParam) == XBUTTON1) ? VK_XBUTTON1 : VK_XBUTTON2;
             break;
+    
+        case WM_MOUSEMOVE: {
+            if (!windowWidth || !windowHeight) {
+                if (!GetWindowSize(hWnd)) break;
+            }
+
+            CURSORINFO ci = {};
+            ci.cbSize = sizeof(ci);
+            if (GetCursorInfo(&ci) && (ci.flags & CURSOR_SHOWING)) {
+                Logger::Info("Cursor is visible");
+                break;
+            }
+            else {
+                Logger::Info("Cursor is hidden");
+            }
+
+             POINT p;
+             p.x = GET_X_LPARAM(lParam);
+             p.y = GET_Y_LPARAM(lParam);
+
+             int dx = p.x - windowWidth / 2;
+             int dy = p.y - windowHeight / 2;
+
+             mouseDeltaX = (float)dx;
+             mouseDeltaY = (float)dy;
+             break;
+        }
+        case WM_SIZE:
+            GetWindowSize(hWnd);
+            break;
 
         case WM_MOUSEWHEEL:
             scrollDelta += GET_WHEEL_DELTA_WPARAM(wParam) / 120.0f;
@@ -90,10 +120,23 @@ void Input::Update(UINT uMsg, WPARAM wParam) {
     }
 }
 
+bool Input::GetWindowSize(HWND hWnd) {
+    RECT rect;
+    if (GetClientRect(hWnd, &rect)) {
+        windowWidth = rect.right - rect.left;
+        windowHeight = rect.bottom - rect.top;
+        Logger::Info("Window resized: (%d, %d)", windowWidth, windowHeight);
+        return true;
+    }
+    return false;
+}
+
 void Input::Reset() {
     memset(keyPressed, 0, sizeof(keyPressed));
     memset(keyReleased, 0, sizeof(keyReleased));
     scrollDelta = 0.0f;
+    mouseDeltaX = 0;
+    mouseDeltaY = 0;
 }
 
 bool Input::IsPressed(int vk) const {

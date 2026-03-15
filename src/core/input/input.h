@@ -1,5 +1,6 @@
 #pragma once
 #include <windows.h>
+#include <windowsx.h>
 #include <cstdint>
 
 class Input {
@@ -17,17 +18,28 @@ public:
 
     float GetScrollDelta() const { return scrollDelta; }
 
+    int GetMouseDeltaX() const { return mouseDeltaX; }
+    int GetMouseDeltaY() const { return mouseDeltaY; }
+
 private:
     static Input* instance;
     static LONG_PTR origWndProc;
 
     static LRESULT __stdcall WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-    void Update(UINT uMsg, WPARAM wParam);
+    void Update(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+    bool GetWindowSize(HWND hWnd);
 
     bool keyDown[256] = {};
     bool keyPressed[256] = {};
     bool keyReleased[256] = {};
 
     float scrollDelta = 0.0f;
+
+    int mouseDeltaX = 0;
+    int mouseDeltaY = 0;
+
+    int windowWidth = 0;
+    int windowHeight = 0;
 };

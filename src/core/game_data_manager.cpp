@@ -1,25 +1,31 @@
 #include "core/game_data_manager.h"
 
+#include "ModUtils.h"
+
 #include "utils/memory.h"
 #include "utils/debug.h"
 
 uintptr_t GameDataManager::fieldAreaSig = 0;
 uintptr_t GameDataManager::worldChrManSig = 0;
 uintptr_t GameDataManager::gameDataManSig = 0;
+uintptr_t GameDataManager::gamePauseSig = 0;
+bool GameDataManager::isGamePaused = false;
 
 bool GameDataManager::Init() {
 	Logger::Info("Initializing GameDataManager...");
 
 	SigEntry signatures[] = {
-		{ "fieldAreaSig",   "48 8B 3D ? ? ? ? 49 8B D8 48 8B F2 4C 8B F1 48 85 FF", 3, true, &fieldAreaSig },
-		{ "worldChrManSig", "48 8B 05 ? ? ? ? 48 85 C0 74 0F 48 39 88",				3, true, &worldChrManSig },
-		{ "gameDataManSig",	"48 8B 05 ? ? ? ? 48 85 C0 74 05 48 8B 40 58 C3 C3",	3, false, &gameDataManSig },
+		{ "fieldAreaSig",   "48 8B 3D ? ? ? ? 49 8B D8 48 8B F2 4C 8B F1 48 85 FF", 3, true, true, &fieldAreaSig },
+		{ "worldChrManSig", "48 8B 05 ? ? ? ? 48 85 C0 74 0F 48 39 88",				3, true, true, &worldChrManSig },
+		{ "gameDataManSig",	"48 8B 05 ? ? ? ? 48 85 C0 74 05 48 8B 40 58 C3 C3",	3, true, false, &gameDataManSig },
+		{ "gamePauseSig",	"0F 84 ? ? ? ? C6 ? ? ? ? ? 00 ? 8D ? ? ? ? ? ? 89 ? ? 89 ? ? ? 8B ? ? ? ? ? ? 85 ? 75", 
+			1, false, false, &gamePauseSig },
 	};
 
 	for (SigEntry& sig : signatures) {
 		Logger::Info("Scanning for %s, AOB: \"%s\", offset: %d...", sig.name, sig.pattern, sig.offset);
 
-		*sig.result = Signature(sig.pattern).Scan().Add(sig.offset).Rip().As<uint64_t>();
+		*sig.result = Signature(sig.pattern).Scan().Add(sig.offset).Rip(sig.isRip).As<uintptr_t>();
 		if (!*sig.result) {
 			if (sig.isObligatory) {
 				Logger::Error("Failed to find %s", sig.name);
@@ -72,4 +78,23 @@ GameData::OptionData* GameDataManager::GetOptionData() {
 	if (!gameDataMan) return nullptr;
 
 	return gameDataMan->optionData;
+}
+
+void GameDataManager::PauseGame(bool enabled) {
+	if (!gamePauseSig) {
+		Logger::Warn("Game pausing is not possible, gamePauseSig wasn't found.");
+		return;
+	}
+
+	if (isGamePaused == enabled) return;
+
+	Logger::Info("Pausing Game...");
+	if (enabled) {
+		ModUtils::ReplaceExpectedBytesAtAddress(gamePauseSig, "84", "85");
+	}
+	else {
+		ModUtils::ReplaceExpectedBytesAtAddress(gamePauseSig, "85", "84");
+	}
+
+	isGamePaused = enabled;
 }

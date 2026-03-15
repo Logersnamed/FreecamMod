@@ -23,11 +23,16 @@ public:
 	void SetMaxFov(float newMaxFov) { maxFov = std::clamp(newMaxFov, MIN_FOV, MAX_FOV); }
 	void SetIsSprinting(bool enabled) { isSprinting = enabled; }
     void SetHideHud(bool enabled) { isHideHud = enabled; }
+    void SetFreezeGame(bool enabled) { isFreezeGame = enabled; }
     void SetFreezeEntities(bool enabled) { isFreezeEntities = enabled; }
 	void SetFreezePlayer(bool enabled) { isFreezePlayer = enabled; }
 	void SetDisablePlayerControls(bool enabled) { isDisablePlayerControls = enabled; }
     void SetSmoothCamera(bool enabled) { isSmoothCamera = enabled; }
     void SetOnlyFreezeAnim(bool enabled) { isOnlyFreezeAnim = enabled; }
+
+    void SetSensitivity(float sens) { mouseSensitivity = sens; }
+    void SetMouseDeltaX(int x) { mouseDeltaX = x; }
+    void SetMouseDeltaY(int y) { mouseDeltaY = y; }
 
 	void AddSpeed(float delta) { SetSpeed(speed + delta); }
 	void AddVelocity(const float3& delta) { velocity += delta; }
@@ -39,8 +44,8 @@ private:
     float defaultSpeed = 10.0f;
     float speed = defaultSpeed;
     float zoomSpeed = 0.7f;
+    const float MIN_FOV = 0.000126f, MAX_FOV = 3.13f;
     float minFov = MIN_FOV, maxFov = MAX_FOV;
-	const float MIN_FOV = 0.000126f, MAX_FOV = 3.13f;
     
     float3 velocity = float3(0);
     float zoomVelocity = 0.0f;
@@ -48,6 +53,7 @@ private:
     std::byte savedHudOption = std::byte(2);
 
 	bool isHideHud = true;
+    bool isFreezeGame = false;
 	bool isFreezeEntities = true;
 	bool isFreezePlayer = true;
 	bool isDisablePlayerControls = true;
@@ -56,7 +62,14 @@ private:
 
     bool isEnabled = false;
 
+    float mouseSensitivity = 0.001f;
+	float yaw = 0.0f;
+	float pitch = 0.0f;
+    float mouseDeltaX = 0;
+    float mouseDeltaY = 0;
+
     void UpdatePosition(GameData::Camera* camera, float dt);
+    void UpdateRotation(GameData::Camera* freeCamera, GameData::Camera* playerCamera, float dt);
     void UpdateFov(GameData::Camera* camera, float dt);
 	void UpdateVelocity(float dt);
 	void UpdateZoomVelocity(float dt);

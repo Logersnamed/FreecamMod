@@ -110,9 +110,10 @@ public:
 	 * \brief Gets the relative displacement of the pointer
 	 * \return MemoryHandle
 	 */
-	constexpr MemoryHandle Rip()
+	constexpr MemoryHandle Rip(bool isRip)
 	{
 		if (!m_Ptr) return MemoryHandle(nullptr);
+		if (!isRip) return MemoryHandle(m_Ptr);
 		return Add(As<std::int32_t&>()).Add(4U);
 	}
 

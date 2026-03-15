@@ -14,6 +14,7 @@
 #include <iomanip>
 
 #include "mini/ini.h"
+#include "utils/debug.h"
 
 namespace ModUtils
 {
@@ -436,7 +437,8 @@ namespace ModUtils
 
 			if (aob1Tokens[i] != aob2Tokens[i])
 			{
-				ShowErrorPopup("Bytes do not match!");
+				Logger::Info("Byts do not match!");
+				// ShowErrorPopup("Bytes do not match!");
 				return false;
 			}
 		}

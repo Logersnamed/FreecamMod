@@ -41,6 +41,9 @@ void Freecam::Run() {
 }
 
 void Freecam::ProcessInput(GameData::GameRend* gameRend) {
+	freeCamera.SetMouseDeltaX(input.GetMouseDeltaX());
+	freeCamera.SetMouseDeltaY(input.GetMouseDeltaY());
+
     if (actionManager.IsJustPressed(Action::Type::ReloadConfig)) config.Reload(actionManager, freeCamera);
     if (actionManager.IsJustPressed(Action::Type::Toggle)) freeCamera.Toggle(gameRend);
 
