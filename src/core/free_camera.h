@@ -29,7 +29,7 @@ public:
 	void SetFreezePlayer(bool enabled) { isFreezePlayer = enabled; }
 	void SetDisablePlayerControls(bool enabled) { isDisablePlayerControls = enabled; }
     void SetSmoothCamera(bool enabled) { isSmoothCamera = enabled; }
-    void SetOnlyFreezeAnim(bool enabled) { isOnlyFreezeAnim = enabled; }
+    void SetZeroSpeedFreeze(bool enabled) { isZeroSpeedFreeze = enabled; }
     void SetResetCameraSettings(bool enabled) { isResetCameraSettings = enabled; }
 
     void SetSensitivity(float sens) { mouseSensitivity = sens; }
@@ -60,7 +60,7 @@ private:
 	bool isFreezePlayer = true;
 	bool isDisablePlayerControls = true;
 	bool isSmoothCamera = true;
-    bool isOnlyFreezeAnim = false;
+    bool isZeroSpeedFreeze = false;
     bool isResetCameraSettings = false;
 
     bool isEnabled = false;

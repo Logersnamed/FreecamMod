@@ -75,13 +75,13 @@ void Logger::Print(const char* level, WORD color, const char* fmt, va_list args)
         logFile.flush();
     }
 
-    if (enabled && initialized) {
-        SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
+    if (initialized) {
+        //SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
 
-        PrintTime();
-        printf("[%s] %s\n", level, buffer);
+        //PrintTime();
+        printf("Freecam > [%s] %s\n", level, buffer);
 
-        SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);
+        //SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);
     }
 }
 

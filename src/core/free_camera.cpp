@@ -48,22 +48,24 @@ void FreeCamera::UpdateRotation(GameData::Camera* freeCamera, GameData::Camera* 
         CopyRotation(freeCamera, playerCamera);
         return;
     }
-    
+
+    if (!mouseDeltaX && !mouseDeltaY) return;
+
     const float sens = mouseSensitivity * freeCamera->fov;
     yaw += mouseDeltaX * sens;
     pitch += mouseDeltaY * sens;
 
-    const float limit = 1.55f;
-    pitch = std::clamp(pitch, -limit, limit);
+    const float pitchLimit = 1.55f;
+    pitch = std::clamp(pitch, -pitchLimit, pitchLimit);
 
-    float cy = std::cos(yaw);
+    float cy = std::cos(yaw);   
     float sy = std::sin(yaw);
     float cp = std::cos(pitch);
     float sp = std::sin(pitch);
 
     float3 forward = { sy * cp, -sp, cy * cp };
     float3 right = { cy, 0.0f, -sy };
-    float3 up = right.cross(forward, right);
+    float3 up = float3().cross(forward, right);
 
     freeCamera->matrix.c0 = float4(right, 0.0f);
     freeCamera->matrix.c1 = float4(up, 0.0f);
@@ -188,7 +190,7 @@ void FreeCamera::DisableCamera() {
 }
 
 void FreeCamera::FreezeEntity(GameData::ChrIns* entity, bool enabled) {
-    if (isOnlyFreezeAnim) {
+    if (isZeroSpeedFreeze) {
         entity->chrModules->chrBehavior->animationSpeed = !enabled;
     }
     else {

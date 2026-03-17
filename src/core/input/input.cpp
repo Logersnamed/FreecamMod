@@ -20,7 +20,7 @@ LRESULT __stdcall Input::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 bool Input::HookWndProc(HWND hWnd) {
     Logger::Info("Hooking WndProc...");
     if (!hWnd) {
-		Logger::Error("Failed to hook WndProc: Invalid window handle %d", hWnd);
+		Logger::Error("Failed to hook WndProc: Invalid window handle %p", hWnd);
         return false;
     }
     
@@ -44,6 +44,7 @@ void Input::Update(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_KILLFOCUS:
         case WM_ACTIVATEAPP:
+            isWindowFocused = (uMsg == WM_ACTIVATEAPP);
             if (!wParam) {
                 Reset();
                 memset(keyDown, 0, sizeof(keyDown));
@@ -72,26 +73,12 @@ void Input::Update(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 if (!GetWindowSize(hWnd)) break;
             }
 
-            CURSORINFO ci = {};
-            ci.cbSize = sizeof(ci);
-            if (GetCursorInfo(&ci) && (ci.flags & CURSOR_SHOWING)) {
-                Logger::Info("Cursor is visible");
-                break;
-            }
-            else {
-                Logger::Info("Cursor is hidden");
-            }
+            if (IsCursorVisible() || !isWindowFocused) break;
 
-             POINT p;
-             p.x = GET_X_LPARAM(lParam);
-             p.y = GET_Y_LPARAM(lParam);
+            mouseDeltaX = GET_X_LPARAM(lParam) - windowWidth / 2;
+            mouseDeltaY = GET_Y_LPARAM(lParam) - windowHeight / 2;
 
-             int dx = p.x - windowWidth / 2;
-             int dy = p.y - windowHeight / 2;
-
-             mouseDeltaX = (float)dx;
-             mouseDeltaY = (float)dy;
-             break;
+            break;
         }
         case WM_SIZE:
             GetWindowSize(hWnd);
@@ -120,12 +107,17 @@ void Input::Update(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     }
 }
 
+bool Input::IsCursorVisible() {
+    CURSORINFO ci = {};
+    ci.cbSize = sizeof(ci);
+    return GetCursorInfo(&ci) && (ci.flags & CURSOR_SHOWING);
+}
+
 bool Input::GetWindowSize(HWND hWnd) {
     RECT rect;
     if (GetClientRect(hWnd, &rect)) {
         windowWidth = rect.right - rect.left;
         windowHeight = rect.bottom - rect.top;
-        Logger::Info("Window resized: (%d, %d)", windowWidth, windowHeight);
         return true;
     }
     return false;

@@ -41,9 +41,8 @@ void Config::Reload(ActionManager &actionManager, FreeCamera &freeCamera) {
     freeCamera.SetDisablePlayerControls(ReadValue("freecam", "disable_player_controls", 1));
     freeCamera.SetSmoothCamera(ReadValue("freecam", "smooth_camera", 1));
 
-    freeCamera.SetOnlyFreezeAnim(ReadValue("freecam_beta", "only_freeze_animation", 0));
-    freeCamera.SetFreezeGame(ReadValue("freecam_beta", "freeze_game", 0));
-    freeCamera.SetResetCameraSettings(ReadValue("freecam_beta", "reset_camera_settings", 1));
+    freeCamera.SetFreezeGame(ReadValue("experimental", "freeze_game", 0));
+    freeCamera.SetResetCameraSettings(ReadValue("experimental", "reset_camera_settings", 1));
 
     freeCamera.SetSensitivity(ReadValue("camera_settings", "sensitivity", 0.001f));
     freeCamera.SetDefaultSpeed(ReadValue("camera_settings", "default_speed", 10.0f));
@@ -51,6 +50,8 @@ void Config::Reload(ActionManager &actionManager, FreeCamera &freeCamera) {
     freeCamera.SetZoomSpeed(ReadValue("camera_settings", "zoom_speed", 0.7f));
     freeCamera.SetMinFov(Math::toRadians(ReadValue("camera_settings", "min_fov", Math::radToDegrees(0.0001f))));
     freeCamera.SetMaxFov(Math::toRadians(ReadValue("camera_settings", "max_fov", Math::radToDegrees(2.71f))));
+
+    freeCamera.SetZeroSpeedFreeze(ReadValue("hidden", "freeze_by_setting_zero_speed", 0));
 
     for (const Keybind& keybind : keybinds) {
         actionManager.BindAction(ReadKeybind(keybind));
@@ -93,7 +94,7 @@ T Config::ReadValue(const std::string& section, const std::string& name, T defau
         }
     }
 
-    ini[section][name] = std::to_string(defaultValue);
+    if (section != "hidden") ini[section][name] = std::to_string(defaultValue);
     return defaultValue;
 }
 

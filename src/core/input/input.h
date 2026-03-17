@@ -30,6 +30,9 @@ private:
     void Update(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
     bool GetWindowSize(HWND hWnd);
+    bool IsCursorVisible();
+
+    bool isWindowFocused = false;
 
     bool keyDown[256] = {};
     bool keyPressed[256] = {};
