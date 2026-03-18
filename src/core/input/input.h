@@ -38,8 +38,8 @@ private:
     bool GetWindowSize(HWND hWnd);
     bool IsCursorVisible();
 
-    bool isWindowFocused = false;
-    bool isWindowJustFocused = false;
+    bool isWindowFocused = true;
+    bool isWindowJustFocused = true;
 
     bool keyDown[256] = {};
     bool keyPressed[256] = {};

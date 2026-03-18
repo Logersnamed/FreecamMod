@@ -46,8 +46,8 @@ void Freecam::Run() {
 }
 
 void Freecam::ProcessInput(GameData::GameRend* gameRend) {
-    if (actionManager.IsPressed(Action::Type::TiltLeft)) freeCamera.SetTiltXVeloctiy(-1.0f);
-    if (actionManager.IsPressed(Action::Type::TiltRight)) freeCamera.SetTiltXVeloctiy(1.0f);
+    if (actionManager.IsPressed(Action::Type::TiltLeft)) freeCamera.SetRollVeloctiy(1.0f);
+    if (actionManager.IsPressed(Action::Type::TiltRight)) freeCamera.SetRollVeloctiy(-1.0f);
 
 	freeCamera.SetMouseDeltaX(input.GetMouseDeltaX());
 	freeCamera.SetMouseDeltaY(input.GetMouseDeltaY());

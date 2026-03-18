@@ -38,6 +38,7 @@ public:
     void SetMouseDeltaX(int x) { mouseDeltaX = x; }
     void SetMouseDeltaY(int y) { mouseDeltaY = y; }
     void SetTiltXVeloctiy(float vel) { tiltXVelocity = vel; }
+    void SetRollVeloctiy(float vel) { rollVelocity = vel; }
     void SetTiltSpeed(float speed) { tiltSpeed = speed; }
 
     void SetInitHudValue(int value) { initHudValue = value; }
@@ -80,10 +81,12 @@ private:
 
     float tiltSpeed = 1.0f;
     float tiltXVelocity = 0.0f;
+    float rollVelocity = 0.0f;
 
     float mouseSensitivity = 0.001f;
 	float yaw = 0.0f;
 	float pitch = 0.0f;
+	float roll = 0.0f;
     float mouseDeltaX = 0;
     float mouseDeltaY = 0;
 

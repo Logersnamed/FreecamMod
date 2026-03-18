@@ -51,15 +51,17 @@ void FreeCamera::UpdateRotation(GameData::Camera* freeCamera, GameData::Camera* 
         return;
     }
 
-    if (!mouseDeltaX && !mouseDeltaY && !tiltXVelocity) return;
+    if (!mouseDeltaX && !mouseDeltaY && !tiltXVelocity && !rollVelocity) return;
 
     const float sens = mouseSensitivity * freeCamera->fov;
+
     yaw += (mouseDeltaX + tiltXVelocity * tiltSpeed * 100.0f * dt) * sens;
     pitch += mouseDeltaY * sens;
+    roll += rollVelocity * tiltSpeed * 100.0f * dt * sens;
 
     if (pitchLimit) pitch = std::clamp(pitch, -pitchLimit, pitchLimit);
 
-    float cy = std::cos(yaw);   
+    float cy = std::cos(yaw);
     float sy = std::sin(yaw);
     float cp = std::cos(pitch);
     float sp = std::sin(pitch);
@@ -68,11 +70,21 @@ void FreeCamera::UpdateRotation(GameData::Camera* freeCamera, GameData::Camera* 
     float3 right = { cy, 0.0f, -sy };
     float3 up = float3().cross(forward, right);
 
+    float cr = std::cos(roll);
+    float sr = std::sin(roll);
+
+    float3 r = right * cr + up * sr;
+    float3 u = up * cr - right * sr;
+
+    right = r;
+    up = u;
+
     freeCamera->matrix.c0 = float4(right, 0.0f);
     freeCamera->matrix.c1 = float4(up, 0.0f);
     freeCamera->matrix.c2 = float4(forward, 0.0f);
 
     tiltXVelocity = 0;
+    rollVelocity = 0;
 }
 
 void FreeCamera::UpdateFov(GameData::Camera* camera, float dt) {
@@ -120,6 +132,11 @@ void FreeCamera::ResetSettings(GameData::Camera* freeCamera, GameData::Camera* p
     CopyPositionAndFov(freeCamera, playerCamera);
     CopyRotation(freeCamera, playerCamera);
     speed = defaultSpeed;
+
+    float3 forward = freeCamera->matrix.c2.xyz();
+    yaw = std::atan2(forward.x, forward.z);
+    pitch = std::asin(-forward.y);
+    roll = 0;
 }
 
 float FreeCamera::ComputeZoomFactor(float fov) {
