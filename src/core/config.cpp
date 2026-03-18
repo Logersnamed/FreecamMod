@@ -43,6 +43,7 @@ void Config::Reload(ActionManager &actionManager, FreeCamera &freeCamera) {
 
     freeCamera.SetFreezeGame(ReadValue("experimental", "freeze_game", 0));
     freeCamera.SetResetCameraSettings(ReadValue("experimental", "reset_camera_settings", 1));
+    freeCamera.SetAlwaysUseCustomRotation(ReadValue("experimental", "always_use_custom_rotation", 0));
 
     freeCamera.SetSensitivity(ReadValue("camera_settings", "sensitivity", 0.001f));
     freeCamera.SetDefaultSpeed(ReadValue("camera_settings", "default_speed", 10.0f));

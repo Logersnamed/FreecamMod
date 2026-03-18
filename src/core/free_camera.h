@@ -31,6 +31,7 @@ public:
     void SetSmoothCamera(bool enabled) { isSmoothCamera = enabled; }
     void SetZeroSpeedFreeze(bool enabled) { isZeroSpeedFreeze = enabled; }
     void SetResetCameraSettings(bool enabled) { isResetCameraSettings = enabled; }
+    void SetAlwaysUseCustomRotation(bool enabled) { isAlwaysUseCustomRotation = enabled; }
 
     void SetSensitivity(float sens) { mouseSensitivity = sens; }
     void SetPitchLimit(float limit) { pitchLimit = limit; }
@@ -64,6 +65,7 @@ private:
 	bool isSmoothCamera = true;
     bool isZeroSpeedFreeze = false;
     bool isResetCameraSettings = false;
+    bool isAlwaysUseCustomRotation = false;
 
     bool isEnabled = false;
     bool isFristEnabled = true;
@@ -85,6 +87,8 @@ private:
     void CopyPositionAndFov(GameData::Camera* toCamera, GameData::Camera* fromCamera);
     void CopyRotation(GameData::Camera* toCamera, GameData::Camera* fromCamera);
     float ComputeZoomFactor(float fov);
+
+    bool IsUsingCustomRotation() const { return isFreezeGame || !isResetCameraSettings || isAlwaysUseCustomRotation; }
 
 	void FreezeEntity(GameData::ChrIns* entity, bool enabled);
     void FreezePlayer(bool enabled);

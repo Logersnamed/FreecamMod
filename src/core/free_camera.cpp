@@ -44,7 +44,7 @@ void FreeCamera::UpdatePosition(GameData::Camera* camera, float dt) {
 }
 
 void FreeCamera::UpdateRotation(GameData::Camera* freeCamera, GameData::Camera* playerCamera, float dt) {
-    if (!isFreezeGame && isResetCameraSettings) {
+    if (!IsUsingCustomRotation()) {
         CopyRotation(freeCamera, playerCamera);
         return;
     }
@@ -141,17 +141,19 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
     velocity = float3(0);
     zoomVelocity = 0.0f;
 
+
     if (isResetCameraSettings || isFristEnabled) {
         ResetSettings(freeCamera, playerCamera);
         isFristEnabled = false;
     }
 
-    if (isFreezeGame) {
-        GameDataManager::PauseGame(true);
+    if (IsUsingCustomRotation()) {
         float3 forward = freeCamera->matrix.c2.xyz();
         yaw = std::atan2(forward.x, forward.z);
         pitch = std::asin(-forward.y);
     }
+
+    if (isFreezeGame) GameDataManager::PauseGame(true);
     if (isFreezeEntities) FreezeEntities(true);
     if (isFreezePlayer) FreezePlayer(true);
 
