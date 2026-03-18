@@ -49,6 +49,6 @@ public:
 		std::ofstream file(path);
 		if (!file.is_open()) return;
 
-		file << (enabled ? '1' : '0') << hudValue;
+		file << (enabled ? '1' : '0') << (hudValue == -1 ? '0' : hudValue);
 	}
 };
