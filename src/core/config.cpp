@@ -47,6 +47,7 @@ void Config::Reload(ActionManager &actionManager, FreeCamera &freeCamera) {
 
     freeCamera.SetSensitivity(ReadValue("camera_settings", "sensitivity", 0.001f));
     freeCamera.SetDefaultSpeed(ReadValue("camera_settings", "default_speed", 10.0f));
+    freeCamera.SetTiltSpeed(ReadValue("camera_settings", "tilt_speed", 10.0f));
     freeCamera.SetSpeedMult(ReadValue("camera_settings", "speed_multiplier", 2.5f));
     freeCamera.SetZoomSpeed(ReadValue("camera_settings", "zoom_speed", 0.7f));
     freeCamera.SetMinFov(Math::toRadians(ReadValue("camera_settings", "min_fov_degrees", 0.005f)));

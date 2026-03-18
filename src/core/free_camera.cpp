@@ -49,10 +49,10 @@ void FreeCamera::UpdateRotation(GameData::Camera* freeCamera, GameData::Camera* 
         return;
     }
 
-    if (!mouseDeltaX && !mouseDeltaY) return;
+    if (!mouseDeltaX && !mouseDeltaY && !tiltXVelocity) return;
 
     const float sens = mouseSensitivity * freeCamera->fov;
-    yaw += mouseDeltaX * sens;
+    yaw += (mouseDeltaX + tiltXVelocity * tiltSpeed * 100.0f * dt) * sens;
     pitch += mouseDeltaY * sens;
 
     if (pitchLimit) pitch = std::clamp(pitch, -pitchLimit, pitchLimit);
@@ -69,6 +69,8 @@ void FreeCamera::UpdateRotation(GameData::Camera* freeCamera, GameData::Camera* 
     freeCamera->matrix.c0 = float4(right, 0.0f);
     freeCamera->matrix.c1 = float4(up, 0.0f);
     freeCamera->matrix.c2 = float4(forward, 0.0f);
+
+    tiltXVelocity = 0;
 }
 
 void FreeCamera::UpdateFov(GameData::Camera* camera, float dt) {

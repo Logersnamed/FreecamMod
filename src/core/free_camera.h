@@ -37,6 +37,8 @@ public:
     void SetPitchLimit(float limit) { pitchLimit = limit; }
     void SetMouseDeltaX(int x) { mouseDeltaX = x; }
     void SetMouseDeltaY(int y) { mouseDeltaY = y; }
+    void SetTiltXVeloctiy(float vel) { tiltXVelocity = vel; }
+    void SetTiltSpeed(float speed) { tiltSpeed = speed; }
 
 	void AddSpeed(float delta) { SetSpeed(speed + delta); }
 	void AddVelocity(const float3& delta) { velocity += delta; }
@@ -69,6 +71,9 @@ private:
 
     bool isEnabled = false;
     bool isFristEnabled = true;
+
+    float tiltSpeed = 1.0f;
+    float tiltXVelocity = 0.0f;
 
     float mouseSensitivity = 0.001f;
 	float yaw = 0.0f;

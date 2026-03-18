@@ -23,6 +23,8 @@ public:
 		Sprint,
 		ZoomIn,
 		ZoomOut,
+		TiltLeft,
+		TiltRight,
 		ScrollZoomModifier,
 		ScroolCameraSpeedModifier,
 		Count

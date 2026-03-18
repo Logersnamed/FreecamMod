@@ -48,6 +48,8 @@ private:
         {"keybinds", "sprint", Action::Type::Sprint, { VK_LBUTTON }},
         {"keybinds", "zoom_in", Action::Type::ZoomIn, { VK_OEM_PLUS }},
         {"keybinds", "zoom_out", Action::Type::ZoomOut, { VK_OEM_MINUS }},
+        {"keybinds", "tilt_left", Action::Type::TiltLeft, { 'Q' }},
+        {"keybinds", "tilt_right", Action::Type::TiltRight, { 'E'}},
         {"keybinds", "scroll_zoom_modifier", Action::Type::ScrollZoomModifier, { VK_CONTROL }},
         {"keybinds", "scroll_camera_speed_modifier", Action::Type::ScroolCameraSpeedModifier, {}, { VK_CONTROL }},
     };
