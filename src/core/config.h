@@ -23,6 +23,7 @@ public:
     void Reload(ActionManager& actionManager, FreeCamera& freeCamera);
 
     bool CreateModDirectory();
+    std::string GetConfigDirPath() const { return configDirPath; }
 
 private:
     mINI::INIFile file = mINI::INIFile("");

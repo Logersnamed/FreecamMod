@@ -40,6 +40,8 @@ public:
     void SetTiltXVeloctiy(float vel) { tiltXVelocity = vel; }
     void SetTiltSpeed(float speed) { tiltSpeed = speed; }
 
+    void SetInitHudValue(int value) { initHudValue = value; }
+
 	void AddSpeed(float delta) { SetSpeed(speed + delta); }
 	void AddVelocity(const float3& delta) { velocity += delta; }
 	void AddZoomVelocity(float delta) { zoomVelocity += delta; }
@@ -58,6 +60,7 @@ private:
     float zoomVelocity = 0.0f;
 	bool isSprinting = false;
     std::byte savedHudOption = std::byte(2);
+    int initHudValue = -1;
 
 	bool isHideHud = true;
     bool isFreezeGame = false;
@@ -87,6 +90,7 @@ private:
 	void UpdateVelocity(float dt);
 	void UpdateZoomVelocity(float dt);
 
+    void RestoreSettings();
     void ResetSettings(GameData::Camera* freeCamera, GameData::Camera* playerCamera);
 
     void CopyPositionAndFov(GameData::Camera* toCamera, GameData::Camera* fromCamera);

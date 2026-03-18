@@ -5,11 +5,13 @@
 #include "ModUtils.h"
 
 #include "core/game_data_manager.h"
+#include "core/settings_backup.h"
 #include "utils/types.h"
 #include "utils/debug.h"
 #include "utils/math.h"
 
 void FreeCamera::Update(GameData::GameRend* gameRend, float deltaTime) {
+    RestoreSettings();
     if (!gameRend->IsFreecamEnabled()) {
         if (isEnabled) {
 			Logger::Info("Freecam wasn't disabled properly, disabling now...");
@@ -103,6 +105,17 @@ void FreeCamera::ResetSettings(GameData::GameRend* gameRend) {
     ResetSettings(freeCamera, playerCamera);
 }
 
+void FreeCamera::RestoreSettings() {
+    if (initHudValue == -1) return;
+
+    GameData::OptionData* optionData = GameDataManager::GetOptionData();
+    if (optionData) {
+        Logger::Info("Restored hud from %d to %d", optionData->HUD, initHudValue);
+        optionData->HUD = std::byte(initHudValue);
+        initHudValue = -1;
+    }
+}
+
 void FreeCamera::ResetSettings(GameData::Camera* freeCamera, GameData::Camera* playerCamera) {
     CopyPositionAndFov(freeCamera, playerCamera);
     CopyRotation(freeCamera, playerCamera);
@@ -140,6 +153,9 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
         }
     }
 
+    SettingsBackup::SetEnabled(1);
+    SettingsBackup::SaveHudValue((int)savedHudOption);
+
     velocity = float3(0);
     zoomVelocity = 0.0f;
 
@@ -173,6 +189,8 @@ void FreeCamera::DisableCamera(GameData::GameRend* rend) {
             optionData->HUD = savedHudOption;
         }
     }
+
+    SettingsBackup::SetEnabled(0);
 
     if (isFreezeGame) GameDataManager::PauseGame(false);
     if (isFreezeEntities) FreezeEntities(false);

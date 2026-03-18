@@ -6,6 +6,7 @@
 #include "ModUtils.h"
 
 #include "core/game_data_manager.h"
+#include "core/settings_backup.h"
 #include "utils/time.h"
 #include "utils/memory.h"
 #include "utils/debug.h"
@@ -27,6 +28,10 @@ bool Freecam::Initialize() {
     if (!actionManager.Initialize(&input)) return false;
     if (!input.HookWndProc(ModUtils::muWindow)) return false;
     if (!HookFunctions()) return false;
+
+    SettingsBackup::SetFolderPath(config.GetConfigDirPath());
+    freeCamera.SetInitHudValue(SettingsBackup::RestoreHudValue());
+    SettingsBackup::SetEnabled(0);
 
     return true;
 }
