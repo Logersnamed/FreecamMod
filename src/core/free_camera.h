@@ -33,6 +33,7 @@ public:
     void SetResetCameraSettings(bool enabled) { isResetCameraSettings = enabled; }
 
     void SetSensitivity(float sens) { mouseSensitivity = sens; }
+    void SetPitchLimit(float limit) { pitchLimit = limit; }
     void SetMouseDeltaX(int x) { mouseDeltaX = x; }
     void SetMouseDeltaY(int y) { mouseDeltaY = y; }
 
@@ -48,6 +49,7 @@ private:
     float zoomSpeed = 0.7f;
     const float MIN_FOV = 0.000126f, MAX_FOV = 3.13f;
     float minFov = MIN_FOV, maxFov = MAX_FOV;
+    float pitchLimit = 1.55f;
     
     float3 velocity = float3(0);
     float zoomVelocity = 0.0f;

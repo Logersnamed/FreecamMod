@@ -55,8 +55,7 @@ void FreeCamera::UpdateRotation(GameData::Camera* freeCamera, GameData::Camera* 
     yaw += mouseDeltaX * sens;
     pitch += mouseDeltaY * sens;
 
-    const float pitchLimit = 1.55f;
-    pitch = std::clamp(pitch, -pitchLimit, pitchLimit);
+    if (pitchLimit) pitch = std::clamp(pitch, -pitchLimit, pitchLimit);
 
     float cy = std::cos(yaw);   
     float sy = std::sin(yaw);

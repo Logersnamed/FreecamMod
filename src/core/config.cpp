@@ -48,8 +48,9 @@ void Config::Reload(ActionManager &actionManager, FreeCamera &freeCamera) {
     freeCamera.SetDefaultSpeed(ReadValue("camera_settings", "default_speed", 10.0f));
     freeCamera.SetSpeedMult(ReadValue("camera_settings", "speed_multiplier", 2.5f));
     freeCamera.SetZoomSpeed(ReadValue("camera_settings", "zoom_speed", 0.7f));
-    freeCamera.SetMinFov(Math::toRadians(ReadValue("camera_settings", "min_fov", Math::radToDegrees(0.0001f))));
-    freeCamera.SetMaxFov(Math::toRadians(ReadValue("camera_settings", "max_fov", Math::radToDegrees(2.71f))));
+    freeCamera.SetMinFov(Math::toRadians(ReadValue("camera_settings", "min_fov_degrees", 0.005f)));
+    freeCamera.SetMaxFov(Math::toRadians(ReadValue("camera_settings", "max_fov_degrees", 155.0f)));
+    freeCamera.SetPitchLimit(Math::toRadians(ReadValue("camera_settings", "pitch_limit_degrees", 88.0f)));
 
     freeCamera.SetZeroSpeedFreeze(ReadValue("hidden", "freeze_by_setting_zero_speed", 0));
 
