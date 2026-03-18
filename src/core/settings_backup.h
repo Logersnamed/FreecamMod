@@ -48,7 +48,11 @@ public:
 		if (path.empty()) return;
 		std::ofstream file(path);
 		if (!file.is_open()) return;
+		if (hudValue > 2 || hudValue < 0) {
+			file << '0' << '0';
+			return;
+		}
 
-		file << (enabled ? '1' : '0') << (hudValue == -1 ? '0' : hudValue);
+		file << (enabled ? '1' : '0') << hudValue;
 	}
 };
