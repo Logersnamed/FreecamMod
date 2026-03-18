@@ -21,6 +21,12 @@ public:
     int GetMouseDeltaX() const { return mouseDeltaX; }
     int GetMouseDeltaY() const { return mouseDeltaY; }
 
+    bool IsWindowJustGetFocused() { 
+        bool isJustFocused = isWindowJustFocused;
+        isWindowJustFocused = false;
+        return isJustFocused;
+    }
+
 private:
     static Input* instance;
     static LONG_PTR origWndProc;
@@ -33,6 +39,7 @@ private:
     bool IsCursorVisible();
 
     bool isWindowFocused = false;
+    bool isWindowJustFocused = false;
 
     bool keyDown[256] = {};
     bool keyPressed[256] = {};

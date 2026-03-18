@@ -49,7 +49,10 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend) {
 
     if (actionManager.IsJustPressed(Action::Type::ReloadConfig)) config.Reload(actionManager, freeCamera);
     if (actionManager.IsJustPressed(Action::Type::ResetSettings)) freeCamera.ResetSettings(gameRend);
-    if (actionManager.IsJustPressed(Action::Type::Toggle)) freeCamera.Toggle(gameRend);
+    if (actionManager.IsJustPressed(Action::Type::Toggle)) {
+        config.Reload(actionManager, freeCamera);
+        freeCamera.Toggle(gameRend);
+    }
 
     freeCamera.SetIsSprinting(actionManager.IsPressed(Action::Type::Sprint));
     
@@ -69,6 +72,10 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend) {
 }
 
 void Freecam::Update(GameData::GameRend* gameRend) {
+    if (input.IsWindowJustGetFocused()) {
+        config.Reload(actionManager, freeCamera);
+    }
+
     ProcessInput(gameRend);
     freeCamera.Update(gameRend, std::clamp(Time::DeltaTime(), 0.0f, 0.4f));
     input.Reset();

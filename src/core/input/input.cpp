@@ -45,6 +45,8 @@ void Input::Update(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         case WM_KILLFOCUS:
         case WM_ACTIVATEAPP:
             isWindowFocused = (uMsg == WM_ACTIVATEAPP);
+            isWindowJustFocused = isWindowFocused;
+
             if (!wParam) {
                 Reset();
                 memset(keyDown, 0, sizeof(keyDown));
