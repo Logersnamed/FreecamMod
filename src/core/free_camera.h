@@ -74,6 +74,9 @@ private:
 
     bool isEnabled = false;
     bool isFristEnabled = true;
+    bool areEntitesFreezed = false;
+    bool isPlayerFreezed = false;
+    bool isHudHidden = false;
 
     float tiltSpeed = 1.0f;
     float tiltXVelocity = 0.0f;

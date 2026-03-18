@@ -150,6 +150,7 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
         if (optionData) {
             savedHudOption = optionData->HUD;
             optionData->HUD = std::byte(0);
+            isHudHidden = true;
         }
     }
 
@@ -183,18 +184,19 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
 void FreeCamera::DisableCamera(GameData::GameRend* rend) {
 	rend->DisableFreecam();
 
-    if (isHideHud) {
+    if (isHudHidden) {
         GameData::OptionData* optionData = GameDataManager::GetOptionData();
         if (optionData) {
             optionData->HUD = savedHudOption;
+            isHudHidden = false;
         }
     }
 
     SettingsBackup::SetEnabled(0);
 
-    if (isFreezeGame) GameDataManager::PauseGame(false);
-    if (isFreezeEntities) FreezeEntities(false);
-    if (isFreezePlayer) FreezePlayer(false);
+    GameDataManager::PauseGame(false);
+    FreezeEntities(false);
+    FreezePlayer(false);
 
     isEnabled = false;
 	Logger::Info("Free camera disabled");
@@ -223,11 +225,17 @@ void FreeCamera::FreezeEntity(GameData::ChrIns* entity, bool enabled) {
 }
 
 void FreeCamera::FreezePlayer(bool enabled) {
+    if (isPlayerFreezed == enabled) return;
+    isPlayerFreezed = enabled;
+
     GameData::ChrIns* player = GameDataManager::GetPlayer();
     if (player) FreezeEntity(player, enabled);
 }
 
 void FreeCamera::FreezeEntities(bool enabled) {
+    if (areEntitesFreezed == enabled) return;
+    areEntitesFreezed = enabled;
+
     GameData::WorldChrMan* world = GameDataManager::GetWorldChrMan();
     if (!world) return;
 

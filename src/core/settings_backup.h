@@ -11,7 +11,7 @@ class SettingsBackup {
 
 public:
 	static void SetFolderPath(const std::string& folderPath) {
-		if (path.empty()) return;
+		if (folderPath.empty()) return;
 		path = folderPath + "settings.bak";
 	}
 
