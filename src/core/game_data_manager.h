@@ -13,8 +13,6 @@ public:
 	static void PauseGame(bool enabled);
 
 private:
-	static bool isGamePaused;
-
 	struct SigEntry {
 		const char* name;
 		const char* pattern;
@@ -24,8 +22,10 @@ private:
 		uintptr_t* result;
 	};
 
-	static uintptr_t fieldAreaSig;
-	static uintptr_t worldChrManSig;
-	static uintptr_t gameDataManSig;
-	static uintptr_t gamePauseSig;
+	static inline bool isGamePaused = false;
+
+	static inline uintptr_t fieldAreaSig{};
+	static inline uintptr_t worldChrManSig{};
+	static inline uintptr_t gameDataManSig{};
+	static inline uintptr_t gamePauseSig{};
 };

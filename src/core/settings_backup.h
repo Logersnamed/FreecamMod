@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <optional>
 
 #include "utils/debug.h"
 
@@ -15,22 +16,22 @@ public:
 		path = folderPath + "settings.bak";
 	}
 
-	static int RestoreHudValue() {
-		if (path.empty()) return -1;
+	static std::optional<int> RestoreHudValue() {
+		if (path.empty()) return std::nullopt;
 
 		std::ifstream file(path);
-		if (!file.is_open()) return -1;
+		if (!file.is_open()) return std::nullopt;
 
 		std::string data;
-		if (!std::getline(file, data)) return -1;
+		if (!std::getline(file, data)) return std::nullopt;
 
-		if (data.size() < 2) return -1;
+		if (data.size() < 2) return std::nullopt;
 
 		bool isEnabled = data[0] == '1';
 		int hudValue = data[1] - '0';
 
-		if (!isEnabled) return -1;
-		if (hudValue > 2 || hudValue < 0) return -1;
+		if (!isEnabled) return std::nullopt;
+		if (hudValue > 2 || hudValue < 0) return std::nullopt;
 
 		return hudValue;
 	}

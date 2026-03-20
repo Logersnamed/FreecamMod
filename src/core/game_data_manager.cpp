@@ -5,12 +5,6 @@
 #include "utils/memory.h"
 #include "utils/debug.h"
 
-uintptr_t GameDataManager::fieldAreaSig = 0;
-uintptr_t GameDataManager::worldChrManSig = 0;
-uintptr_t GameDataManager::gameDataManSig = 0;
-uintptr_t GameDataManager::gamePauseSig = 0;
-bool GameDataManager::isGamePaused = false;
-
 bool GameDataManager::Init() {
 	Logger::Info("Initializing GameDataManager...");
 

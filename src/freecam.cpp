@@ -1,6 +1,7 @@
 #include "freecam.h"
 
 #include <algorithm>
+#include <optional>
 
 #include "MinHook.h"
 #include "ModUtils.h"
@@ -30,7 +31,9 @@ bool Freecam::Initialize() {
     if (!HookFunctions()) return false;
 
     SettingsBackup::SetFolderPath(config.GetConfigDirPath());
-    freeCamera.SetInitHudValue(SettingsBackup::RestoreHudValue());
+    if (auto restoredHudValue = SettingsBackup::RestoreHudValue()) {
+        freeCamera.SetInitHudValue(restoredHudValue.value());
+    }
     SettingsBackup::SetEnabled(0);
 
     return true;
