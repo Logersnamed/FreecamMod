@@ -35,8 +35,7 @@ public:
 
     void SetSensitivity(float sens) { mouseSensitivity = sens; }
     void SetPitchLimit(float limit) { pitchLimit = limit; }
-    void SetMouseDeltaX(int x) { mouseDeltaX = x; }
-    void SetMouseDeltaY(int y) { mouseDeltaY = y; }
+    void SetMouseDelta(int2 delta) { mouseDelta = delta; }
     void SetTiltXVeloctiy(float vel) { tiltXVelocity = vel; }
     void SetRollVeloctiy(float vel) { rollVelocity = vel; }
     void SetTiltSpeed(float speed) { tiltSpeed = speed; }
@@ -87,8 +86,7 @@ private:
 	float yaw = 0.0f;
 	float pitch = 0.0f;
 	float roll = 0.0f;
-    float mouseDeltaX = 0;
-    float mouseDeltaY = 0;
+    int2 mouseDelta = 0;
 
     void UpdatePosition(GameData::Camera* camera, float dt);
     void UpdateRotation(GameData::Camera* freeCamera, GameData::Camera* playerCamera, float dt);

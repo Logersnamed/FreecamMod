@@ -1,6 +1,14 @@
 #pragma once
 #include <cmath>
 
+struct int2 {
+    int x, y;
+
+    constexpr int2() : x(0), y(0) {}
+    constexpr int2(int t) : x(t), y(t) {}
+    constexpr int2(int x, int y) : x(x), y(y) {}
+};
+
 struct float3 {
     float x, y, z;
 

@@ -51,13 +51,13 @@ void FreeCamera::UpdateRotation(GameData::Camera* freeCamera, GameData::Camera* 
         return;
     }
 
-    if (!mouseDeltaX && !mouseDeltaY && !tiltXVelocity && !rollVelocity) return;
+    if (!mouseDelta.x && !mouseDelta.y && !tiltXVelocity && !rollVelocity) return;
 
     const float sens = mouseSensitivity * freeCamera->fov;
 
-    yaw += (mouseDeltaX + tiltXVelocity * tiltSpeed * 100.0f * dt) * sens;
-    pitch += mouseDeltaY * sens;
-    roll += rollVelocity * tiltSpeed * 100.0f * dt * sens;
+    yaw += (mouseDelta.x + tiltXVelocity * tiltSpeed * 100.0f * dt) * sens;
+    pitch += mouseDelta.y * sens;
+    roll += rollVelocity * tiltSpeed * 100.0f * dt * mouseSensitivity;
 
     if (pitchLimit) pitch = std::clamp(pitch, -pitchLimit, pitchLimit);
 

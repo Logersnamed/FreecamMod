@@ -4,11 +4,9 @@
 #include <fstream>
 #include <optional>
 
-#include "utils/debug.h"
-
 class SettingsBackup {
-	inline static std::string path{};
-	inline static int savedHudValue = -1;
+	static inline std::string path{};
+	static inline int savedHudValue = -1;
 
 public:
 	static void SetFolderPath(const std::string& folderPath) {

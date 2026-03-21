@@ -106,7 +106,7 @@ Action Config::ReadKeybind(const Keybind& keybind) {
         auto& collection = ini[keybind.section];
 
         if (collection.has(keybind.name)) {
-            std::vector<int> keys;
+            std::vector<int> keyStates;
             std::vector<int> restricted;
 
             std::string keyBindStr = collection[keybind.name];
@@ -132,11 +132,11 @@ Action Config::ReadKeybind(const Keybind& keybind) {
                     if (isRestricted)
                         restricted.push_back(key);
                     else
-                        keys.push_back(key);
+                        keyStates.push_back(key);
                 }
             }
 
-            return Action(keybind.type, keys, restricted);
+            return Action(keybind.type, keyStates, restricted);
         }
     }
 

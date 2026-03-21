@@ -8,7 +8,7 @@
 
 class Freecam {
 public:
-    static Freecam* instance;
+    static inline Freecam* instance = nullptr;
 
     Freecam(HMODULE hModule);
     bool Initialize();

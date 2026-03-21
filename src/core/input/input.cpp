@@ -4,9 +4,6 @@
 
 #include "utils/debug.h"
 
-Input* Input::instance = nullptr;
-LONG_PTR Input::origWndProc = 0;
-
 Input::Input() {
 	instance = this;
 }
@@ -44,41 +41,32 @@ void Input::Update(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_KILLFOCUS:
         case WM_ACTIVATEAPP:
-            isWindowFocused = (uMsg == WM_ACTIVATEAPP);
-            isWindowJustFocused = isWindowFocused;
-
-            if (!wParam) {
-                Reset();
-                memset(keyDown, 0, sizeof(keyDown));
-            }
+            OnWindowFocus(uMsg == WM_ACTIVATEAPP, wParam);
             return;
 
         case WM_KEYDOWN:
         case WM_SYSKEYDOWN:
-            key = (int)wParam;
-            break;
-
         case WM_KEYUP:
-        case WM_SYSKEYUP:
+        case WM_SYSKEYUP: 
             key = (int)wParam;
             break;
-
+            
         case WM_LBUTTONDOWN: case WM_LBUTTONUP: key = VK_LBUTTON; break;
         case WM_RBUTTONDOWN: case WM_RBUTTONUP: key = VK_RBUTTON; break;
         case WM_MBUTTONDOWN: case WM_MBUTTONUP: key = VK_MBUTTON; break;
         case WM_XBUTTONDOWN: case WM_XBUTTONUP:
             key = (HIWORD(wParam) == XBUTTON1) ? VK_XBUTTON1 : VK_XBUTTON2;
             break;
-    
+
         case WM_MOUSEMOVE: {
-            if (!windowWidth || !windowHeight) {
+            if (!halfWindowSize.x || !halfWindowSize.y) {
                 if (!GetWindowSize(hWnd)) break;
             }
 
             if (IsCursorVisible() || !isWindowFocused) break;
 
-            mouseDeltaX = GET_X_LPARAM(lParam) - windowWidth / 2;
-            mouseDeltaY = GET_Y_LPARAM(lParam) - windowHeight / 2;
+            mouseDelta.x = GET_X_LPARAM(lParam) - halfWindowSize.x;
+            mouseDelta.y = GET_Y_LPARAM(lParam) - halfWindowSize.y;
 
             break;
         }
@@ -97,15 +85,18 @@ void Input::Update(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         uMsg == WM_LBUTTONDOWN || uMsg == WM_RBUTTONDOWN ||
         uMsg == WM_MBUTTONDOWN || uMsg == WM_XBUTTONDOWN);
 
-    if (isDown) {
-        if (!keyDown[key])
-            keyPressed[key] = true;
+    keyStates[key].Update(isDown);
+}
 
-        keyDown[key] = true;
-    }
-    else {
-        keyReleased[key] = true;
-        keyDown[key] = false;
+void Input::OnWindowFocus(bool getFocused, WPARAM wParam) {
+    isWindowFocused = getFocused;
+    isWindowJustFocused = getFocused;
+
+    if (!wParam) {
+        Reset();
+        for (KeyState& key : keyStates) {
+            key.down = false;
+        }
     }
 }
 
@@ -118,29 +109,19 @@ bool Input::IsCursorVisible() {
 bool Input::GetWindowSize(HWND hWnd) {
     RECT rect;
     if (GetClientRect(hWnd, &rect)) {
-        windowWidth = rect.right - rect.left;
-        windowHeight = rect.bottom - rect.top;
+        halfWindowSize.x = (rect.right - rect.left) / 2;
+        halfWindowSize.y = (rect.bottom - rect.top) / 2;
         return true;
     }
     return false;
 }
 
 void Input::Reset() {
-    memset(keyPressed, 0, sizeof(keyPressed));
-    memset(keyReleased, 0, sizeof(keyReleased));
+    for (KeyState& key : keyStates) {
+        key.pressed = false;
+        key.released = false;
+    }
     scrollDelta = 0.0f;
-    mouseDeltaX = 0;
-    mouseDeltaY = 0;
-}
-
-bool Input::IsPressed(int vk) const {
-    return keyDown[vk];
-}
-
-bool Input::IsJustPressed(int vk) const {
-    return keyPressed[vk];
-}
-
-bool Input::IsReleased(int vk) const {
-    return keyReleased[vk];
+    mouseDelta = 0;
+    isWindowJustFocused = false;
 }

@@ -569,7 +569,7 @@ namespace ModUtils
 		}
 	}
 
-	static bool AreKeysPressed(std::vector<unsigned short> keys, bool trueWhileHolding = false, bool checkController = false)
+	static bool AreKeysPressed(std::vector<unsigned short> keyStates, bool trueWhileHolding = false, bool checkController = false)
 	{
 		static std::vector<std::vector<unsigned short>> notReleasedKeys;
 
@@ -581,7 +581,7 @@ namespace ModUtils
 			return false;
 		}
 
-		size_t numKeys = keys.size();
+		size_t numKeys = keyStates.size();
 		size_t numKeysBeingPressed = 0;
 
 		if (checkController)
@@ -592,7 +592,7 @@ namespace ModUtils
 				DWORD result = XInputGetState(controllerIndex, &state);
 				if (result == ERROR_SUCCESS)
 				{
-					for (auto key : keys)
+					for (auto key : keyStates)
 					{
 						if ((key & state.Gamepad.wButtons) == key)
 						{
@@ -604,7 +604,7 @@ namespace ModUtils
 		}
 		else
 		{
-			for (auto key : keys)
+			for (auto key : keyStates)
 			{
 				if (GetAsyncKeyState(key))
 				{
@@ -613,7 +613,7 @@ namespace ModUtils
 			}
 		}
 
-		auto iterator = std::find(notReleasedKeys.begin(), notReleasedKeys.end(), keys);
+		auto iterator = std::find(notReleasedKeys.begin(), notReleasedKeys.end(), keyStates);
 		bool keysBeingHeld = iterator != notReleasedKeys.end();
 		if (numKeysBeingPressed == numKeys)
 		{
@@ -626,7 +626,7 @@ namespace ModUtils
 			}
 			else
 			{
-				notReleasedKeys.push_back(keys);
+				notReleasedKeys.push_back(keyStates);
 			}
 		}
 		else

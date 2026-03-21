@@ -10,9 +10,8 @@
 #include "core/settings_backup.h"
 #include "utils/time.h"
 #include "utils/memory.h"
+#include "utils/types.h"
 #include "utils/debug.h"
-
-Freecam* Freecam::instance = nullptr;
 
 Freecam::Freecam(HMODULE hModule) : hModule(hModule) {
     instance = this;
@@ -43,40 +42,39 @@ void Freecam::Run() {
     if (!Initialize()) return;
 
     while (isRunning) {
-        if (actionManager.IsPressed(Action::Type::ExitMod)) break;
+        if (actionManager.IsPressed(Action::ExitMod)) break;
         Sleep(10);
     }
 }
 
 void Freecam::ProcessInput(GameData::GameRend* gameRend) {
-    if (actionManager.IsPressed(Action::Type::TiltLeft)) freeCamera.SetRollVeloctiy(1.0f);
-    if (actionManager.IsPressed(Action::Type::TiltRight)) freeCamera.SetRollVeloctiy(-1.0f);
+    if (actionManager.IsPressed(Action::TiltLeft)) freeCamera.SetRollVeloctiy(1.0f);
+    if (actionManager.IsPressed(Action::TiltRight)) freeCamera.SetRollVeloctiy(-1.0f);
 
-	freeCamera.SetMouseDeltaX(input.GetMouseDeltaX());
-	freeCamera.SetMouseDeltaY(input.GetMouseDeltaY());
+	freeCamera.SetMouseDelta(input.GetMouseDelta());
 
-    if (actionManager.IsJustPressed(Action::Type::ReloadConfig)) config.Reload(actionManager, freeCamera);
-    if (actionManager.IsJustPressed(Action::Type::ResetSettings)) freeCamera.ResetSettings(gameRend);
-    if (actionManager.IsJustPressed(Action::Type::Toggle)) {
+    if (actionManager.IsJustPressed(Action::ReloadConfig)) config.Reload(actionManager, freeCamera);
+    if (actionManager.IsJustPressed(Action::ResetSettings)) freeCamera.ResetSettings(gameRend);
+    if (actionManager.IsJustPressed(Action::Toggle)) {
         config.Reload(actionManager, freeCamera);
         freeCamera.Toggle(gameRend);
     }
 
-    freeCamera.SetIsSprinting(actionManager.IsPressed(Action::Type::Sprint));
+    freeCamera.SetIsSprinting(actionManager.IsPressed(Action::Sprint));
     
-    if (actionManager.IsPressed(Action::Type::MoveForward)) freeCamera.AddVelocity(float3::forward());
-    if (actionManager.IsPressed(Action::Type::MoveBackward)) freeCamera.AddVelocity(float3::back());
-    if (actionManager.IsPressed(Action::Type::MoveLeft)) freeCamera.AddVelocity(float3::left());
-    if (actionManager.IsPressed(Action::Type::MoveRight)) freeCamera.AddVelocity(float3::right());
+    if (actionManager.IsPressed(Action::MoveForward)) freeCamera.AddVelocity(float3::forward());
+    if (actionManager.IsPressed(Action::MoveBackward)) freeCamera.AddVelocity(float3::back());
+    if (actionManager.IsPressed(Action::MoveLeft)) freeCamera.AddVelocity(float3::left());
+    if (actionManager.IsPressed(Action::MoveRight)) freeCamera.AddVelocity(float3::right());
 
-    if (actionManager.IsPressed(Action::Type::MoveUp)) freeCamera.AddVelocity(float3::up());
-    if (actionManager.IsPressed(Action::Type::MoveDown)) freeCamera.AddVelocity(float3::down());
+    if (actionManager.IsPressed(Action::MoveUp)) freeCamera.AddVelocity(float3::up());
+    if (actionManager.IsPressed(Action::MoveDown)) freeCamera.AddVelocity(float3::down());
 
-    if (actionManager.IsPressed(Action::Type::ZoomIn)) freeCamera.AddZoomVelocity(-1.0f);
-    if (actionManager.IsPressed(Action::Type::ZoomOut)) freeCamera.AddZoomVelocity(1.0f);
+    if (actionManager.IsPressed(Action::ZoomIn)) freeCamera.AddZoomVelocity(-1.0f);
+    if (actionManager.IsPressed(Action::ZoomOut)) freeCamera.AddZoomVelocity(1.0f);
 
-    if (actionManager.IsPressed(Action::Type::ScrollZoomModifier)) freeCamera.AddZoomVelocity(-input.GetScrollDelta());
-    if (actionManager.IsPressed(Action::Type::ScroolCameraSpeedModifier)) freeCamera.AddSpeed(input.GetScrollDelta());
+    if (actionManager.IsPressed(Action::ScrollZoomModifier)) freeCamera.AddZoomVelocity(-input.GetScrollDelta());
+    if (actionManager.IsPressed(Action::ScroolCameraSpeedModifier)) freeCamera.AddSpeed(input.GetScrollDelta());
 }
 
 void Freecam::Update(GameData::GameRend* gameRend) {
