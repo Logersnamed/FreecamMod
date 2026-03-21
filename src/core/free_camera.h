@@ -36,7 +36,6 @@ public:
     void SetSensitivity(float sens) { mouseSensitivity = sens; }
     void SetPitchLimit(float limit) { pitchLimit = limit; }
     void SetMouseDelta(int2 delta) { mouseDelta = delta; }
-    void SetTiltXVeloctiy(float vel) { tiltXVelocity = vel; }
     void SetRollVeloctiy(float vel) { rollVelocity = vel; }
     void SetTiltSpeed(float speed) { tiltSpeed = speed; }
 
@@ -79,7 +78,6 @@ private:
     bool isHudHidden = false;
 
     float tiltSpeed = 1.0f;
-    float tiltXVelocity = 0.0f;
     float rollVelocity = 0.0f;
 
     float mouseSensitivity = 0.001f;
@@ -100,6 +98,8 @@ private:
     void CopyPositionAndFov(GameData::Camera* toCamera, GameData::Camera* fromCamera);
     void CopyRotation(GameData::Camera* toCamera, GameData::Camera* fromCamera);
     float ComputeZoomFactor(float fov);
+
+    void GetCameraPitchYaw(GameData::Camera* camera, float* _pitch, float* _yaw);
 
     bool IsUsingCustomRotation() const { return isFreezeGame || !isResetCameraSettings || isAlwaysUseCustomRotation; }
 

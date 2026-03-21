@@ -1,12 +1,29 @@
 #pragma once
 #include <cmath>
 
+struct float2 {
+    float x, y;
+
+    constexpr float2() : x(0), y(0) {}
+    constexpr float2(float t) : x(t), y(t) {}
+    constexpr float2(float x, float y) : x(x), y(y) {}
+
+
+};
+
 struct int2 {
     int x, y;
 
     constexpr int2() : x(0), y(0) {}
     constexpr int2(int t) : x(t), y(t) {}
     constexpr int2(int x, int y) : x(x), y(y) {}
+
+    float2 rotate(float sin, float cos) const {
+        return { 
+             x * cos + y * sin,
+            -x * sin + y * cos 
+        };
+    }
 };
 
 struct float3 {

@@ -51,39 +51,33 @@ void FreeCamera::UpdateRotation(GameData::Camera* freeCamera, GameData::Camera* 
         return;
     }
 
-    if (!mouseDelta.x && !mouseDelta.y && !tiltXVelocity && !rollVelocity) return;
+    roll += rollVelocity * tiltSpeed * dt;
+    float rollSin = std::sin(roll);
+    float rollCos = std::cos(roll);
 
-    const float sens = mouseSensitivity * freeCamera->fov;
-
-    yaw += (mouseDelta.x + tiltXVelocity * tiltSpeed * 100.0f * dt) * sens;
-    pitch += mouseDelta.y * sens;
-    roll += rollVelocity * tiltSpeed * 100.0f * dt * mouseSensitivity;
+    const float sens = mouseSensitivity * ComputeZoomFactor(freeCamera->fov) * 0.001f;
+    float2 rolledMouseDelta = mouseDelta.rotate(rollSin, rollCos);
+    yaw   += rolledMouseDelta.x * sens;
+    pitch += rolledMouseDelta.y * sens;
 
     if (pitchLimit) pitch = std::clamp(pitch, -pitchLimit, pitchLimit);
 
-    float cy = std::cos(yaw);
-    float sy = std::sin(yaw);
-    float cp = std::cos(pitch);
-    float sp = std::sin(pitch);
+    float yawSin = std::sin(yaw);
+    float yawCos = std::cos(yaw);
+    float pitchSin = std::sin(pitch);
+    float pitchCos = std::cos(pitch);
 
-    float3 forward = { sy * cp, -sp, cy * cp };
-    float3 right = { cy, 0.0f, -sy };
-    float3 up = float3().cross(forward, right);
+    float3 forward = { yawSin * pitchCos, -pitchSin, yawCos * pitchCos };
+    float3 right = { yawCos, 0.0f, -yawSin };
+    float3 up = float3::cross(forward, right);
 
-    float cr = std::cos(roll);
-    float sr = std::sin(roll);
+    float3 rolledRight = right * rollCos + up * rollSin;
+    float3 rolledUp = up * rollCos - right * rollSin;
 
-    float3 r = right * cr + up * sr;
-    float3 u = up * cr - right * sr;
-
-    right = r;
-    up = u;
-
-    freeCamera->matrix.c0 = float4(right, 0.0f);
-    freeCamera->matrix.c1 = float4(up, 0.0f);
+    freeCamera->matrix.c0 = float4(rolledRight, 0.0f);
+    freeCamera->matrix.c1 = float4(rolledUp, 0.0f);
     freeCamera->matrix.c2 = float4(forward, 0.0f);
 
-    tiltXVelocity = 0;
     rollVelocity = 0;
 }
 
@@ -133,9 +127,7 @@ void FreeCamera::ResetSettings(GameData::Camera* freeCamera, GameData::Camera* p
     CopyRotation(freeCamera, playerCamera);
     speed = defaultSpeed;
 
-    float3 forward = freeCamera->matrix.c2.xyz();
-    yaw = std::atan2(forward.x, forward.z);
-    pitch = std::asin(-forward.y);
+    GetCameraPitchYaw(freeCamera, &pitch, &yaw);
     roll = 0;
 }
 
@@ -143,6 +135,12 @@ float FreeCamera::ComputeZoomFactor(float fov) {
 	const float min_fov = 0.00001, max_fov = 3.14f;
     float t = Math::clamp((fov - min_fov) / (max_fov - min_fov));
     return Math::quadraticEaseOut(t);
+}
+
+void FreeCamera::GetCameraPitchYaw(GameData::Camera* camera, float* _pitch, float* _yaw) {
+    float3 forward = camera->matrix.c2.xyz();
+    *_yaw = std::atan2(forward.x, forward.z);
+    *_pitch = std::asin(-forward.y);
 }
 
 void FreeCamera::CopyPositionAndFov(GameData::Camera* toCamera, GameData::Camera* fromCamera) {
@@ -174,24 +172,21 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
     SettingsBackup::SetEnabled(1);
     SettingsBackup::SaveHudValue((int)savedHudOption);
 
-    velocity = float3(0);
-    zoomVelocity = 0.0f;
-
-
     if (isResetCameraSettings || isFristEnabled) {
         ResetSettings(freeCamera, playerCamera);
         isFristEnabled = false;
     }
 
     if (IsUsingCustomRotation()) {
-        float3 forward = freeCamera->matrix.c2.xyz();
-        yaw = std::atan2(forward.x, forward.z);
-        pitch = std::asin(-forward.y);
+        GetCameraPitchYaw(freeCamera, &pitch, &yaw);
     }
 
     if (isFreezeGame) GameDataManager::PauseGame(true);
-    if (isFreezeEntities) FreezeEntities(true);
-    if (isFreezePlayer) FreezePlayer(true);
+    if (isFreezeEntities && !isFreezeGame) FreezeEntities(true);
+    if (isFreezePlayer && !isFreezeGame) FreezePlayer(true);
+
+    velocity = float3(0);
+    zoomVelocity = 0.0f;
 
 	rend->EnableFreecam(isDisablePlayerControls);
     isEnabled = true;
