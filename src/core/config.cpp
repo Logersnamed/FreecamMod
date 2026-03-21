@@ -1,6 +1,7 @@
 #include "core/config.h"
 
 #include <filesystem>
+#include <cctype>
 
 #include "utils/math.h"
 
@@ -71,7 +72,13 @@ void Config::Reload(ActionManager &actionManager, FreeCamera &freeCamera) {
 bool Config::CreateModDirectory() {
     if (!std::filesystem::exists(configDirPath)) {
         Logger::Info("Creating config directory...");
-        std::filesystem::create_directories(configDirPath);
+        try {
+            std::filesystem::create_directories(configDirPath);
+        }
+        catch (...) {
+            Logger::Error("Failed to create config directory");
+            return false;
+        }
     }
 
     return true;
@@ -85,14 +92,19 @@ T Config::ReadValue(const std::string& section, const std::string& name, T defau
         if (collection.has(name)) {
 			auto& value = collection[name];
 
-            if constexpr (std::is_same_v<T, int>) {
-                return std::stoi(value);
+            try {
+                if constexpr (std::is_same_v<T, int>) {
+                    return std::stoi(value);
+                }
+                else if constexpr (std::is_same_v<T, float>) {
+                    return std::stof(value);
+                }
+                else if constexpr (std::is_same_v<T, bool>) {
+                    return value == "1" || value == "true";
+                }
             }
-            else if constexpr (std::is_same_v<T, float>) {
-                return std::stof(value);
-            }
-            else if constexpr (std::is_same_v<T, bool>) {
-                return std::stoi(value) != 0;
+            catch (...) {
+                return defaultValue;
             }
         }
     }
@@ -180,9 +192,8 @@ bool Config::findDllPath(HMODULE hModule) {
 int Config::ParseKey(std::string key) {
     std::transform(key.begin(), key.end(), key.begin(), ::toupper);
 
-    auto it = keyMap.find(key);
-    if (it != keyMap.end())
-        return it->second;
+    for (const auto& k : keyMap)
+        if (key == k.name) return k.vk;
 
     if (key.size() == 1)
         return key[0];
@@ -199,8 +210,8 @@ int Config::ParseKey(std::string key) {
 }
 
 std::string Config::KeyToString(int key) {
-    if (reverseKeyMap.count(key))
-        return reverseKeyMap[key];
+    for (const auto& k : keyMap)
+        if (key == k.vk) return k.name;
 
     if ((key >= 'A' && key <= 'Z') || (key >= '0' && key <= '9'))
         return std::string(1, (char)key);

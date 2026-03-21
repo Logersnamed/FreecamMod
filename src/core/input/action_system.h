@@ -3,7 +3,6 @@
 #include <cstdint>
 #include <vector>
 #include <string>
-#include <array>
 
 #include "core/input/input.h"
 
@@ -26,7 +25,7 @@ public:
 		TiltLeft,
 		TiltRight,
 		ScrollZoomModifier,
-		ScroolCameraSpeedModifier,
+		ScrollCameraSpeedModifier,
 		Count
 	};
 

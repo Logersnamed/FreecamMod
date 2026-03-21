@@ -73,7 +73,7 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend) {
     if (actionManager.IsPressed(Action::ZoomOut, input)) freeCamera.AddZoomVelocity(1.0f);
 
     if (actionManager.IsPressed(Action::ScrollZoomModifier, input)) freeCamera.AddZoomVelocity(-input.GetScrollDelta());
-    if (actionManager.IsPressed(Action::ScroolCameraSpeedModifier, input)) freeCamera.AddSpeed(input.GetScrollDelta());
+    if (actionManager.IsPressed(Action::ScrollCameraSpeedModifier, input)) freeCamera.AddSpeed(input.GetScrollDelta());
 }
 
 void Freecam::Update(GameData::GameRend* gameRend) {
