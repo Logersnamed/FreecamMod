@@ -5,7 +5,7 @@
 
 #include "mini/ini.h"
 
-#include "core/input/action.h"
+#include "core/input/action_system.h"
 #include "core/free_camera.h"
 #include "utils/debug.h"
 

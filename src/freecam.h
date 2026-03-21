@@ -1,7 +1,7 @@
 #pragma once
 #include <windows.h>
 
-#include "core/input/action.h"
+#include "core/input/action_system.h"
 #include "core/input/input.h"
 #include "core/config.h"
 #include "core/free_camera.h"

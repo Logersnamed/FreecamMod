@@ -3,9 +3,9 @@
 #include <cstdint>
 #include <vector>
 #include <string>
+#include <array>
 
 #include "core/input/input.h"
-#include "utils/debug.h"
 
 class Action {
 public:
@@ -42,49 +42,40 @@ public:
 
 	Type GetType() const { return type; }
 
-	bool IsPressed(const Input* input) const {
+	bool IsPressed(const Input& input) const {
 		for (int key : keysRequired) {
-			if (!input->IsPressed(key)) return false;
+			if (!input.IsPressed(key)) return false;
 		}
 		for (int key : keysRestricted) {
-			if (input->IsPressed(key)) return false;
+			if (input.IsPressed(key)) return false;
 		}
 		return true;
 	}
 
-	bool IsJustPressed(const Input* input) const {
+	bool IsJustPressed(const Input& input) const {
+		bool anyJustPressed = false;
 		for (int key : keysRequired) {
-			if (!input->IsJustPressed(key)) return false;
+			if (!input.IsPressed(key)) return false;
+			if (input.IsJustPressed(key)) anyJustPressed = true;
 		}
 		for (int key : keysRestricted) {
-			if (input->IsPressed(key)) return false;
+			if (input.IsPressed(key)) return false;
 		}
-		return true;
+		return anyJustPressed;
 	}
 };
 
 class ActionManager {
-	Input* input{};
 	std::unordered_map<Action::Type, Action> actionKeyMap{};
 
 public:
-	bool Initialize(Input* input) {
-		if (!input) {
-			Logger::Error("Input pointer is null in ActionManager::Initialize");
-			return false;
-		}
-		this->input = input;
-
-		return true;
-	}
-
-	bool IsPressed(Action::Type actionType) const {
+	bool IsPressed(Action::Type actionType, const Input& input) const {
 		const auto action = actionKeyMap.find(actionType);
 		if (action == actionKeyMap.end()) return false;
 		return action->second.IsPressed(input);
 	}
 
-	bool IsJustPressed(Action::Type actionType) const {
+	bool IsJustPressed(Action::Type actionType, const Input& input) const {
 		const auto action = actionKeyMap.find(actionType);
 		if (action == actionKeyMap.end()) return false;
 		return action->second.IsJustPressed(input);
