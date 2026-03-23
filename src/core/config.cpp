@@ -36,26 +36,28 @@ void Config::Reload(ActionManager &actionManager, FreeCamera &freeCamera) {
 
     Logger::Enable(ReadValue("mod", "debug_console", 0));
 
-    freeCamera.SetHideHud(ReadValue("freecam", "hide_hud", 1));
-    freeCamera.SetFreezeEntities(ReadValue("freecam", "freeze_entities", 1));
-    freeCamera.SetFreezePlayer(ReadValue("freecam", "freeze_player", 1));
-    freeCamera.SetDisablePlayerControls(ReadValue("freecam", "disable_player_controls", 1));
-    freeCamera.SetSmoothCamera(ReadValue("freecam", "smooth_camera", 1));
+    FreeCamera::Settings settings{};
+    settings.flags.hideHud = ReadValue("freecam", "hide_hud", 1);
+    settings.flags.freezeEntities = ReadValue("freecam", "freeze_entities", 1);
+    settings.flags.freezePlayer = ReadValue("freecam", "freeze_player", 1);
+    settings.flags.disablePlayerControls = ReadValue("freecam", "disable_player_controls", 1);
+    settings.flags.smoothCamera = ReadValue("freecam", "smooth_camera", 1);
 
-    freeCamera.SetFreezeGame(ReadValue("experimental", "freeze_game", 1));
-    freeCamera.SetResetCameraSettings(ReadValue("experimental", "reset_camera_settings", 1));
-    freeCamera.SetAlwaysUseCustomRotation(ReadValue("experimental", "always_use_custom_rotation", 1));
+    settings.flags.freezeGame = ReadValue("experimental", "freeze_game", 1);
+    settings.flags.resetCameraSettings = ReadValue("experimental", "reset_camera_settings", 1);
+    settings.flags.alwaysUseCustomRotation = ReadValue("experimental", "always_use_custom_rotation", 1);
 
-    freeCamera.SetSensitivity(ReadValue("camera_settings", "sensitivity", 1.0f));
-    freeCamera.SetDefaultSpeed(ReadValue("camera_settings", "default_speed", 10.0f));
-    freeCamera.SetTiltSpeed(ReadValue("camera_settings", "tilt_speed", 1.0f));
-    freeCamera.SetSpeedMult(ReadValue("camera_settings", "speed_multiplier", 2.5f));
-    freeCamera.SetZoomSpeed(ReadValue("camera_settings", "zoom_speed", 0.7f));
-    freeCamera.SetMinFov(Math::toRadians(ReadValue("camera_settings", "min_fov_degrees", 0.005f)));
-    freeCamera.SetMaxFov(Math::toRadians(ReadValue("camera_settings", "max_fov_degrees", 155.0f)));
-    freeCamera.SetPitchLimit(Math::toRadians(ReadValue("camera_settings", "pitch_limit_degrees", 88.0f)));
+    settings.sensitivity = ReadValue("camera_settings", "sensitivity", 1.0f);
+    settings.defaultSpeed = ReadValue("camera_settings", "default_speed", 10.0f);
+    settings.tiltSpeed = ReadValue("camera_settings", "tilt_speed", 1.0f);
+    settings.speedMult = ReadValue("camera_settings", "speed_multiplier", 2.5f);
+    settings.zoomSpeed = ReadValue("camera_settings", "zoom_speed", 0.7f);
+    settings.minFov = Math::toRadians(ReadValue("camera_settings", "min_fov_degrees", 0.005f));
+    settings.maxFov = Math::toRadians(ReadValue("camera_settings", "max_fov_degrees", 155.0f));
+    settings.pitchLimit = Math::toRadians(ReadValue("camera_settings", "pitch_limit_degrees", 88.0f));
 
-    freeCamera.SetZeroSpeedFreeze(ReadValue("hidden", "freeze_by_setting_zero_speed", 0));
+    settings.flags.zeroSpeedFreeze = ReadValue("hidden", "freeze_by_setting_zero_speed", 0);
+    freeCamera.SetConfigSettings(settings);
 
     for (const Keybind& keybind : keybinds) {
         actionManager.BindAction(ReadKeybind(keybind));

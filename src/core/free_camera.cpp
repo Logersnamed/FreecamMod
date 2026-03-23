@@ -11,7 +11,7 @@
 #include "utils/math.h"
 
 void FreeCamera::Update(GameData::GameRend* gameRend, float deltaTime) {
-    RestoreSettings();
+    RestorePendingSettings();
     if (!gameRend->IsFreecamEnabled()) {
         if (isEnabled) {
 			Logger::Info("Freecam wasn't disabled properly, disabling now...");
@@ -55,7 +55,7 @@ void FreeCamera::UpdateRotation(GameData::Camera* freeCamera, GameData::Camera* 
     float rollSin = std::sin(roll);
     float rollCos = std::cos(roll);
 
-    const float sens = mouseSensitivity * ComputeZoomFactor(freeCamera->fov) * 0.001f;
+    const float sens = sensitivity * ComputeZoomFactor(freeCamera->fov) * 0.001f;
     float2 rolledMouseDelta = mouseDelta.rotate(rollSin, rollCos);
     yaw   += rolledMouseDelta.x * sens;
     pitch += rolledMouseDelta.y * sens;
@@ -88,7 +88,7 @@ void FreeCamera::UpdateFov(GameData::Camera* camera, float dt) {
 }
 
 void FreeCamera::UpdateVelocity(float dt) {
-	if (!isSmoothCamera) {
+	if (!flags.smoothCamera) {
         velocity = float3(0);
         return;
     }
@@ -111,14 +111,29 @@ void FreeCamera::ResetSettings(GameData::GameRend* gameRend) {
     ResetSettings(freeCamera, playerCamera);
 }
 
-void FreeCamera::RestoreSettings() {
-    if (initHudValue == -1) return;
+void FreeCamera::SetConfigSettings(const Settings& settings) {
+    sensitivity = settings.sensitivity;
+    SetDefaultSpeed(settings.defaultSpeed);
+    SetSpeedMult(settings.speedMult);
+    SetZoomSpeed(settings.zoomSpeed);
+
+    SetMinFov(settings.minFov);
+    SetMaxFov(settings.maxFov);
+    pitchLimit = settings.pitchLimit;
+
+    tiltSpeed = settings.tiltSpeed;
+
+    flags = settings.flags;
+}
+
+void FreeCamera::RestorePendingSettings() {
+    if (!hudValueToRestore.has_value()) return;
 
     GameData::OptionData* optionData = GameDataManager::GetOptionData();
     if (optionData) {
-        Logger::Info("Restored hud from %d to %d", optionData->HUD, initHudValue);
-        optionData->HUD = std::byte(initHudValue);
-        initHudValue = -1;
+        Logger::Info("Restored hud option from %d to %d", optionData->HUD, hudValueToRestore);
+        optionData->HUD = std::byte(hudValueToRestore.value());
+        hudValueToRestore = std::nullopt;
     }
 }
 
@@ -160,7 +175,7 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
     GameData::Camera* playerCamera = rend->csPersCam1;
     if (!freeCamera || !playerCamera) return;
 
-    if (isHideHud) {
+    if (flags.hideHud) {
         GameData::OptionData* optionData = GameDataManager::GetOptionData();
         if (optionData) {
             savedHudOption = optionData->HUD;
@@ -172,23 +187,23 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
     SettingsBackup::SetEnabled(1);
     SettingsBackup::SaveHudValue((int)savedHudOption);
 
-    if (isResetCameraSettings || isFristEnabled) {
+    if (flags.resetCameraSettings || isFirstEnabled) {
         ResetSettings(freeCamera, playerCamera);
-        isFristEnabled = false;
+        isFirstEnabled = false;
     }
 
     if (IsUsingCustomRotation()) {
         GetCameraPitchYaw(freeCamera, &pitch, &yaw);
     }
 
-    if (isFreezeGame) GameDataManager::PauseGame(true);
-    if (isFreezeEntities && !isFreezeGame) FreezeEntities(true);
-    if (isFreezePlayer && !isFreezeGame) FreezePlayer(true);
+    if (flags.freezeGame) GameDataManager::PauseGame(true);
+    if (flags.freezeEntities && !flags.freezeGame) FreezeEntities(true);
+    if (flags.freezePlayer && !flags.freezeGame) FreezePlayer(true);
 
     velocity = float3(0);
     zoomVelocity = 0.0f;
 
-	rend->EnableFreecam(isDisablePlayerControls);
+	rend->EnableFreecam(flags.disablePlayerControls);
     isEnabled = true;
 	Logger::Info("Free camera enabled");
 }
@@ -225,7 +240,7 @@ void FreeCamera::DisableCamera() {
 }
 
 void FreeCamera::FreezeEntity(GameData::ChrIns* entity, bool enabled) {
-    if (isZeroSpeedFreeze) {
+    if (flags.zeroSpeedFreeze) {
         entity->chrModules->chrBehavior->animationSpeed = !enabled;
     }
     else {
@@ -237,16 +252,16 @@ void FreeCamera::FreezeEntity(GameData::ChrIns* entity, bool enabled) {
 }
 
 void FreeCamera::FreezePlayer(bool enabled) {
-    if (isPlayerFreezed == enabled) return;
-    isPlayerFreezed = enabled;
+    if (isPlayerFrozen == enabled) return;
+    isPlayerFrozen = enabled;
 
     GameData::ChrIns* player = GameDataManager::GetPlayer();
     if (player) FreezeEntity(player, enabled);
 }
 
 void FreeCamera::FreezeEntities(bool enabled) {
-    if (areEntitesFreezed == enabled) return;
-    areEntitesFreezed = enabled;
+    if (areEntitesFrozen == enabled) return;
+    areEntitesFrozen = enabled;
 
     GameData::WorldChrMan* world = GameDataManager::GetWorldChrMan();
     if (!world) return;

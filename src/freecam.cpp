@@ -29,9 +29,7 @@ bool Freecam::Initialize() {
     if (!HookFunctions()) return false;
 
     SettingsBackup::SetFolderPath(config.GetConfigDirPath());
-    if (auto restoredHudValue = SettingsBackup::RestoreHudValue()) {
-        freeCamera.SetInitHudValue(restoredHudValue.value());
-    }
+    freeCamera.SetHudValueToRestore(SettingsBackup::RestoreHudValue());
     SettingsBackup::SetEnabled(0);
 
     return true;
