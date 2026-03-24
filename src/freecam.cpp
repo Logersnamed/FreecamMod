@@ -6,6 +6,7 @@
 #include "MinHook.h"
 #include "ModUtils.h"
 
+#include "core/features/path_recorder.h"
 #include "core/game_data_manager.h"
 #include "core/settings_backup.h"
 #include "utils/time.h"
@@ -72,6 +73,11 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend) {
 
     if (actionManager.IsPressed(Action::ScrollZoomModifier, input)) freeCamera.AddZoomVelocity(-input.GetScrollDelta());
     if (actionManager.IsPressed(Action::ScrollCameraSpeedModifier, input)) freeCamera.AddSpeed(input.GetScrollDelta());
+
+    if (input.IsJustPressed(VK_F8)) freeCamera.GetPathRecorder().Record();
+    if (input.IsJustPressed(VK_F9)) freeCamera.GetPathRecorder().PlayRecord();
+
+    if (input.IsJustPressed(VK_F6)) freeCamera.StepFrames();
 }
 
 void Freecam::Update(GameData::GameRend* gameRend) {

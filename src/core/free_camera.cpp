@@ -31,6 +31,37 @@ void FreeCamera::Update(GameData::GameRend* gameRend, float deltaTime) {
     UpdateVelocity(deltaTime);
     UpdateZoomVelocity(deltaTime);
     isSprinting = false;
+
+    if (pathRecorder.IsRecording()) pathRecorder.RecordFrame(freeCamera);
+    if (pathRecorder.IsPlaying()) pathRecorder.PlayNextFrame(freeCamera);
+
+    if (framesToStep > 0) {
+        if (isGameFrozen) {
+            wasGameFrozen = true;
+            GameDataManager::PauseGame(false);
+        }
+        else if (areEntitesFrozen) {
+            wasEntitiesFrozen = true;
+            FreezeEntities(false);
+        }
+        else if (isPlayerFrozen) {
+            wasPlayerFrozen = true;
+            FreezePlayer(false);
+        }
+
+        if (framesToStep <= 1) {
+            if (wasGameFrozen) GameDataManager::PauseGame(true);
+            if (wasEntitiesFrozen) FreezeEntities(true);
+            if (wasPlayerFrozen) FreezePlayer(true);
+            wasGameFrozen = false;
+            wasEntitiesFrozen = false;
+            wasPlayerFrozen = false;
+            framesToStep = 0;
+        }
+        else {
+            --framesToStep;
+        }
+    }
 }
 
 void FreeCamera::UpdatePosition(GameData::Camera* camera, float dt) {
@@ -175,6 +206,8 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
     GameData::Camera* playerCamera = rend->csPersCam1;
     if (!freeCamera || !playerCamera) return;
 
+    framesToStep = 0;
+
     if (flags.hideHud) {
         GameData::OptionData* optionData = GameDataManager::GetOptionData();
         if (optionData) {
@@ -196,7 +229,10 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
         GetCameraPitchYaw(freeCamera, &pitch, &yaw);
     }
 
-    if (flags.freezeGame) GameDataManager::PauseGame(true);
+    if (flags.freezeGame && !isGameFrozen) {
+        GameDataManager::PauseGame(true);
+        isGameFrozen = true;
+    }
     if (flags.freezeEntities && !flags.freezeGame) FreezeEntities(true);
     if (flags.freezePlayer && !flags.freezeGame) FreezePlayer(true);
 
@@ -221,9 +257,15 @@ void FreeCamera::DisableCamera(GameData::GameRend* rend) {
 
     SettingsBackup::SetEnabled(0);
 
-    GameDataManager::PauseGame(false);
+    if (isGameFrozen) {
+        GameDataManager::PauseGame(false);
+        isGameFrozen = false;
+    }
     FreezeEntities(false);
     FreezePlayer(false);
+
+    if (pathRecorder.IsRecording()) pathRecorder.EndRecord();
+    if (pathRecorder.IsPlaying()) pathRecorder.EndPlay();
 
     isEnabled = false;
 	Logger::Info("Free camera disabled");

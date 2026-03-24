@@ -5,7 +5,9 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "core/features/path_recorder.h"
 #include "core/game_data/game_data.h"
+#include "utils/debug.h"
 
 class FreeCamera {
 public:
@@ -42,6 +44,8 @@ public:
     void DisableCamera();
     void ResetSettings(GameData::GameRend* gameRend);
     void SetConfigSettings(const Settings& cameraSettings);
+
+    PathRecorder& GetPathRecorder() { return pathRecorder; }
 
     void SetMouseDelta(int2 delta) { mouseDelta = delta; }
     void SetRollVeloctiy(float vel) { rollVelocity = vel; }
@@ -81,6 +85,7 @@ private:
     
 	bool isSprinting = false;
 
+    bool isGameFrozen = false;
     bool isEnabled = false;
     bool isFirstEnabled = true;
     bool areEntitesFrozen = false;
@@ -110,6 +115,19 @@ private:
 	void FreezeEntity(GameData::ChrIns* entity, bool enabled);
     void FreezePlayer(bool enabled);
     void FreezeEntities(bool enabled);
+    
+    PathRecorder pathRecorder;
+
+public:
+    void StepFrames() { framesToStep += step; }
+
+private:
+    const int step = 1;
+    int framesToStep = 0;
+
+    bool wasGameFrozen = false;
+    bool wasEntitiesFrozen = false;
+    bool wasPlayerFrozen = false;
 
     void GetCameraPitchYaw(GameData::Camera* camera, float* _pitch, float* _yaw);
 

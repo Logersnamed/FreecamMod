@@ -80,6 +80,10 @@ struct float4 {
     constexpr float4(float3 vec3, float w) : x(vec3.x), y(vec3.y), z(vec3.z), w(w) {}
 
     constexpr float3 xyz() const { return { x,y,z }; }
+
+    bool operator==(const float4& other) {
+        return x == other.x && y == other.y && z == other.z && w == other.w;
+    }
 };
 
 struct matrix4x4 {
@@ -107,5 +111,13 @@ struct matrix4x4 {
 
     const float3& position() const {
         return *reinterpret_cast<const float3*>(&c3);
+    }
+
+    bool operator==(const matrix4x4& other) {
+        return c0 == other.c0 && c1 == other.c1 && c2 == other.c2 && c3 == other.c3;
+    }
+
+    bool operator!=(const matrix4x4& other) {
+        return !(*this == other);
     }
 };
