@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "core/features/freeze_controller.h"
 #include "core/features/path_recorder.h"
 #include "core/game_data/game_data.h"
 #include "utils/debug.h"
@@ -87,16 +88,17 @@ private:
     
 	bool isSprinting = false;
 
-    bool isGameFrozen = false;
+    //bool isGameFrozen = false;
     bool isEnabled = false;
     bool isFirstEnabled = true;
-    bool areEntitesFrozen = false;
-    bool isPlayerFrozen = false;
+    //bool areEntitesFrozen = false;
+    //bool isPlayerFrozen = false;
 
     bool isHudHidden = false;
     std::byte savedHudOption = std::byte(2);
     std::optional<int> hudValueToRestore = std::nullopt;
 
+    FreezeController freezeController{};
     PathRecorder pathRecorder{};
 
     void UpdatePosition(GameData::Camera* camera, float dt);
@@ -116,9 +118,9 @@ private:
         return flags.freezeGame || !flags.resetCameraSettings || flags.alwaysUseCustomRotation; 
     }
 
-	void FreezeEntity(GameData::ChrIns* entity, bool enabled);
-    void FreezePlayer(bool enabled);
-    void FreezeEntities(bool enabled); 
+	//void FreezeEntity(GameData::ChrIns* entity, bool enabled);
+ //   void FreezePlayer(bool enabled);
+ //   void FreezeEntities(bool enabled); 
     
     void GetCameraPitchYaw(GameData::Camera* camera, float* _pitch, float* _yaw);
 
