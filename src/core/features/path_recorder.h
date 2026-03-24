@@ -5,21 +5,65 @@
 #include "utils/types.h"
 #include "utils/debug.h"
 
+// todo: use interpolation to not record every frame
 class PathRecorder {
-    struct Data {
-        int frame;
-        matrix4x4 cameraMatrix;
-        float fov;
+    template<typename T>
+    struct FrameDataBuffer {
+        static constexpr size_t MAX_FRAMES = 100000;
+
+        struct FrameData {
+            int frame = 0;
+            T data;
+        };
+
+        int framesRestored = 0;
+        std::vector<FrameData> framesData;
+
+        bool isFullyRestored = false;
+        bool IsFullyRestored() const { return isFullyRestored; }
+
+        void Record(int frame, T data) {
+            if (framesData.empty() || framesData.back().data != data) {
+                if (framesData.size() >= MAX_FRAMES) return;
+                framesData.push_back(FrameData{ frame, data });
+            }
+        }
+
+        T& GetNextFrameData(int frame) {
+            int size = framesData.size();
+            if (framesRestored >= size) {
+                isFullyRestored = true;
+                return framesData[size - 1].data;
+            }
+
+            FrameData& frameData = framesData[framesRestored];
+            if (frame == frameData.frame) {
+                ++framesRestored;
+            }
+
+            return frameData.data;
+        }
+
+        void Restart() {
+            framesRestored = 0;
+            isFullyRestored = false;
+        }
+
+        void Clear() {
+            Restart();
+            framesData.clear();
+        }
     };
 
     int framesRecorded = 0;
     int framesPlayed = 0;
 
+    FrameDataBuffer<float3> positions;
+    FrameDataBuffer<matrix3x3> rotations;   // todo: use quaternions
+    FrameDataBuffer<float> fovs;
+
     bool isRecording = false;
     bool isPlaying = false;
-
-    std::vector<Data> data;
-    int dataRestored = 0;
 
 public:
     void Record() { isRecording ? EndRecord() : StartRecord(); }
@@ -27,17 +71,29 @@ public:
 
     void StartRecord() {
         if (isPlaying) return;
+        Logger::Info("Recording started");
         Clear();
         isRecording = true;
-        Logger::Info("Recording started", isRecording);
     }
 
     void EndRecord() {
+        Logger::Info("Recording Ended:");
+        Logger::Info("\tTotal frames recorded: %d", framesRecorded);
+        Logger::Info("\tPositions recorded: %zu frames = %zu bytes",
+            positions.framesData.size(), positions.framesData.size() * sizeof(float3)
+        );
+        Logger::Info("\tRotations recorded: %zu frames = %zu bytes",
+            rotations.framesData.size(), rotations.framesData.size() * sizeof(matrix3x3)
+        );
+        Logger::Info("\tFOVs recorded: %zu frames = %zu bytes",
+            fovs.framesData.size(), fovs.framesData.size() * sizeof(float)
+        );
+
         isRecording = false;
-        Logger::Info("Recording ended");
     }
 
     void StartPlay() {
+        Logger::Info("Recording play started");
         if (isRecording) {
             EndRecord();
         }
@@ -47,43 +103,44 @@ public:
     }
 
     void EndPlay() {
+        Logger::Info("Recording play ended");
         isPlaying = false;
         framesPlayed = 0;
-        dataRestored = 0;
+
+        positions.Restart();
+        rotations.Restart();
+        fovs.Restart();
     }
 
     bool IsRecording() const { return isRecording; }
     bool IsPlaying() const { return isPlaying; }
 
     void RecordFrame(const GameData::Camera* camera) {
-        if (!data.size() || data.back().cameraMatrix != camera->matrix) {
-            data.push_back(Data{
-                framesRecorded,
-                camera->matrix,
-                camera->fov
-                });
-        }
+        positions.Record(framesRecorded, camera->matrix.position());
+        rotations.Record(framesRecorded, camera->matrix.rotation());
+        fovs.Record(framesRecorded, camera->fov);
+
         ++framesRecorded;
     }
 
     void PlayNextFrame(GameData::Camera* camera) {
-        Data& frameData = data[dataRestored];
-        camera->matrix = frameData.cameraMatrix;
-        camera->fov = frameData.fov;
+        camera->matrix.position() = positions.GetNextFrameData(framesPlayed);
+        camera->matrix.rotation() = rotations.GetNextFrameData(framesPlayed);
+        camera->fov = fovs.GetNextFrameData(framesPlayed);
 
-        if (framesPlayed == data[dataRestored].frame) {
-            ++dataRestored;
-        }
+        ++framesPlayed;
 
-        if (++framesPlayed == framesRecorded || dataRestored >= data.size()) {
+        if (positions.IsFullyRestored() && rotations.IsFullyRestored() && fovs.IsFullyRestored()) {
             EndPlay();
         }
     }
 
     void Clear() {
-        data.clear();
+        positions.Clear();
+        rotations.Clear();
+        fovs.Clear();
+
         framesPlayed = 0;
         framesRecorded = 0;
-        dataRestored = 0;
     }
 };

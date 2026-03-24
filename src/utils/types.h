@@ -7,8 +7,6 @@ struct float2 {
     constexpr float2() : x(0), y(0) {}
     constexpr float2(float t) : x(t), y(t) {}
     constexpr float2(float x, float y) : x(x), y(y) {}
-
-
 };
 
 struct int2 {
@@ -69,6 +67,32 @@ struct float3 {
 	static float3 left() { return { -1, 0, 0 }; }
 	static float3 up() { return { 0, 1, 0 }; }
 	static float3 down() { return { 0, -1, 0 }; }
+
+    bool operator==(const float3& other) const {
+        return x == other.x && y == other.y && z == other.z;
+    }
+
+    bool operator!=(const float3& other) const {
+        return !(*this == other);
+    }
+};
+
+struct float3_ref {
+    float& x;
+    float& y;
+    float& z;
+
+    operator float3() const { return { x, y, z }; }
+
+    float3_ref& operator=(const float3& v) {
+        x = v.x; y = v.y; z = v.z;
+        return *this;
+    }
+
+    float3_ref& operator+=(const float3& v) {
+        x += v.x; y += v.y; z += v.z;
+        return *this;
+    }
 };
 
 struct float4 {
@@ -81,8 +105,45 @@ struct float4 {
 
     constexpr float3 xyz() const { return { x,y,z }; }
 
-    bool operator==(const float4& other) {
+    bool operator==(const float4& other) const {
         return x == other.x && y == other.y && z == other.z && w == other.w;
+    }
+};
+
+struct matrix3x3 {
+    float3 c0, c1, c2;
+
+    constexpr matrix3x3()
+        : c0(1, 0, 0),
+        c1(0, 1, 0),
+        c2(0, 0, 1) {
+    }
+
+    constexpr matrix3x3(const float3& c0, const float3& c1, const float3& c2)
+        : c0(c0), c1(c1), c2(c2) {
+    }
+
+    static matrix3x3 identity() { return {}; }
+
+    bool operator==(const matrix3x3& other) const {
+        return c0 == other.c0 && c1 == other.c1 && c2 == other.c2;
+    }
+
+    bool operator!=(const matrix3x3& other) const {
+        return !(*this == other);
+    }
+};
+
+struct matrix3x3_ref {
+    float3_ref col0;
+    float3_ref col1;
+    float3_ref col2;
+
+    matrix3x3_ref& operator=(const matrix3x3& m) {
+        col0 = m.c0;
+        col1 = m.c1;
+        col2 = m.c2;
+        return *this;
     }
 };
 
@@ -97,23 +158,27 @@ struct matrix4x4 {
 
     static matrix4x4 identity() { return matrix4x4(); }
 
-    inline float3 transform_vector(const matrix4x4& m, const float3& v) {
-        return {
-            m.c0.x * v.x + m.c1.x * v.y + m.c2.x * v.z,
-            m.c0.y * v.x + m.c1.y * v.y + m.c2.y * v.z,
-            m.c0.z * v.x + m.c1.z * v.y + m.c2.z * v.z
-        };
+    float3_ref position() {
+        return { c3.x, c3.y, c3.z };
     }
 
-    float3& position() {
-        return *reinterpret_cast<float3*>(&c3);
+    float3 position() const {
+        return { c3.x, c3.y, c3.z };
     }
 
-    const float3& position() const {
-        return *reinterpret_cast<const float3*>(&c3);
+    matrix3x3_ref rotation() {
+        return { {c0.x, c0.y, c0.z}, {c1.x, c1.y, c1.z}, {c2.x, c2.y, c2.z} };
     }
 
-    bool operator==(const matrix4x4& other) {
+    matrix3x3 rotation() const {
+        return matrix3x3(
+            { c0.x, c0.y, c0.z },
+            { c1.x, c1.y, c1.z },
+            { c2.x, c2.y, c2.z }
+        );
+    }
+
+    bool operator==(const matrix4x4& other) const {
         return c0 == other.c0 && c1 == other.c1 && c2 == other.c2 && c3 == other.c3;
     }
 
