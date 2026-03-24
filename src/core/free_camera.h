@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "core/features/frame_stepper.h"
 #include "core/features/freeze_controller.h"
 #include "core/features/path_recorder.h"
 #include "core/game_data/game_data.h"
@@ -39,6 +40,8 @@ public:
         } flags{};
     };
 
+    FreeCamera() : frameStepper(freezeController) {}
+
     void Update(GameData::GameRend* gameRend, float deltaTime);
 
     void Toggle(GameData::GameRend* rend);
@@ -49,6 +52,7 @@ public:
     void SetConfigSettings(const Settings& cameraSettings);
 
     PathRecorder& GetPathRecorder() { return pathRecorder; }
+    void StepFrames() { frameStepper.StepFrames(step); }
 
     void SetMouseDelta(int2 delta) { mouseDelta = delta; }
     void SetRollVeloctiy(float vel) { rollVelocity = vel; }
@@ -62,9 +66,15 @@ public:
     void SetHudValueToRestore(std::optional<int> value) { hudValueToRestore = value; }
 
 private:
+    bool isEnabled = false;
+    bool isFirstEnabled = true;
+
+    FreezeController freezeController{};
+    FrameStepper frameStepper;
+    PathRecorder pathRecorder{};
     Settings::Flags flags{};
 
-    float speed = defaultSpeed;
+    float speed = 10.0f;
     float3 velocity = float3(0);
     float zoomVelocity = 0.0f;
     float rollVelocity = 0.0f;
@@ -88,18 +98,11 @@ private:
     
 	bool isSprinting = false;
 
-    //bool isGameFrozen = false;
-    bool isEnabled = false;
-    bool isFirstEnabled = true;
-    //bool areEntitesFrozen = false;
-    //bool isPlayerFrozen = false;
-
     bool isHudHidden = false;
     std::byte savedHudOption = std::byte(2);
     std::optional<int> hudValueToRestore = std::nullopt;
 
-    FreezeController freezeController{};
-    PathRecorder pathRecorder{};
+    int step = 1;
 
     void UpdatePosition(GameData::Camera* camera, float dt);
     void UpdateRotation(GameData::Camera* freeCamera, GameData::Camera* playerCamera, float dt);
@@ -118,10 +121,6 @@ private:
         return flags.freezeGame || !flags.resetCameraSettings || flags.alwaysUseCustomRotation; 
     }
 
-	//void FreezeEntity(GameData::ChrIns* entity, bool enabled);
- //   void FreezePlayer(bool enabled);
- //   void FreezeEntities(bool enabled); 
-    
     void GetCameraPitchYaw(GameData::Camera* camera, float* _pitch, float* _yaw);
 
     void SetSpeed(float newSpeed) { speed = max(newSpeed, 0.0f); }
@@ -131,15 +130,4 @@ private:
     void SetFov(GameData::Camera* cam, float newFov) { if (cam) cam->fov = std::clamp(newFov, minFov, maxFov); }
     void SetMinFov(float newMinFov) { minFov = std::clamp(newMinFov, MIN_FOV, MAX_FOV); }
     void SetMaxFov(float newMaxFov) { maxFov = std::clamp(newMaxFov, MIN_FOV, MAX_FOV); }
-
-public:
-    void StepFrames() { framesToStep += step; }
-
-private:
-    int step = 1;
-    int framesToStep = 0;
-
-    bool wasGameFrozen = false;
-    bool wasEntitiesFrozen = false;
-    bool wasPlayerFrozen = false;
 };

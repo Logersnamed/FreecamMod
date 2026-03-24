@@ -35,33 +35,7 @@ void FreeCamera::Update(GameData::GameRend* gameRend, float deltaTime) {
     if (pathRecorder.IsRecording()) pathRecorder.RecordFrame(freeCamera);
     if (pathRecorder.IsPlaying()) pathRecorder.PlayNextFrame(freeCamera);
 
-    if (framesToStep > 0) {
-        if (freezeController.IsGameFrozen()) {
-            wasGameFrozen = true;
-            freezeController.FreezeGame(false);
-        }
-        else if (freezeController.AreEntitesFrozen()) {
-            wasEntitiesFrozen = true;
-            freezeController.FreezeEntities(false);
-        }
-        else if (freezeController.IsPlayerFrozen()) {
-            wasPlayerFrozen = true;
-            freezeController.FreezePlayer(false);
-        }
-
-        if (framesToStep <= 1) {
-            if (wasGameFrozen) freezeController.FreezeGame(true);
-            if (wasEntitiesFrozen) freezeController.FreezeEntities(true);
-            if (wasPlayerFrozen) freezeController.FreezePlayer(true);
-            wasGameFrozen = false;
-            wasEntitiesFrozen = false;
-            wasPlayerFrozen = false;
-            framesToStep = 0;
-        }
-        else {
-            --framesToStep;
-        }
-    }
+    frameStepper.Update();
 }
 
 void FreeCamera::UpdatePosition(GameData::Camera* camera, float dt) {
@@ -157,6 +131,7 @@ void FreeCamera::SetConfigSettings(const Settings& settings) {
     step = settings.step;
 
     flags = settings.flags;
+    freezeController.SetZeroSpeedFreeze(flags.zeroSpeedFreeze);
 }
 
 void FreeCamera::RestorePendingSettings() {
@@ -208,8 +183,6 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
     GameData::Camera* playerCamera = rend->csPersCam1;
     if (!freeCamera || !playerCamera) return;
 
-    framesToStep = 0;
-
     if (flags.hideHud) {
         GameData::OptionData* optionData = GameDataManager::GetOptionData();
         if (optionData) {
@@ -238,6 +211,8 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
         if (flags.freezeEntities) freezeController.FreezeEntities(true);
         if (flags.freezePlayer) freezeController.FreezePlayer(true);
     }
+
+    frameStepper.Reset();
 
     velocity = float3(0);
     zoomVelocity = 0.0f;
@@ -280,48 +255,3 @@ void FreeCamera::DisableCamera() {
 
     DisableCamera(fieldArea->gameRend);
 }
-
-//void FreeCamera::FreezeEntity(GameData::ChrIns* entity, bool enabled) {
-//    if (flags.zeroSpeedFreeze) {
-//        entity->chrModules->chrBehavior->animationSpeed = !enabled;
-//    }
-//    else {
-//        entity->flags2.noUpdate = enabled;
-//    }
-//    entity->flags1.noHit = enabled;
-//    entity->chrModules->chrData->flags.noDamage = enabled;
-//    entity->chrModules->chrData->flags.noDead = enabled;
-//}
-//
-//void FreeCamera::FreezePlayer(bool enabled) {
-//    if (isPlayerFrozen == enabled) return;
-//    isPlayerFrozen = enabled;
-//
-//    GameData::ChrIns* player = GameDataManager::GetPlayer();
-//    if (player) FreezeEntity(player, enabled);
-//}
-//
-//void FreeCamera::FreezeEntities(bool enabled) {
-//    if (areEntitesFrozen == enabled) return;
-//    areEntitesFrozen = enabled;
-//
-//    GameData::WorldChrMan* world = GameDataManager::GetWorldChrMan();
-//    if (!world) return;
-//
-//    GameData::Players* players = world->players;
-//    if (!players) return;
-//
-//    if (!players->IsPlayerAlone()) {
-//        Logger::Info("Freezing entities in online is disabled");
-//        return;
-//    }
-//
-//	GameData::ChrIns* player = players->player0;
-//
-//    const size_t length = world->GetEntityListLenght();
-//	Logger::Info("Set FreezeEntity = %d to %zu entities", enabled, length);
-//    for (size_t i = 0; i < length; ++i) {
-//        GameData::ChrIns* entity = world->begin[i];
-//        if (entity && entity != player) FreezeEntity(entity, enabled);
-//    }
-//}

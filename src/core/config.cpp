@@ -28,7 +28,7 @@ bool Config::Initialize(HMODULE hModule) {
 }
 
 void Config::Reload(ActionManager &actionManager, FreeCamera &freeCamera) {
-    Logger::Info("Loading config...");
+    // Logger::Info("Loading config...");
     CreateModDirectory();
 
     ini.clear();

@@ -43,7 +43,7 @@ private:
         Keybind{"keybinds", "exit_mod", Action::ExitMod, { VK_DELETE }},
         Keybind{"keybinds", "start/end_recording", Action::StartEndRecording, { VK_F8 }},
         Keybind{"keybinds", "strat/end_playing_recording", Action::StartEndPlayingRecording, { VK_F9}},
-        Keybind{"keybinds", "step_frames", Action::StepFrames, { VK_F6}},
+        Keybind{"keybinds", "step_frames", Action::StepFrames, { VK_F2}},
         Keybind{"keybinds", "move_forward", Action::MoveForward, { 'W' }},
         Keybind{"keybinds", "move_backward", Action::MoveBackward, { 'S' }},
         Keybind{"keybinds", "move_left", Action::MoveLeft, { 'A' }},
