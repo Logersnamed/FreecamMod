@@ -56,6 +56,8 @@ void Config::Reload(ActionManager &actionManager, FreeCamera &freeCamera) {
     settings.maxFov = Math::toRadians(ReadValue("camera_settings", "max_fov_degrees", 155.0f));
     settings.pitchLimit = Math::toRadians(ReadValue("camera_settings", "pitch_limit_degrees", 88.0f));
 
+    settings.step = ReadValue("frame_stepper", "step", 1);
+
     settings.flags.zeroSpeedFreeze = ReadValue("hidden", "freeze_by_setting_zero_speed", 0);
     freeCamera.SetConfigSettings(settings);
 

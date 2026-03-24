@@ -18,9 +18,7 @@ class PathRecorder {
 
         int framesRestored = 0;
         std::vector<FrameData> framesData;
-
         bool isFullyRestored = false;
-        bool IsFullyRestored() const { return isFullyRestored; }
 
         void Record(int frame, T data) {
             if (framesData.empty() || framesData.back().data != data) {
@@ -130,7 +128,7 @@ public:
 
         ++framesPlayed;
 
-        if (positions.IsFullyRestored() && rotations.IsFullyRestored() && fovs.IsFullyRestored()) {
+        if (positions.isFullyRestored && rotations.isFullyRestored && fovs.isFullyRestored) {
             EndPlay();
         }
     }

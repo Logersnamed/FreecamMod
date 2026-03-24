@@ -23,6 +23,8 @@ public:
 
         float tiltSpeed = 1.0f;
 
+        int step = 1;
+
         struct Flags {
             bool smoothCamera = true;
             bool hideHud = true;
@@ -95,6 +97,8 @@ private:
     std::byte savedHudOption = std::byte(2);
     std::optional<int> hudValueToRestore = std::nullopt;
 
+    PathRecorder pathRecorder{};
+
     void UpdatePosition(GameData::Camera* camera, float dt);
     void UpdateRotation(GameData::Camera* freeCamera, GameData::Camera* playerCamera, float dt);
     void UpdateFov(GameData::Camera* camera, float dt);
@@ -114,21 +118,8 @@ private:
 
 	void FreezeEntity(GameData::ChrIns* entity, bool enabled);
     void FreezePlayer(bool enabled);
-    void FreezeEntities(bool enabled);
+    void FreezeEntities(bool enabled); 
     
-    PathRecorder pathRecorder;
-
-public:
-    void StepFrames() { framesToStep += step; }
-
-private:
-    const int step = 1;
-    int framesToStep = 0;
-
-    bool wasGameFrozen = false;
-    bool wasEntitiesFrozen = false;
-    bool wasPlayerFrozen = false;
-
     void GetCameraPitchYaw(GameData::Camera* camera, float* _pitch, float* _yaw);
 
     void SetSpeed(float newSpeed) { speed = max(newSpeed, 0.0f); }
@@ -138,4 +129,15 @@ private:
     void SetFov(GameData::Camera* cam, float newFov) { if (cam) cam->fov = std::clamp(newFov, minFov, maxFov); }
     void SetMinFov(float newMinFov) { minFov = std::clamp(newMinFov, MIN_FOV, MAX_FOV); }
     void SetMaxFov(float newMaxFov) { maxFov = std::clamp(newMaxFov, MIN_FOV, MAX_FOV); }
+
+public:
+    void StepFrames() { framesToStep += step; }
+
+private:
+    int step = 1;
+    int framesToStep = 0;
+
+    bool wasGameFrozen = false;
+    bool wasEntitiesFrozen = false;
+    bool wasPlayerFrozen = false;
 };

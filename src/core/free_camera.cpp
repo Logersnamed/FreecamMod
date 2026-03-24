@@ -154,6 +154,8 @@ void FreeCamera::SetConfigSettings(const Settings& settings) {
 
     tiltSpeed = settings.tiltSpeed;
 
+    step = settings.step;
+
     flags = settings.flags;
 }
 

@@ -74,10 +74,10 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend) {
     if (actionManager.IsPressed(Action::ScrollZoomModifier, input)) freeCamera.AddZoomVelocity(-input.GetScrollDelta());
     if (actionManager.IsPressed(Action::ScrollCameraSpeedModifier, input)) freeCamera.AddSpeed(input.GetScrollDelta());
 
-    if (input.IsJustPressed(VK_F8)) freeCamera.GetPathRecorder().Record();
-    if (input.IsJustPressed(VK_F9)) freeCamera.GetPathRecorder().PlayRecord();
+    if (actionManager.IsJustPressed(Action::StartEndRecording, input)) freeCamera.GetPathRecorder().Record();
+    if (actionManager.IsJustPressed(Action::StartEndPlayingRecording, input)) freeCamera.GetPathRecorder().PlayRecord();
 
-    if (input.IsJustPressed(VK_F6)) freeCamera.StepFrames();
+    if (actionManager.IsJustPressed(Action::StepFrames, input)) freeCamera.StepFrames();
 }
 
 void Freecam::Update(GameData::GameRend* gameRend) {
