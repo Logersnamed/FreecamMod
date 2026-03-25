@@ -1,0 +1,51 @@
+name: Build Pre-Release Freecam
+
+permissions:
+  contents: write
+
+env:
+  project_name: Freecam
+
+on:
+  push:
+    branches: [ pre-release ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Configure CMake
+        run: cmake -B build -G "Visual Studio 17 2022" -A x64
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Prepare package
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force -Path package/Freecam
+          Copy-Item build/Release/${{ env.project_name }}.dll package/
+          Copy-Item config/config.ini package/Freecam/
+
+      - name: Create pre-release zip
+        shell: powershell
+        run: |
+          Compress-Archive -Path package/* -DestinationPath "${{ env.project_name }}-pre-release.zip"
+
+      - name: Create or Update Pre-release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: pre-release
+          name: Pre-release (latest)
+          prerelease: true
+          overwrite_files: true
+          files: ${{ env.project_name }}-pre-release.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
