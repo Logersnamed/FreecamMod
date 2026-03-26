@@ -68,7 +68,7 @@ public:
 			const float smootht = Math::smoothstep(t);
 			Lerp(camera, startState, endState, smootht);
 
-			if (t == 1) {
+			if (t == 1 || startState == endState) {
 				time = 0;
 				++interval;
 			}
