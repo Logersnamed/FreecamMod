@@ -57,7 +57,7 @@ class PathRecorder {
     int framesPlayed = 0;
 
     FrameDataBuffer<float3> positions;
-    FrameDataBuffer<matrix3x3> rotations;   // todo: use quaternions
+    FrameDataBuffer<matrix3x3> rotations;   // todo: use quaternions. Also c0.y is always 0 so don't store it
     FrameDataBuffer<float> fovs;
 
     bool isRecording = false;

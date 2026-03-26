@@ -8,6 +8,7 @@
 #include "core/features/frame_stepper.h"
 #include "core/features/freeze_controller.h"
 #include "core/features/path_recorder.h"
+#include "core/features/camera_state_manager.h"
 #include "core/game_data/game_data.h"
 #include "utils/debug.h"
 
@@ -52,7 +53,10 @@ public:
     void SetConfigSettings(const Settings& cameraSettings);
 
     PathRecorder& GetPathRecorder() { return pathRecorder; }
+    CameraStateManager& GetCameraStateManager() { return cameraStateManager; }
     void StepFrames() { frameStepper.StepFrames(step); }
+
+    bool IsEnabled() { return isEnabled; }
 
     void SetMouseDelta(int2 delta) { mouseDelta = delta; }
     void SetRollVeloctiy(float vel) { rollVelocity = vel; }
@@ -72,6 +76,7 @@ private:
     FreezeController freezeController{};
     FrameStepper frameStepper;
     PathRecorder pathRecorder{};
+    CameraStateManager cameraStateManager{};
     Settings::Flags flags{};
 
     float speed = 10.0f;

@@ -135,14 +135,16 @@ struct matrix3x3 {
 };
 
 struct matrix3x3_ref {
-    float3_ref col0;
-    float3_ref col1;
-    float3_ref col2;
+    float3_ref c0;
+    float3_ref c1;
+    float3_ref c2;
+
+    operator matrix3x3() const { return { (float3)c0, (float3)c1, (float3)c2 }; }
 
     matrix3x3_ref& operator=(const matrix3x3& m) {
-        col0 = m.c0;
-        col1 = m.c1;
-        col2 = m.c2;
+        c0 = m.c0;
+        c1 = m.c1;
+        c2 = m.c2;
         return *this;
     }
 };

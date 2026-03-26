@@ -26,6 +26,16 @@ private:
 
     void Update(GameData::GameRend* gameRend);
 	void ProcessInput(GameData::GameRend* gameRend);
+    void ProcessNumRowKeys(GameData::GameRend* gameRend);
+
+    struct NumRowKey {
+        bool shouldBeProcessed = false;
+        int pressId = 0;
+    } numRowKeys[10]{};
+
+    int id = 0;
+    bool isNumRowProcessed = true;
+    bool isWaitingForOtherNumKeys = false;
 
     bool HookFunctions();
 

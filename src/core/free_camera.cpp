@@ -36,6 +36,8 @@ void FreeCamera::Update(GameData::GameRend* gameRend, float deltaTime) {
     if (pathRecorder.IsPlaying()) pathRecorder.PlayNextFrame(freeCamera);
 
     frameStepper.Update();
+
+    cameraStateManager.Update(freeCamera, deltaTime);
 }
 
 void FreeCamera::UpdatePosition(GameData::Camera* camera, float dt) {

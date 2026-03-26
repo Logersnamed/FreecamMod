@@ -78,6 +78,72 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend) {
     if (actionManager.IsJustPressed(Action::StartEndPlayingRecording, input)) freeCamera.GetPathRecorder().PlayRecord();
 
     if (actionManager.IsJustPressed(Action::StepFrames, input)) freeCamera.StepFrames();
+
+    // temp
+    if (input.IsJustPressed(VK_F3)) Logger::Enable(1);
+
+    ProcessNumRowKeys(gameRend);
+}
+
+void Freecam::ProcessNumRowKeys(GameData::GameRend* gameRend) {
+    if (input.IsPressed(VK_CONTROL)) {
+        GameData::Camera* activeCamera = gameRend->IsFreecamEnabled() ? gameRend->csDebugCam : gameRend->csPersCam1;
+        if (!activeCamera) return;
+
+        for (int key = 0; key < 10; ++key) {
+            int keyCode = key + (int)'0';
+
+            if (input.IsJustPressed(keyCode)) {
+                freeCamera.GetCameraStateManager().SaveState(activeCamera, key);
+            }
+        }
+
+        return;
+    }
+
+    bool isAtLeastOnePressed = false;
+    for (int key = 0; key < 10; ++key) {
+        int keyCode = key + (int)'0';
+
+        if (input.IsPressed(keyCode)) {
+            isAtLeastOnePressed = true;
+            isWaitingForOtherNumKeys = true;
+
+            numRowKeys[key].shouldBeProcessed = false;
+            if (input.IsJustPressed(keyCode)) {
+                numRowKeys[key].pressId = id++;
+            }
+        }
+
+        if (input.IsReleased(keyCode)) {
+            if (isWaitingForOtherNumKeys) isNumRowProcessed = false;
+
+            numRowKeys[key].shouldBeProcessed = true;
+        }
+    }
+
+    std::vector<uint8_t> keysToProcess;
+    if (!isNumRowProcessed && !isAtLeastOnePressed) {
+        for (int key = 0; key < 10; ++key) {
+            if (numRowKeys[key].shouldBeProcessed) {
+                numRowKeys[key].shouldBeProcessed = false;
+                keysToProcess.push_back(key);
+            }
+        }
+
+        isNumRowProcessed = true;
+        isWaitingForOtherNumKeys = false;
+        id = 0;
+    }
+
+    if (keysToProcess.size()) {
+        std::sort(keysToProcess.begin(), keysToProcess.end(), [&](const int& a, const int& b) {
+            return numRowKeys[a].pressId < numRowKeys[b].pressId;
+            });
+
+        GameData::Camera* activeCamera = gameRend->IsFreecamEnabled() ? gameRend->csDebugCam : gameRend->csPersCam1;
+        freeCamera.GetCameraStateManager().StartLerpBetweenSlots(activeCamera, keysToProcess);
+    }
 }
 
 void Freecam::Update(GameData::GameRend* gameRend) {
