@@ -37,7 +37,7 @@ void FreeCamera::Update(GameData::GameRend* gameRend, float deltaTime) {
 
     frameStepper.Update();
 
-    cameraStateManager.Update(freeCamera, deltaTime);
+    cameraStateManager.Update(freeCamera, float3_ref(yaw, pitch, roll), deltaTime);
 }
 
 void FreeCamera::UpdatePosition(GameData::Camera* camera, float dt) {

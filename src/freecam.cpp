@@ -79,9 +79,6 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend) {
 
     if (actionManager.IsJustPressed(Action::StepFrames, input)) freeCamera.StepFrames();
 
-    // temp
-    if (input.IsJustPressed(VK_F3)) Logger::Enable(1);
-
     ProcessNumRowKeys(gameRend);
 }
 
@@ -94,7 +91,7 @@ void Freecam::ProcessNumRowKeys(GameData::GameRend* gameRend) {
             int keyCode = key + (int)'0';
 
             if (input.IsJustPressed(keyCode)) {
-                freeCamera.GetCameraStateManager().SaveState(activeCamera, key);
+                freeCamera.GetCameraStateManager().SaveState(activeCamera, key, freeCamera.GetYawPitchRoll());
             }
         }
 

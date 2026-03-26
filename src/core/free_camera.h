@@ -56,7 +56,8 @@ public:
     CameraStateManager& GetCameraStateManager() { return cameraStateManager; }
     void StepFrames() { frameStepper.StepFrames(step); }
 
-    bool IsEnabled() { return isEnabled; }
+    bool IsEnabled() const { return isEnabled; }
+    float3 GetYawPitchRoll() const { return { yaw, pitch, roll }; }
 
     void SetMouseDelta(int2 delta) { mouseDelta = delta; }
     void SetRollVeloctiy(float vel) { rollVelocity = vel; }

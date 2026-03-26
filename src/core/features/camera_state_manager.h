@@ -10,28 +10,28 @@
 class CameraStateManager {
 	struct State {
 		float3 pos = 0.0f;
-		matrix3x3 rotation{};
+		Quaternion rotation{};
 		float fov = 1.0f;
+		float3 yawPitchRoll = 0;
 
-		bool operator==(const State& other) const {
-			return pos == other.pos && rotation == other.rotation && fov == other.fov;
-		}
+		bool operator==(const State& other) const { return pos == other.pos && rotation == other.rotation && fov == other.fov; }
 	} stateSlots[10]{};
 
 	bool isInterpolating = false;
-	std::vector<uint8_t> slotOrder;
+	std::vector<uint8_t> slotOrder;	
 	uint8_t interval = 0;
 	float time = 0;
 	const int iTime = 3.0f;
 
 public:
-	void SaveState(GameData::Camera* camera, int slot) {
-		Logger::Info("Saved sloat %d", slot);
+	void SaveState(GameData::Camera* camera, int slot, float3 yawPitchRoll) {
+		Logger::Info("Saved slot %d", slot);
 
 		State state = {
 			camera->matrix.position(),
-			(matrix3x3)camera->matrix.rotation(),	// is not saved correctly because it doenst account my pitchyaws or smth
-			camera->fov
+			Quaternion::fromRotationMatrix(camera->matrix.rotation()),
+			camera->fov,
+			yawPitchRoll
 		};
 
 		stateSlots[slot] = state;
@@ -39,30 +39,23 @@ public:
 
 	void StartLerpBetweenSlots(GameData::Camera* camera, const std::vector<uint8_t>& positionSlots) {
 		Logger::Info("Interpolation started");
-		if (positionSlots.size() == 1) {
-			State& state = stateSlots[positionSlots[0]];
-			camera->matrix.position() = state.pos;
-			camera->matrix.rotation() = state.rotation;
-			camera->fov = state.fov;
-			return;
-		}
-
 		slotOrder = positionSlots;
-
-		for (auto& slot : slotOrder)
-			Logger::Info("%d", slot);
 
 		isInterpolating = true;
 		interval = 0;
 		time = 0;
 	}
 
-	void Update(GameData::Camera* camera,  float dt) {
+	void Update(GameData::Camera* camera, const float3_ref& yawPitchRoll, float dt) {
 		if (!isInterpolating) return;
 
 		if (interval + 1 >= slotOrder.size()) {
 			const State& endState = stateSlots[slotOrder[interval]];
 			Lerp(camera, endState, endState, 1.0f);
+
+			yawPitchRoll.x = endState.yawPitchRoll.x;
+			yawPitchRoll.y = endState.yawPitchRoll.y;
+			yawPitchRoll.z = endState.yawPitchRoll.z;
 
 			isInterpolating = false;
 			Logger::Info("Interpolation finished");
@@ -89,13 +82,13 @@ private:
 	void Lerp(GameData::Camera* camera, const State& startState, const State& endState, float t) {
 		if (startState == endState) {
 			camera->matrix.position() = startState.pos;
-			camera->matrix.rotation() = startState.rotation;
+			camera->matrix.rotation() = startState.rotation.toRotationMatrix();
 			camera->fov = startState.fov;
 			return;
 		}
 
 		camera->matrix.position() = Math::lerp(startState.pos, endState.pos, t);
-		camera->matrix.rotation() = endState.rotation; /*Math::lerp(startState.rotation, endState.rotation, t);*/
+		camera->matrix.rotation() = Quaternion::slerp(startState.rotation, endState.rotation, t).toRotationMatrix();
 		camera->fov = Math::lerp(startState.fov, endState.fov, t);
 	}
 };
