@@ -41,7 +41,8 @@ void Config::Reload(ActionManager &actionManager, FreeCamera &freeCamera) {
     settings.flags.freezeEntities = ReadValue("freecam", "freeze_entities", 1);
     settings.flags.freezePlayer = ReadValue("freecam", "freeze_player", 1);
     settings.flags.disablePlayerControls = ReadValue("freecam", "disable_player_controls", 1);
-    settings.flags.smoothCamera = ReadValue("freecam", "smooth_camera", 1);
+    settings.flags.smoothCameraMovement = ReadValue("freecam", "smooth_camera_movement", 1);
+    settings.flags.smoothCameraRotation = ReadValue("freecam", "smooth_camera_rotation", 0);
 
     settings.flags.freezeGame = ReadValue("experimental", "freeze_game", 1);
     settings.flags.resetCameraSettings = ReadValue("experimental", "reset_camera_settings", 1);

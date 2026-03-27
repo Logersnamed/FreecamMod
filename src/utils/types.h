@@ -7,6 +7,12 @@ struct float2 {
     constexpr float2() : x(0), y(0) {}
     constexpr float2(float t) : x(t), y(t) {}
     constexpr float2(float x, float y) : x(x), y(y) {}
+
+    float2& operator+=(const float2& v) { x += v.x; y += v.y; return *this; }
+    float2& operator*=(float s) { x *= s; y *= s; return *this; }
+
+    inline float length() const { return std::sqrt(x * x + y * y); }
+    inline float lengthSquared() const { return x * x + y * y; }
 };
 
 struct int2 {

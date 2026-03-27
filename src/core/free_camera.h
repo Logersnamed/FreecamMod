@@ -29,7 +29,8 @@ public:
         int step = 1;
 
         struct Flags {
-            bool smoothCamera = true;
+            bool smoothCameraMovement = true;
+            bool smoothCameraRotation = false;
             bool hideHud = true;
             bool freezeGame = false;
             bool freezeEntities = true;
@@ -60,11 +61,11 @@ public:
     float3 GetYawPitchRoll() const { return { yaw, pitch, roll }; }
 
     void SetMouseDelta(int2 delta) { mouseDelta = delta; }
-    void SetRollVeloctiy(float vel) { rollVelocity = vel; }
     void SetIsSprinting(bool enabled) { isSprinting = enabled; }
 
-	void AddSpeed(float delta) { SetSpeed(speed + delta); }
+	void AddSpeed(float delta) { SetSpeed(speed + delta * speed * 0.05); }
 	void AddVelocity(const float3& delta) { velocity += delta; }
+    void AddRollVelocity(float delta) { rollVelocity += delta; }
 	void AddZoomVelocity(float delta) { zoomVelocity += delta; }
 	void AddFov(GameData::Camera* cam, float delta) { if (cam) SetFov(cam, cam->fov + delta); }
 
@@ -83,6 +84,7 @@ private:
     float speed = 10.0f;
     float3 velocity = float3(0);
     float zoomVelocity = 0.0f;
+    float2 yawPitchVelocity = 0;
     float rollVelocity = 0.0f;
 
     int2 mouseDelta = 0;

@@ -62,10 +62,11 @@ void FreeCamera::UpdateRotation(GameData::Camera* freeCamera, GameData::Camera* 
     float rollSin = std::sin(roll);
     float rollCos = std::cos(roll);
 
-    const float sens = sensitivity * ComputeZoomFactor(freeCamera->fov) * 0.001f;
-    float2 rolledMouseDelta = mouseDelta.rotate(rollSin, rollCos);
-    yaw   += rolledMouseDelta.x * sens;
-    pitch += rolledMouseDelta.y * sens;
+    const float smoothFactor = flags.smoothCameraRotation ? 0.1f * 100.0f * dt : 1.0f;
+    const float sens = sensitivity * ComputeZoomFactor(freeCamera->fov) * 0.001f * smoothFactor;
+    yawPitchVelocity += mouseDelta.rotate(rollSin, rollCos);// better roll vel 
+    yaw   += yawPitchVelocity.x * sens;
+    pitch += yawPitchVelocity.y * sens;
 
     if (pitchLimit) pitch = std::clamp(pitch, -pitchLimit, pitchLimit);
 
@@ -85,7 +86,18 @@ void FreeCamera::UpdateRotation(GameData::Camera* freeCamera, GameData::Camera* 
     freeCamera->matrix.c1 = float4(rolledUp, 0.0f);
     freeCamera->matrix.c2 = float4(forward, 0.0f);
 
-    rollVelocity = 0;
+    if (!flags.smoothCameraRotation) {
+        yawPitchVelocity = float2();
+        rollVelocity = 0;
+        return;
+    }
+
+    const float velocityFadeSpeed = 1.0f;
+    float factor = Math::fastEase(velocityFadeSpeed * dt);
+    yawPitchVelocity *= factor;
+    rollVelocity *= factor;
+    if (yawPitchVelocity.lengthSquared() < 0.001f) yawPitchVelocity = float2();
+    if (std::abs(rollVelocity) < 0.001f) rollVelocity = 0;
 }
 
 void FreeCamera::UpdateFov(GameData::Camera* camera, float dt) {
@@ -95,7 +107,7 @@ void FreeCamera::UpdateFov(GameData::Camera* camera, float dt) {
 }
 
 void FreeCamera::UpdateVelocity(float dt) {
-	if (!flags.smoothCamera) {
+	if (!flags.smoothCameraMovement) {
         velocity = float3(0);
         return;
     }
