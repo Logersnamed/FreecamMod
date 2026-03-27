@@ -6,7 +6,7 @@
 #include <cstdint>
 
 #include "core/features/frame_stepper.h"
-#include "core/features/freeze_controller.h"
+#include "core/features/game_state_manager.h"
 #include "core/features/path_recorder.h"
 #include "core/features/camera_state_manager.h"
 #include "core/game_data/game_data.h"
@@ -42,7 +42,7 @@ public:
         } flags{};
     };
 
-    FreeCamera() : frameStepper(freezeController) {}
+    FreeCamera() : frameStepper(gameStateManager) {}
 
     void Update(GameData::GameRend* gameRend, float deltaTime);
 
@@ -75,7 +75,7 @@ private:
     bool isEnabled = false;
     bool isFirstEnabled = true;
 
-    FreezeController freezeController{};
+    GameStateManager gameStateManager{};
     FrameStepper frameStepper;
     PathRecorder pathRecorder{};
     CameraStateManager cameraStateManager{};

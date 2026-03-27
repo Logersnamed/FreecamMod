@@ -1,8 +1,8 @@
 #pragma once
-#include "core/features/freeze_controller.h"
+#include "core/features/game_state_manager.h"
 
 class FrameStepper {
-    FreezeController& freezeController;
+    GameStateManager& gameStateManager;
 
     int framesToStep = 0;
 
@@ -11,19 +11,19 @@ class FrameStepper {
     bool wasPlayerFrozen = false;
 
 public:
-    FrameStepper(FreezeController& controller) : freezeController(controller) {}
+    FrameStepper(GameStateManager& gameStateMgr) : gameStateManager(gameStateMgr) {}
 
     void StepFrames(int step) {
         if (step <= 0) return;
 
         if (framesToStep == 0) {
-            wasGameFrozen = freezeController.IsGameFrozen();
-            wasEntitiesFrozen = freezeController.AreEntitesFrozen();
-            wasPlayerFrozen = freezeController.IsPlayerFrozen();
+            wasGameFrozen = gameStateManager.IsGameFrozen();
+            wasEntitiesFrozen = gameStateManager.AreEntitesFrozen();
+            wasPlayerFrozen = gameStateManager.IsPlayerFrozen();
 
-            if (wasGameFrozen)     freezeController.FreezeGame(false);
-            if (wasEntitiesFrozen) freezeController.FreezeEntities(false);
-            if (wasPlayerFrozen)   freezeController.FreezePlayer(false);
+            if (wasGameFrozen)     gameStateManager.FreezeGame(false);
+            if (wasEntitiesFrozen) gameStateManager.FreezeEntities(false);
+            if (wasPlayerFrozen)   gameStateManager.FreezePlayer(false);
         }
 
         framesToStep += step + 1;   // https://cdn.7tv.app/emote/01JQK3VGYV3FBX6R7YGQPNG19J/4x.avif
@@ -35,9 +35,9 @@ public:
         --framesToStep;
 
         if (framesToStep == 0) {
-            if (wasGameFrozen)     freezeController.FreezeGame(true);
-            if (wasEntitiesFrozen) freezeController.FreezeEntities(true);
-            if (wasPlayerFrozen)   freezeController.FreezePlayer(true);
+            if (wasGameFrozen)     gameStateManager.FreezeGame(true);
+            if (wasEntitiesFrozen) gameStateManager.FreezeEntities(true);
+            if (wasPlayerFrozen)   gameStateManager.FreezePlayer(true);
 
             wasGameFrozen = false;
             wasEntitiesFrozen = false;

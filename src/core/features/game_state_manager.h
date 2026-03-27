@@ -3,7 +3,7 @@
 #include "core/game_data_manager.h"
 #include "utils/debug.h"
 
-class FreezeController {
+class GameStateManager {
 public:
 	void FreezeGame(bool enabled) {
 		if (isGameFrozen != enabled) {

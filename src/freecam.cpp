@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <optional>
 
-#include "MinHook.h"
 #include "ModUtils.h"
 
 #include "core/features/path_recorder.h"
@@ -160,29 +159,15 @@ void __fastcall Freecam::Hook_UpdateCameraMatrix(GameData::GameRend* gameRend,vo
 }
 
 bool Freecam::HookFunctions() {
-    Logger::Info("Initializing MinHook...");
-    if (MH_Initialize() != MH_OK) {
-        Logger::Error("Failed to initialize MinHook");
-        return false;
-    }
+    if (!hookManager.Initialize()) return false;
 
-    Logger::Info("Scanning for UpdateCameraMatrixFunc...");
-    UpdateCameraMatrix UpdateCameraMatrixFunc = (UpdateCameraMatrix)Signature("4C 8B 49 18 4C 8B D1 8B 42 50 41 89 41 50 8B 42").Scan().As<uint64_t>();
-    if (!UpdateCameraMatrixFunc) {
-        Logger::Error("Failed to find UpdateCameraMatrixFunc");
-        return false;
-    }
-    Logger::Info("Hooking UpdateCameraMatrixFunc at %p...", UpdateCameraMatrixFunc);
-    if (MH_CreateHook(UpdateCameraMatrixFunc, &Hook_UpdateCameraMatrix, (void**)&originalUpdateCameraMatrix) != MH_OK) {
-        Logger::Error("Failed to create hook for UpdateCameraMatrixFunc");
-        return false;
-    }
-    if (MH_EnableHook(UpdateCameraMatrixFunc) != MH_OK) {
-        Logger::Error("Failed to enable hook for UpdateCameraMatrixFunc");
-        return false;
-    }
+    if (!hookManager.Create(
+        GameDataManager::GetUpdateCameraMatrixFunc(), 
+        &Hook_UpdateCameraMatrix, 
+        (void**)&originalUpdateCameraMatrix)
+    ) return false;
 
-	return true;
+    return hookManager.EnableAll();
 }
 
 void Freecam::Dispose() {
@@ -192,16 +177,13 @@ void Freecam::Dispose() {
 	Logger::Info("Disabling free camera...");
     freeCamera.DisableCamera();
 
-	Logger::Info("Unhooking UpdateCameraMatrixFunc...");
-    MH_RemoveHook(MH_ALL_HOOKS);
-    Logger::Info("Uninitializing MinHook...");
-    MH_Uninitialize();
+    hookManager.Shutdown();
 
     Logger::Info("Unhooking WndProc...");
     input.UnhookWndProc(ModUtils::muWindow);
 
     instance = nullptr;
 
-    Logger::Info("Shutting down Logger..");
+    Logger::Info("Shutting down Logger...");
     Logger::Shutdown();
 }

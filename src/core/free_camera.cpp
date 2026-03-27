@@ -145,7 +145,7 @@ void FreeCamera::SetConfigSettings(const Settings& settings) {
     step = settings.step;
 
     flags = settings.flags;
-    freezeController.SetZeroSpeedFreeze(flags.zeroSpeedFreeze);
+    gameStateManager.SetZeroSpeedFreeze(flags.zeroSpeedFreeze);
 }
 
 void FreeCamera::RestorePendingSettings() {
@@ -219,17 +219,19 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
     }
 
     if (flags.freezeGame) {
-        freezeController.FreezeGame(true);
+        gameStateManager.FreezeGame(true);
     }
     else {
-        if (flags.freezeEntities) freezeController.FreezeEntities(true);
-        if (flags.freezePlayer) freezeController.FreezePlayer(true);
+        if (flags.freezeEntities) gameStateManager.FreezeEntities(true);
+        if (flags.freezePlayer) gameStateManager.FreezePlayer(true);
     }
 
     frameStepper.Reset();
 
     velocity = float3(0);
+    yawPitchVelocity = float2(0);
     zoomVelocity = 0.0f;
+    rollVelocity = 0.0;
 
 	rend->EnableFreecam(flags.disablePlayerControls);
     isEnabled = true;
@@ -249,9 +251,9 @@ void FreeCamera::DisableCamera(GameData::GameRend* rend) {
 
     SettingsBackup::SetEnabled(0);
 
-    freezeController.FreezeGame(false);
-    freezeController.FreezeEntities(false);
-    freezeController.FreezePlayer(false);
+    gameStateManager.FreezeGame(false);
+    gameStateManager.FreezeEntities(false);
+    gameStateManager.FreezePlayer(false);
 
     if (pathRecorder.IsRecording()) pathRecorder.EndRecord();
     if (pathRecorder.IsPlaying()) pathRecorder.EndPlay();

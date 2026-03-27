@@ -5,6 +5,7 @@
 #include "core/input/input.h"
 #include "core/config.h"
 #include "core/free_camera.h"
+#include "core/hook_manager.h"
 
 class Freecam {
 public:
@@ -21,6 +22,7 @@ private:
     Config config{};
     Input input{};
 	ActionManager actionManager{};
+    HookManager hookManager{};
 
     bool isRunning = true;
 

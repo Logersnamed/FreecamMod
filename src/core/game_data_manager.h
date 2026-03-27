@@ -9,6 +9,7 @@ public:
 	static GameData::GameDataMan* GetGameDataMan();
 	static GameData::OptionData* GetOptionData();
 	static GameData::ChrIns* GetPlayer();
+	static void* GetUpdateCameraMatrixFunc();
 
 	static void PauseGame(bool enabled);
 
@@ -28,4 +29,5 @@ private:
 	static inline uintptr_t worldChrManSig{};
 	static inline uintptr_t gameDataManSig{};
 	static inline uintptr_t gamePauseSig{};
+	static inline uintptr_t updateCameraMatrixFuncSig{};
 };
