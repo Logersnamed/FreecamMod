@@ -57,7 +57,7 @@ class PathRecorder {
     int framesPlayed = 0;
 
     FrameDataBuffer<float3> positions;
-    FrameDataBuffer<matrix3x3> rotations;   // todo: use quaternions. Also c0.y is always 0 so don't store it
+    FrameDataBuffer<Quaternion> rotations;
     FrameDataBuffer<float> fovs;
 
     bool isRecording = false;
@@ -81,7 +81,7 @@ public:
             positions.framesData.size(), positions.framesData.size() * sizeof(float3)
         );
         Logger::Info("\tRotations recorded: %zu frames = %zu bytes",
-            rotations.framesData.size(), rotations.framesData.size() * sizeof(matrix3x3)
+            rotations.framesData.size(), rotations.framesData.size() * sizeof(Quaternion)
         );
         Logger::Info("\tFOVs recorded: %zu frames = %zu bytes",
             fovs.framesData.size(), fovs.framesData.size() * sizeof(float)
@@ -115,7 +115,7 @@ public:
 
     void RecordFrame(const GameData::Camera* camera) {
         positions.Record(framesRecorded, camera->matrix.position());
-        rotations.Record(framesRecorded, camera->matrix.rotation());
+        rotations.Record(framesRecorded, Quaternion::fromRotationMatrix(camera->matrix.rotation()));
         fovs.Record(framesRecorded, camera->fov);
 
         ++framesRecorded;
@@ -123,7 +123,7 @@ public:
 
     void PlayNextFrame(GameData::Camera* camera) {
         camera->matrix.position() = positions.GetNextFrameData(framesPlayed);
-        camera->matrix.rotation() = rotations.GetNextFrameData(framesPlayed);
+        camera->matrix.rotation() = rotations.GetNextFrameData(framesPlayed).toRotationMatrix();
         camera->fov = fovs.GetNextFrameData(framesPlayed);
 
         ++framesPlayed;

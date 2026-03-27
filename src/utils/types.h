@@ -268,4 +268,7 @@ struct Quaternion : float4 {
             (a.w * s0) + (b.w * s1)
         );
     }
+
+    bool operator==(const Quaternion& other) const { return x == other.x && y == other.y && z == other.z && w == other.w; }
+    bool operator!=(const Quaternion& other) { return !(*this == other); }
 };
