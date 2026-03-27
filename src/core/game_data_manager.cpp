@@ -6,7 +6,7 @@
 #include "utils/debug.h"
 
 bool GameDataManager::Init() {
-	Logger::Info("Initializing GameDataManager...");
+	LOG_INFO("Initializing GameDataManager...");
 
 	SigEntry signatures[] = {
 		{ "fieldAreaSig",   "48 8B 3D ? ? ? ? 49 8B D8 48 8B F2 4C 8B F1 48 85 FF", 3, true, true, &fieldAreaSig },
@@ -18,20 +18,20 @@ bool GameDataManager::Init() {
 	};
 
 	for (SigEntry& sig : signatures) {
-		Logger::Info("Scanning for %s, AOB: \"%s\", offset: %d...", sig.name, sig.pattern, sig.offset);
+		LOG_INFO("Scanning for %s, AOB: \"%s\", offset: %d...", sig.name, sig.pattern, sig.offset);
 
 		*sig.result = Signature(sig.pattern).Scan().Add(sig.offset).Rip(sig.isRip).As<uintptr_t>();
 		if (!*sig.result) {
 			if (sig.isObligatory) {
-				Logger::Error("Failed to find %s", sig.name);
+				LOG_ERROR("Failed to find %s", sig.name);
 				return false;
 			}
 
-			Logger::Error("Failed to find %s. Some features may won't work", sig.name);
+			LOG_ERROR("Failed to find %s. Some features may won't work", sig.name);
 			continue;
 		}
 
-		Logger::Info("%s: %p", sig.name, *sig.result);
+		LOG_INFO("%s: %p", sig.name, *sig.result);
 	}
 	
 	return true;
@@ -81,13 +81,13 @@ void* GameDataManager::GetUpdateCameraMatrixFunc() {
 
 void GameDataManager::PauseGame(bool enabled) {
 	if (!gamePauseSig) {
-		Logger::Warn("Game pausing is not possible, gamePauseSig wasn't found.");
+		LOG_WARN("Game pausing is not possible, gamePauseSig wasn't found.");
 		return;
 	}
 
 	if (isGamePaused == enabled) return;
 
-	Logger::Info("Pausing Game...");
+	LOG_INFO("Pausing Game...");
 	if (enabled) {
 		ModUtils::ReplaceExpectedBytesAtAddress(gamePauseSig, "84", "85");
 	}

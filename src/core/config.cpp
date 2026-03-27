@@ -10,17 +10,17 @@ bool Config::Initialize(HMODULE hModule) {
 
     configDirPath = dllPath + configDirectoryName;
     Logger::InitFile(configDirPath);
-    Logger::Info("Initializing Config...");
-    Logger::Info("DLL Path: %s", dllPath.c_str());
+    LOG_INFO("Initializing Config...");
+    LOG_INFO("DLL Path: %s", dllPath.c_str());
 
     if (configDirPath.empty()) {
-        Logger::Error("Failed to determine config directory path");
+        LOG_ERROR("Failed to determine config directory path");
 		return false;
     }
     CreateModDirectory();
 
     configFilePath = configDirPath + configFileName;
-    Logger::Info("Config path: %s", configFilePath.c_str());
+    LOG_INFO("Config path: %s", configFilePath.c_str());
 
     file = mINI::INIFile(configFilePath);
 
@@ -28,7 +28,6 @@ bool Config::Initialize(HMODULE hModule) {
 }
 
 void Config::Reload(ActionManager &actionManager, FreeCamera &freeCamera) {
-    // Logger::Info("Loading config...");
     CreateModDirectory();
 
     ini.clear();
@@ -67,21 +66,21 @@ void Config::Reload(ActionManager &actionManager, FreeCamera &freeCamera) {
     }
 
     if (fileExists) {
-        if (!file.write(ini, true)) Logger::Warn("Failed to write to config file");
+        if (!file.write(ini, true)) LOG_WARN("Failed to write to config file");
     }
     else {
-        if (!file.generate(ini, true)) Logger::Warn("Failed to generate config file");
+        if (!file.generate(ini, true)) LOG_WARN("Failed to generate config file");
     }
 }
 
 bool Config::CreateModDirectory() {
     if (!std::filesystem::exists(configDirPath)) {
-        Logger::Info("Creating config directory...");
+        LOG_INFO("Creating config directory...");
         try {
             std::filesystem::create_directories(configDirPath);
         }
         catch (...) {
-            Logger::Error("Failed to create config directory");
+            LOG_ERROR("Failed to create config directory");
             return false;
         }
     }
@@ -181,7 +180,7 @@ bool Config::findDllPath(HMODULE hModule) {
     char path[MAX_PATH];
 
     if (!GetModuleFileNameA(hModule, path, sizeof(path))) {
-        Logger::Error("Failed to get module file name");
+        LOG_ERROR("Failed to get module file name");
         return false;
     }
 

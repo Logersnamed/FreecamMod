@@ -23,14 +23,14 @@ public:
 		if (!players) return;
 
 		if (!players->IsPlayerAlone()) {
-			Logger::Info("Freezing entities in online is disabled");
+			LOG_INFO("Freezing entities in online is disabled");
 			return;
 		}
 
 		GameData::ChrIns* player = players->player0;
 
 		const size_t length = world->GetEntityListLenght();
-		Logger::Info("Set FreezeEntity = %d to %zu entities", enabled, length);
+		LOG_INFO("Set FreezeEntity = %d to %zu entities", enabled, length);
 		for (size_t i = 0; i < length; ++i) {
 			GameData::ChrIns* entity = world->begin[i];
 			if (entity && entity != player) FreezeEntity(entity, enabled);

@@ -26,7 +26,11 @@ bool Freecam::Initialize() {
 
     if (!GameDataManager::Init()) return false;
     if (!input.HookWndProc(ModUtils::muWindow)) return false;
-    if (!HookFunctions()) return false;
+
+    if (!hookManager.Initialize()) return false;
+    if (!hookManager.Create(GameDataManager::GetUpdateCameraMatrixFunc(), &Hook_UpdateCameraMatrix, (void**)&originalUpdateCameraMatrix)) 
+        return false;
+    if (!hookManager.EnableAll()) return false;
 
     SettingsBackup::SetFolderPath(config.GetConfigDirPath());
     freeCamera.SetHudValueToRestore(SettingsBackup::RestoreHudValue());
@@ -158,32 +162,14 @@ void __fastcall Freecam::Hook_UpdateCameraMatrix(GameData::GameRend* gameRend,vo
     if (instance && gameRend) instance->Update(gameRend);
 }
 
-bool Freecam::HookFunctions() {
-    if (!hookManager.Initialize()) return false;
-
-    if (!hookManager.Create(
-        GameDataManager::GetUpdateCameraMatrixFunc(), 
-        &Hook_UpdateCameraMatrix, 
-        (void**)&originalUpdateCameraMatrix)
-    ) return false;
-
-    return hookManager.EnableAll();
-}
-
 void Freecam::Dispose() {
-	Logger::Info("Disposing Freecam...");
+    LOG_INFO("Disposing Freecam...");
     isRunning = false;
 
-	Logger::Info("Disabling free camera...");
     freeCamera.DisableCamera();
-
     hookManager.Shutdown();
-
-    Logger::Info("Unhooking WndProc...");
     input.UnhookWndProc(ModUtils::muWindow);
+    Logger::Shutdown();
 
     instance = nullptr;
-
-    Logger::Info("Shutting down Logger...");
-    Logger::Shutdown();
 }

@@ -25,7 +25,7 @@ class CameraStateManager {
 
 public:
 	void SaveState(GameData::Camera* camera, int slot, float3 yawPitchRoll) {
-		Logger::Info("Saved slot %d", slot);
+		LOG_INFO("Saved slot %d", slot);
 
 		State state = {
 			camera->matrix.position(),
@@ -38,7 +38,7 @@ public:
 	}
 
 	void StartLerpBetweenSlots(GameData::Camera* camera, const std::vector<uint8_t>& positionSlots) {
-		Logger::Info("Interpolation started");
+		LOG_INFO("Interpolation started");
 		slotOrder = positionSlots;
 
 		isInterpolating = true;
@@ -58,7 +58,7 @@ public:
 			yawPitchRoll.z = endState.yawPitchRoll.z;
 
 			isInterpolating = false;
-			Logger::Info("Interpolation finished");
+			LOG_INFO("Interpolation finished");
 		}
 		else {
 			const State& startState = stateSlots[slotOrder[interval]];

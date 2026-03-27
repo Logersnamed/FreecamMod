@@ -8,6 +8,17 @@
 #include <fstream>
 #include <filesystem>
 
+#ifdef LOG_LOCATION
+    #define __FILENAME__ Logger::Filename(__FILE__)
+    #define LOG_INFO(fmt, ...)  Logger::Log("INFO", "[%s:%d] " fmt, __FILENAME__, __LINE__, ##__VA_ARGS__)
+    #define LOG_WARN(fmt, ...)  Logger::Log("WARN", "[%s:%d] " fmt, __FILENAME__, __LINE__, ##__VA_ARGS__)
+    #define LOG_ERROR(fmt, ...) Logger::Log("ERROR", "[%s:%d] " fmt, __FILENAME__, __LINE__, ##__VA_ARGS__)
+#else
+    #define LOG_INFO(fmt, ...)  Logger::Log("INFO", fmt, ##__VA_ARGS__)
+    #define LOG_WARN(fmt, ...)  Logger::Log("WARN", fmt, ##__VA_ARGS__)
+    #define LOG_ERROR(fmt, ...) Logger::Log("ERROR", fmt, ##__VA_ARGS__)
+#endif
+
 class Logger {
 public:
     static void Init(const char* title = "Debug Console");
@@ -15,17 +26,20 @@ public:
 
     static void InitFile(const std::string& folderPath);
 
-    static void Info(const char* fmt, ...);
-    static void Warn(const char* fmt, ...);
-    static void Error(const char* fmt, ...);
+    static void Log(const char* level, const char* fmt, ...);
 
     static void Enable(bool enable);
 
-private:
-    static void PrintTime();
-    static void Print(const char* level, WORD color, const char* fmt, va_list args);
+    static inline const char* Filename(const char* path) {
+        const char* p1 = strrchr(path, '\\');
+        const char* p2 = strrchr(path, '/');
+        const char* p = p1 > p2 ? p1 : p2;
+        return p ? p + 1 : path;
+    }
 
 private:
+    static void Print(const char* level, const char* fmt, va_list args);
+
     static inline bool initialized = false;
     static inline bool enabled = false;
     static inline std::mutex mutex;

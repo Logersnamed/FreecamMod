@@ -15,9 +15,9 @@ LRESULT __stdcall Input::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 }
 
 bool Input::HookWndProc(HWND hWnd) {
-    Logger::Info("Hooking WndProc...");
+    LOG_INFO("Hooking WndProc...");
     if (!hWnd) {
-		Logger::Error("Failed to hook WndProc: Invalid window handle %p", hWnd);
+        LOG_ERROR("Failed to hook WndProc: Invalid window handle %p", hWnd);
         return false;
     }
     
@@ -26,9 +26,9 @@ bool Input::HookWndProc(HWND hWnd) {
 }
 
 void Input::UnhookWndProc(HWND hWnd) {
-    Logger::Info("Unhooking WndProc...");
+    LOG_INFO("Unhooking WndProc...");
     if (!origWndProc || !hWnd) {
-		Logger::Warn("Failed to unhook WndProc: No original WndProc or invalid window handle");
+		LOG_WARN("Failed to unhook WndProc: No original WndProc or invalid window handle");
         return;
     }
 

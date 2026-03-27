@@ -14,7 +14,7 @@ void FreeCamera::Update(GameData::GameRend* gameRend, float deltaTime) {
     RestorePendingSettings();
     if (!gameRend->IsFreecamEnabled()) {
         if (isEnabled) {
-			Logger::Info("Freecam wasn't disabled properly, disabling now...");
+            LOG_INFO("Freecam wasn't disabled properly, disabling now...");
             DisableCamera(gameRend);
 		}
         return;
@@ -153,7 +153,7 @@ void FreeCamera::RestorePendingSettings() {
 
     GameData::OptionData* optionData = GameDataManager::GetOptionData();
     if (optionData) {
-        Logger::Info("Restored hud option from %d to %d", optionData->HUD, hudValueToRestore);
+        LOG_INFO("Restored hud option from %d to %d", optionData->HUD, hudValueToRestore);
         optionData->HUD = std::byte(hudValueToRestore.value());
         hudValueToRestore = std::nullopt;
     }
@@ -235,7 +235,7 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
 
 	rend->EnableFreecam(flags.disablePlayerControls);
     isEnabled = true;
-	Logger::Info("Free camera enabled");
+    LOG_INFO("Free camera enabled");
 }
 
 void FreeCamera::DisableCamera(GameData::GameRend* rend) {
@@ -259,13 +259,13 @@ void FreeCamera::DisableCamera(GameData::GameRend* rend) {
     if (pathRecorder.IsPlaying()) pathRecorder.EndPlay();
 
     isEnabled = false;
-	Logger::Info("Free camera disabled");
+    LOG_INFO("Free camera disabled");
 }
 
 void FreeCamera::DisableCamera() {
 	GameData::FieldArea* fieldArea = GameDataManager::GetFieldArea();
     if (!fieldArea) {
-		Logger::Warn("FieldArea is null in FreeCamera::DisableCamera. Nothing to disable.");
+        LOG_WARN("FieldArea is null in FreeCamera::DisableCamera. Nothing to disable.");
         return;
     }
 

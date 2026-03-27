@@ -437,7 +437,7 @@ namespace ModUtils
 
 			if (aob1Tokens[i] != aob2Tokens[i])
 			{
-				Logger::Info("Byts do not match!");
+				LOG_INFO("Byts do not match!");
 				// ShowErrorPopup("Bytes do not match!");
 				return false;
 			}
@@ -559,11 +559,11 @@ namespace ModUtils
 			{
 				char buffer[100];
 				GetWindowTextA(muWindow, buffer, 100);
-				Logger::Info("Found window handle: %p", ModUtils::muWindow);
+				LOG_INFO("Found window handle: %p", ModUtils::muWindow);
 			}
 			else
 			{
-				Logger::Error("Failed to get window handle");
+				LOG_ERROR("Failed to get window handle");
 			}
 			hasAttemptedToGetWindowHandle = true;
 		}

@@ -69,21 +69,21 @@ public:
 
     void StartRecord() {
         if (isPlaying) return;
-        Logger::Info("Recording started");
+        LOG_INFO("Recording started");
         Clear();
         isRecording = true;
     }
 
     void EndRecord() {
-        Logger::Info("Recording Ended:");
-        Logger::Info("\tTotal frames recorded: %d", framesRecorded);
-        Logger::Info("\tPositions recorded: %zu frames = %zu bytes",
+        LOG_INFO("Recording Ended:");
+        LOG_INFO("\tTotal frames recorded: %d", framesRecorded);
+        LOG_INFO("\tPositions recorded: %zu frames = %zu bytes",
             positions.framesData.size(), positions.framesData.size() * sizeof(float3)
         );
-        Logger::Info("\tRotations recorded: %zu frames = %zu bytes",
+        LOG_INFO("\tRotations recorded: %zu frames = %zu bytes",
             rotations.framesData.size(), rotations.framesData.size() * sizeof(Quaternion)
         );
-        Logger::Info("\tFOVs recorded: %zu frames = %zu bytes",
+        LOG_INFO("\tFOVs recorded: %zu frames = %zu bytes",
             fovs.framesData.size(), fovs.framesData.size() * sizeof(float)
         );
 
@@ -91,7 +91,7 @@ public:
     }
 
     void StartPlay() {
-        Logger::Info("Recording play started");
+        LOG_INFO("Recording play started");
         if (isRecording) {
             EndRecord();
         }
@@ -101,7 +101,7 @@ public:
     }
 
     void EndPlay() {
-        Logger::Info("Recording play ended");
+        LOG_INFO("Recording play ended");
         isPlaying = false;
         framesPlayed = 0;
 
