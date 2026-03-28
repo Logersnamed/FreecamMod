@@ -13,6 +13,7 @@ class CameraStateManager {
 		Quaternion rotation{};
 		float fov = 1.0f;
 		float3 yawPitchRoll = 0;
+		bool isSaved = false;
 
 		bool operator==(const State& other) const { return pos == other.pos && rotation == other.rotation && fov == other.fov; }
 	} stateSlots[10]{};
@@ -23,11 +24,12 @@ class CameraStateManager {
 	float time = 0;
 	float iTime = 3.0f;
 
+	const int MAX_SLOTS = 10;
+
 public:
 	void SetInterpolationTime(float newTime) { iTime = newTime; }
 
 	void SaveState(GameData::Camera* camera, int slot, float3 yawPitchRoll) {
-		constexpr int MAX_SLOTS = 10;
 		if (slot < 0 || slot >= MAX_SLOTS) return;
 		LOG_INFO("Saved slot %d", slot);
 
@@ -35,16 +37,21 @@ public:
 			camera->matrix.position(),
 			Quaternion::fromRotationMatrix(camera->matrix.rotation()),
 			camera->fov,
-			yawPitchRoll
+			yawPitchRoll,
+			true
 		};
 
 		stateSlots[slot] = state;
 	}
 
 	void StartLerpBetweenSlots(GameData::Camera* camera, const std::vector<uint8_t>& positionSlots) {
-		if (positionSlots.empty()) return;
+		slotOrder.clear();
+		for (uint8_t slot : positionSlots) {
+			if (slot < 0 || slot >= MAX_SLOTS) continue;
+			if (stateSlots[(int)slot].isSaved) slotOrder.push_back(slot);
+		}
+		if (slotOrder.empty()) return;
 		LOG_INFO("Interpolation started");
-		slotOrder = positionSlots;
 
 		isInterpolating = true;
 		interval = 0;
