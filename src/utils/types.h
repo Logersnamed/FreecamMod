@@ -9,10 +9,28 @@ struct float2 {
     constexpr float2(float x, float y) : x(x), y(y) {}
 
     float2& operator+=(const float2& v) { x += v.x; y += v.y; return *this; }
+    float2& operator-=(const float2& v) { x -= v.x; y -= v.y; return *this; }
     float2& operator*=(float s) { x *= s; y *= s; return *this; }
+    float2& operator/=(float s) { x /= s; y /= s; return *this; }
+
+    constexpr float2 operator+(const float2& v) const { return { x + v.x, y + v.y }; }
+    constexpr float2 operator-(const float2& v) const { return { x - v.x, y - v.y }; }
+    constexpr float2 operator*(float s) const { return { x * s, y * s }; }
+    constexpr float2 operator/(float s) const { return { x / s, y / s }; }
+
+    constexpr float2 operator-() const { return { -x, -y }; }
+
+    bool operator==(const float2& v) const { return x == v.x && y == v.y; }
+    bool operator!=(const float2& v) const { return !(*this == v); }
 
     inline float length() const { return std::sqrt(x * x + y * y); }
     inline float lengthSquared() const { return x * x + y * y; }
+    float2 normalized() const {
+        float l = length();
+        return l == 0.0f ? float2(0) : *this / l;
+    }
+
+    static float dot(const float2& a, const float2& b) { return a.x * b.x + a.y * b.y; }
 };
 
 struct int2 {
@@ -87,7 +105,9 @@ struct float3_ref {
     operator float3() const { return { x, y, z }; }
 
     float3_ref& operator=(const float3& v) { x = v.x; y = v.y; z = v.z; return *this; }
+    float3_ref& operator=(const float3_ref& v) { x = v.x; y = v.y; z = v.z; return *this; }
     float3_ref& operator+=(const float3& v) { x += v.x; y += v.y; z += v.z; return *this; }
+    float3_ref& operator+=(const float3_ref& v) { x += v.x; y += v.y; z += v.z; return *this; }
 };
 
 struct float4 {

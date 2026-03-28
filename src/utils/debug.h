@@ -40,7 +40,7 @@ public:
 private:
     static void Print(const char* level, const char* fmt, va_list args);
 
-    static inline bool initialized = false;
+    static inline bool isInitialized = false;
     static inline bool enabled = false;
     static inline std::mutex mutex;
     static inline std::ofstream logFile;

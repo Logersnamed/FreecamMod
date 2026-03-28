@@ -13,14 +13,22 @@ class HookManager {
     };
 
     std::vector<Hook> hooks;
+    bool isInitialized = false;
 
 public:
+    HookManager() {};
+
+    ~HookManager() {
+        Shutdown();
+    }
+
     bool Initialize() {
         LOG_INFO("Initializing MinHook...");
         if (MH_Initialize() != MH_OK) {
             LOG_ERROR("MH_Initialize failed");
             return false;
         }
+        isInitialized = true;
         return true;
     }
 
@@ -54,6 +62,7 @@ public:
     }
 
     void Shutdown() {
+        if (!isInitialized) return;
         LOG_INFO("Shutting down hookManager...");
         RemoveAll();
         MH_Uninitialize();

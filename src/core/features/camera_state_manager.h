@@ -21,10 +21,14 @@ class CameraStateManager {
 	std::vector<uint8_t> slotOrder;	
 	uint8_t interval = 0;
 	float time = 0;
-	const int iTime = 3.0f;
+	float iTime = 3.0f;
 
 public:
+	void SetInterpolationTime(float newTime) { iTime = newTime; }
+
 	void SaveState(GameData::Camera* camera, int slot, float3 yawPitchRoll) {
+		constexpr int MAX_SLOTS = 10;
+		if (slot < 0 || slot >= MAX_SLOTS) return;
 		LOG_INFO("Saved slot %d", slot);
 
 		State state = {
@@ -38,6 +42,7 @@ public:
 	}
 
 	void StartLerpBetweenSlots(GameData::Camera* camera, const std::vector<uint8_t>& positionSlots) {
+		if (positionSlots.empty()) return;
 		LOG_INFO("Interpolation started");
 		slotOrder = positionSlots;
 
@@ -46,16 +51,18 @@ public:
 		time = 0;
 	}
 
-	void Update(GameData::Camera* camera, const float3_ref& yawPitchRoll, float dt) {
+	void Update(GameData::Camera* camera, float3_ref& yawPitchRoll, float dt) {
 		if (!isInterpolating) return;
+		if (slotOrder.empty()) {
+			isInterpolating = false;
+			return;
+		}
 
 		if (interval + 1 >= slotOrder.size()) {
 			const State& endState = stateSlots[slotOrder[interval]];
 			Lerp(camera, endState, endState, 1.0f);
 
-			yawPitchRoll.x = endState.yawPitchRoll.x;
-			yawPitchRoll.y = endState.yawPitchRoll.y;
-			yawPitchRoll.z = endState.yawPitchRoll.z;
+			yawPitchRoll = endState.yawPitchRoll;
 
 			isInterpolating = false;
 			LOG_INFO("Interpolation finished");

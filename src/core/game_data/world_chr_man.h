@@ -69,7 +69,7 @@ namespace GameData {
 		ChrIns** begin;						// 0x1F1B8
 		ChrIns** end;						// 0x1F1C0
 
-		size_t GetEntityListLenght() const { return end - begin; }
+		size_t GetEntityListLength() const { return end - begin; }
 	};
 #pragma pack(pop)
 

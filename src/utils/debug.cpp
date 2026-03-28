@@ -9,7 +9,7 @@ void Logger::InitFile(const std::string& folderPath) {
 }
 
 void Logger::Init(const char* title) {
-    if (initialized || !enabled) return;
+    if (isInitialized || !enabled) return;
 
     AllocConsole();
 
@@ -25,7 +25,7 @@ void Logger::Init(const char* title) {
     freopen_s(&f, "CONOUT$", "w", stderr);
     SetConsoleTitleA(title);
 
-    initialized = true;
+    isInitialized = true;
 }
 
 void Logger::Enable(bool enable) {
@@ -56,12 +56,12 @@ void Logger::Log(const char* level, const char* fmt, ...) {
 
 void Logger::Shutdown() {
     LOG_INFO("Shutting down Logger...");
-    if (!initialized)
+    if (!isInitialized)
         return;
 
     if (logFile.is_open())
         logFile.close();
 
     FreeConsole();
-    initialized = false;
+    isInitialized = false;
 }

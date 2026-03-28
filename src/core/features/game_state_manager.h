@@ -13,8 +13,8 @@ public:
 	}
 
 	void FreezeEntities(bool enabled) {
-		if (areEntitesFrozen == enabled) return;
-		areEntitesFrozen = enabled;
+		if (areEntitiesFrozen == enabled) return;
+		areEntitiesFrozen = enabled;
 
 		GameData::WorldChrMan* world = GameDataManager::GetWorldChrMan();
 		if (!world) return;
@@ -29,7 +29,7 @@ public:
 
 		GameData::ChrIns* player = players->player0;
 
-		const size_t length = world->GetEntityListLenght();
+		const size_t length = world->GetEntityListLength();
 		LOG_INFO("Set FreezeEntity = %d to %zu entities", enabled, length);
 		for (size_t i = 0; i < length; ++i) {
 			GameData::ChrIns* entity = world->begin[i];
@@ -58,14 +58,14 @@ public:
 	}
 
 	bool IsGameFrozen() const { return isGameFrozen; }
-	bool AreEntitesFrozen() const { return areEntitesFrozen; }
+	bool AreEntitesFrozen() const { return areEntitiesFrozen; }
 	bool IsPlayerFrozen() const { return isPlayerFrozen; }
 
 	void SetZeroSpeedFreeze(bool enabled) { isZeroSpeedFreeze = enabled; }
 
 private:
 	bool isGameFrozen = false;
-	bool areEntitesFrozen = false;
+	bool areEntitiesFrozen = false;
 	bool isPlayerFrozen = false;
 
 	bool isZeroSpeedFreeze = false;

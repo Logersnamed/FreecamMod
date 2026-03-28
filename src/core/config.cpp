@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <cctype>
+#include <stdio.h>
 
 #include "utils/math.h"
 
@@ -33,33 +34,41 @@ void Config::Reload(ActionManager &actionManager, FreeCamera &freeCamera) {
     ini.clear();
     bool fileExists = file.read(ini);
 
-    Logger::Enable(ReadValue("mod", "debug_console", 0));
+#define READ(sec, key, var) var = ReadValue(sec, key, var)
 
     FreeCamera::Settings settings{};
-    settings.flags.hideHud = ReadValue("freecam", "hide_hud", 1);
-    settings.flags.freezeEntities = ReadValue("freecam", "freeze_entities", 1);
-    settings.flags.freezePlayer = ReadValue("freecam", "freeze_player", 1);
-    settings.flags.disablePlayerControls = ReadValue("freecam", "disable_player_controls", 1);
-    settings.flags.smoothCameraMovement = ReadValue("freecam", "smooth_camera_movement", 1);
-    settings.flags.smoothCameraRotation = ReadValue("freecam", "smooth_camera_rotation", 0);
 
-    settings.flags.freezeGame = ReadValue("experimental", "freeze_game", 1);
-    settings.flags.resetCameraSettings = ReadValue("experimental", "reset_camera_settings", 1);
-    settings.flags.alwaysUseCustomRotation = ReadValue("experimental", "always_use_custom_rotation", 1);
+    READ("freecam", "hide_hud", settings.flags.hideHud);
+    READ("freecam", "freeze_game", settings.flags.freezeGame);
+    READ("freecam", "freeze_entities", settings.flags.freezeEntities);
+    READ("freecam", "freeze_player", settings.flags.freezePlayer);
+    READ("freecam", "disable_player_controls", settings.flags.disablePlayerControls);
+    READ("freecam", "reset_camera_settings", settings.flags.resetCameraSettings);
+    READ("freecam", "always_use_custom_rotation", settings.flags.alwaysUseCustomRotation);
 
-    settings.sensitivity = ReadValue("camera_settings", "sensitivity", 1.0f);
-    settings.defaultSpeed = ReadValue("camera_settings", "default_speed", 10.0f);
-    settings.tiltSpeed = ReadValue("camera_settings", "tilt_speed", 1.0f);
-    settings.speedMult = ReadValue("camera_settings", "speed_multiplier", 2.5f);
-    settings.zoomSpeed = ReadValue("camera_settings", "zoom_speed", 0.7f);
-    settings.minFov = Math::toRadians(ReadValue("camera_settings", "min_fov_degrees", 0.005f));
-    settings.maxFov = Math::toRadians(ReadValue("camera_settings", "max_fov_degrees", 155.0f));
-    settings.pitchLimit = Math::toRadians(ReadValue("camera_settings", "pitch_limit_degrees", 88.0f));
+    READ("camera_settings", "sensitivity", settings.sensitivity);
+    READ("camera_settings", "default_speed", settings.defaultSpeed);
+    READ("camera_settings", "tilt_speed", settings.tiltSpeed);
+    READ("camera_settings", "speed_multiplier", settings.speedMult);
+    READ("camera_settings", "zoom_speed", settings.zoomSpeed);
 
-    settings.step = ReadValue("frame_stepper", "step", 1);
+    settings.minFov = Math::toRadians(ReadValue("camera_settings", "min_fov_degrees", Math::radToDegrees(settings.minFov)));
+    settings.maxFov = Math::toRadians(ReadValue("camera_settings", "max_fov_degrees", Math::radToDegrees(settings.maxFov)));
+    settings.pitchLimit = Math::toRadians(ReadValue("camera_settings", "pitch_limit_degrees", Math::radToDegrees(settings.pitchLimit)));
 
-    settings.flags.zeroSpeedFreeze = ReadValue("hidden", "freeze_by_setting_zero_speed", 0);
-    freeCamera.SetConfigSettings(settings);
+    READ("smooth_camera_settings", "smooth_camera_movement", settings.flags.smoothCameraMovement);
+    READ("smooth_camera_settings", "smooth_camera_rotation", settings.flags.smoothCameraRotation);
+    READ("smooth_camera_settings", "sensitivity", settings.smoothSensitivity);
+    READ("smooth_camera_settings", "tilt_speed", settings.smoothTiltSpeed);
+
+    READ("frame_stepper", "step", settings.step);
+
+    READ("state_saver", "interpolation_time", settings.interpolationTime);
+
+    Logger::Enable(ReadValue("hidden", "debug_console", 0));
+    READ("hidden", "freeze_by_setting_zero_speed", settings.flags.zeroSpeedFreeze);
+
+    freeCamera.SetSettings(settings);
 
     for (const Keybind& keybind : keybinds) {
         actionManager.BindAction(ReadKeybind(keybind));
