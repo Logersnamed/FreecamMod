@@ -120,9 +120,9 @@ private:
     void CopyRotation(GameData::Camera* toCamera, GameData::Camera* fromCamera);
     float ComputeZoomFactor(float fov);
 
-    bool IsUsingCustomRotation() const { 
-        return settings.flags.freezeGame || !settings.flags.resetCameraSettings || 
-            settings.flags.alwaysUseCustomRotation;
+    bool IsUsingCustomRotation() const {
+        if (!settings.flags.alwaysUseCustomRotation) return false;
+        return settings.flags.freezeGame || !settings.flags.resetCameraSettings || settings.flags.alwaysUseCustomRotation;
     }
 
     void GetCameraPitchYaw(GameData::Camera* camera, float* _pitch, float* _yaw);

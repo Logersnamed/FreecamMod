@@ -63,7 +63,7 @@ void Config::Reload(ActionManager &actionManager, FreeCamera &freeCamera) {
 
     READ("frame_stepper", "step", settings.step);
 
-    READ("state_saver", "interpolation_time", settings.interpolationTime);
+    READ("camera_state_manager", "interpolation_time", settings.interpolationTime);
 
     Logger::Enable(ReadValue("hidden", "debug_console", 0));
     READ("hidden", "freeze_by_setting_zero_speed", settings.flags.zeroSpeedFreeze);
