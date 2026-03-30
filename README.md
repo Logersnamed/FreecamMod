@@ -2,7 +2,18 @@
 A [mod](https://www.nexusmods.com/eldenring/mods/9420) that detaches camera from the player in Elden Ring. Currently freezes player while in camera mode.  
 Works with Seamless Co-op, ER Reforged. Tested on EldenModLoader, modengine2, me3.  
 
-![Freecam preview](https://github.com/user-attachments/assets/4d71527d-b1c3-4a38-9593-f1249f2c667e)
+![Freecam preview](https://github.com/user-attachments/assets/9b9569fb-8401-4d98-a025-8c6dc6ec98fa)
+## Features
+- Freeze game, player, and entities independently
+- Adjustable FOV
+- Automatic HUD disabling
+- Frame stepper
+- Save / load state + interpolation between states
+- Path recorder
+- Disable / enable player controls
+- Full 3-axis rotation (pitch, yaw, roll)
+- Configurable keybinds and settings via config file
+
 ## Controls
 You can find and change all keybinds in `config.ini`.  
 Full list of all possible keys can be found in [documentation](https://github.com/Logersnamed/FreecamMod/wiki).
@@ -37,8 +48,6 @@ Build the project:
 cmake --build build --config Release
 ```
 The built DLL will be located in: `build/Release/FreecamMod.dll`
-### Using GitHub Actions
-Prebuilt DLLs are available as workflow artifacts. Go to the Actions tab, select the latest run, and download the FreecamMod.dll artifact.
 
 ## Credits & References
 [EROverlay](https://github.com/koalabear420/EROverlay) – Reference and partial code usage  
