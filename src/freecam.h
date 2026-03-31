@@ -39,7 +39,7 @@ private:
     bool isNumRowProcessed = true;
     bool isWaitingForOtherNumKeys = false;
 
-    using UpdateCameraMatrix = void(__fastcall*)(void*, void*, void*, void*);
-    static inline UpdateCameraMatrix originalUpdateCameraMatrix{};
-    static void __fastcall Hook_UpdateCameraMatrix(GameData::GameRend* gameRend, void* rdx, void* r8, void* r9);
+    using updateCameraMatrix_t = void(__fastcall*)(void*, void*, void*, void*);
+    static inline updateCameraMatrix_t origUpdateCameraMatrix{};
+    static void __fastcall hkUpdateCameraMatrix(GameData::GameRend* gameRend, void* rdx, void* r8, void* r9);
 };

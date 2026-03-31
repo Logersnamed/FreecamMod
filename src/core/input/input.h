@@ -40,23 +40,27 @@ public:
 
     bool IsWindowJustGetFocused() { return isWindowJustFocused; }
 
+    using getRawInputData_t = UINT(WINAPI*)(HRAWINPUT, UINT, LPVOID, PUINT, UINT);
+    static inline getRawInputData_t origGetRawInputData{};
+    static UINT WINAPI hkGetRawInputData(HRAWINPUT hRawInput, UINT uiCommand, LPVOID pData, PUINT pcbSize, UINT cbSizeHeader);
+
 private:
     static inline Input* instance = nullptr;
     static inline LONG_PTR origWndProc = 0;
+
+    bool isShouldGetInput = false;
 
     KeyState keyStates[256] = {};
     float scrollDelta = 0.0f;
     int2 mouseDelta = 0;
 
-    int2 halfWindowSize = 0;
     bool isWindowFocused = true;
     bool isWindowJustFocused = true;
 
-    static LRESULT __stdcall WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    static LRESULT __stdcall hkWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
     void Update(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     void OnWindowFocus(bool getFocused, WPARAM wParam);
 
-    bool GetWindowSize(HWND hWnd);
     bool IsCursorVisible();
 };

@@ -28,7 +28,9 @@ bool Freecam::Initialize() {
     if (!input.HookWndProc(ModUtils::muWindow)) return false;
 
     if (!hookManager.Initialize()) return false;
-    if (!hookManager.Create(GameDataManager::GetUpdateCameraMatrixFunc(), &Hook_UpdateCameraMatrix, (void**)&originalUpdateCameraMatrix)) 
+    if (!hookManager.Create(GameDataManager::GetUpdateCameraMatrixFunc(), &hkUpdateCameraMatrix, (void**)&origUpdateCameraMatrix)) 
+        return false;
+    if (!hookManager.Create(&GetRawInputData, &Input::hkGetRawInputData, (void**)&Input::origGetRawInputData))
         return false;
     if (!hookManager.EnableAll()) return false;
 
@@ -156,8 +158,8 @@ void Freecam::Update(GameData::GameRend* gameRend) {
     input.Reset();
 }
 
-void __fastcall Freecam::Hook_UpdateCameraMatrix(GameData::GameRend* gameRend,void* rdx, void* r8, void* r9) {
-    originalUpdateCameraMatrix(gameRend, rdx, r8, r9);
+void __fastcall Freecam::hkUpdateCameraMatrix(GameData::GameRend* gameRend,void* rdx, void* r8, void* r9) {
+    origUpdateCameraMatrix(gameRend, rdx, r8, r9);
 
     if (instance && gameRend) instance->Update(gameRend);
 }

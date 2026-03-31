@@ -8,10 +8,27 @@ Input::Input() {
 	instance = this;
 }
 
-LRESULT __stdcall Input::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+LRESULT __stdcall Input::hkWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	instance->Update(hWnd, uMsg, wParam, lParam);
 
 	return CallWindowProcW((WNDPROC)Input::origWndProc, hWnd, uMsg, wParam, lParam);
+}
+
+UINT WINAPI Input::hkGetRawInputData(HRAWINPUT hRawInput, UINT uiCommand, LPVOID pData, PUINT pcbSize, UINT cbSizeHeader) {
+    UINT orig = origGetRawInputData(hRawInput, uiCommand, pData, pcbSize, cbSizeHeader);
+
+    if (Input::instance->isShouldGetInput) {
+        if (orig != (UINT)-1 && uiCommand == RID_INPUT && pData) {
+            RAWINPUT* raw = (RAWINPUT*)pData;
+
+            if (raw->header.dwType == RIM_TYPEMOUSE) {
+                Input::instance->mouseDelta.x += raw->data.mouse.lLastX;
+                Input::instance->mouseDelta.y += raw->data.mouse.lLastY;
+            }
+        }
+    }
+
+    return orig;
 }
 
 bool Input::HookWndProc(HWND hWnd) {
@@ -21,7 +38,7 @@ bool Input::HookWndProc(HWND hWnd) {
         return false;
     }
     
-    origWndProc = SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)Input::WndProc);
+    origWndProc = SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)Input::hkWndProc);
     return true;
 }
 
@@ -36,8 +53,9 @@ void Input::UnhookWndProc(HWND hWnd) {
 }
 
 void Input::Update(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    int key = -1;
+    isShouldGetInput = !IsCursorVisible() && isWindowFocused;
 
+    int key = -1;
     switch (uMsg) {
         case WM_KILLFOCUS:
         case WM_ACTIVATEAPP:
@@ -58,24 +76,8 @@ void Input::Update(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             key = (HIWORD(wParam) == XBUTTON1) ? VK_XBUTTON1 : VK_XBUTTON2;
             break;
 
-        case WM_MOUSEMOVE: {
-            if (!halfWindowSize.x || !halfWindowSize.y) {
-                if (!GetWindowSize(hWnd)) break;
-            }
-
-            if (IsCursorVisible() || !isWindowFocused) break;
-
-            mouseDelta.x = GET_X_LPARAM(lParam) - halfWindowSize.x;
-            mouseDelta.y = GET_Y_LPARAM(lParam) - halfWindowSize.y;
-
-            break;
-        }
-        case WM_SIZE:
-            GetWindowSize(hWnd);
-            break;
-
         case WM_MOUSEWHEEL:
-            scrollDelta += GET_WHEEL_DELTA_WPARAM(wParam) / 120.0f;
+            scrollDelta += (float)GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA;
             return;
     }
 
@@ -104,16 +106,6 @@ bool Input::IsCursorVisible() {
     CURSORINFO ci = {};
     ci.cbSize = sizeof(ci);
     return GetCursorInfo(&ci) && (ci.flags & CURSOR_SHOWING);
-}
-
-bool Input::GetWindowSize(HWND hWnd) {
-    RECT rect;
-    if (GetClientRect(hWnd, &rect)) {
-        halfWindowSize.x = (rect.right - rect.left) / 2;
-        halfWindowSize.y = (rect.bottom - rect.top) / 2;
-        return true;
-    }
-    return false;
 }
 
 void Input::Reset() {
