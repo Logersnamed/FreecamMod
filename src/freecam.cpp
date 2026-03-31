@@ -93,6 +93,8 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
         frameStepperTimePressed = 0.0f;
     }
 
+    if (actionManager.IsJustPressed(Action::ToggleFreeze, input)) freeCamera.ToggleFreeze();
+
     ProcessNumRowKeys(gameRend);
 }
 

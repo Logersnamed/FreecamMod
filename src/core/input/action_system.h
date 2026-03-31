@@ -12,6 +12,7 @@ public:
 		Toggle,
 		ReloadConfig,
 		ResetSettings,
+		ToggleFreeze,
 		ExitMod,
 		StartEndRecording,
 		StartEndPlayingRecording,

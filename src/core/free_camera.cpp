@@ -188,6 +188,29 @@ void FreeCamera::Toggle(GameData::GameRend* rend) {
 	rend->IsFreecamEnabled() ? DisableCamera(rend) : EnableCamera(rend);
 }
 
+void FreeCamera::ToggleFreeze() {
+    Freeze(!isFrozen);
+}
+
+void FreeCamera::Freeze(bool enabled) {
+    isFrozen = enabled;
+
+    if (enabled) {
+        if (settings.flags.freezeGame) {
+            gameStateManager.FreezeGame(true);
+        }
+        else {
+            if (settings.flags.freezeEntities) gameStateManager.FreezeEntities(true);
+            if (settings.flags.freezePlayer) gameStateManager.FreezePlayer(true);
+        }
+    }
+    else {
+        gameStateManager.FreezeGame(false);
+        gameStateManager.FreezeEntities(false);
+        gameStateManager.FreezePlayer(false);
+    }
+}
+
 void FreeCamera::EnableCamera(GameData::GameRend* rend) {
     GameData::Camera* freeCamera = rend->csDebugCam;
     GameData::Camera* playerCamera = rend->csPersCam1;
@@ -214,13 +237,7 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
         GetCameraPitchYaw(freeCamera, &pitch, &yaw);
     }
 
-    if (settings.flags.freezeGame) {
-        gameStateManager.FreezeGame(true);
-    }
-    else {
-        if (settings.flags.freezeEntities) gameStateManager.FreezeEntities(true);
-        if (settings.flags.freezePlayer) gameStateManager.FreezePlayer(true);
-    }
+    Freeze(true);
 
     frameStepper.Reset();
 
@@ -247,9 +264,7 @@ void FreeCamera::DisableCamera(GameData::GameRend* rend) {
 
     SettingsBackup::SetEnabled(0);
 
-    gameStateManager.FreezeGame(false);
-    gameStateManager.FreezeEntities(false);
-    gameStateManager.FreezePlayer(false);
+    Freeze(false);
 
     if (pathRecorder.IsRecording()) pathRecorder.EndRecord();
     if (pathRecorder.IsPlaying()) pathRecorder.EndPlay();

@@ -39,7 +39,8 @@ private:
     std::array<Keybind, Action::Count> keybinds = {
         Keybind{"keybinds", "toggle", Action::Toggle, { VK_F1 }},
         Keybind{"keybinds", "reload_config", Action::ReloadConfig, { VK_F5 }},
-        Keybind{"keybinds", "reset_settings", Action::ResetSettings, { 'R'}},
+        Keybind{"keybinds", "reset_settings", Action::ResetSettings, { 'R' }},
+        Keybind{"keybinds", "toggle_freeze", Action::ToggleFreeze, { 'P' }},
         Keybind{"keybinds", "exit_mod", Action::ExitMod, { VK_DELETE }},
         Keybind{"keybinds", "start/end_recording", Action::StartEndRecording, { VK_F8 }},
         Keybind{"keybinds", "strat/end_playing_recording", Action::StartEndPlayingRecording, { VK_F9}},

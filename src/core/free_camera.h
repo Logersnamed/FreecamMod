@@ -57,6 +57,7 @@ public:
     void DisableCamera();
     void ResetSettings(GameData::GameRend* gameRend);
     void SetSettings(const Settings& s);
+    void ToggleFreeze();
 
     PathRecorder& GetPathRecorder() { return pathRecorder; }
     CameraStateManager& GetCameraStateManager() { return cameraStateManager; }
@@ -102,6 +103,8 @@ private:
     const float MAX_FOV = 3.13f;
     
 	bool isSprinting = false;
+    bool isFrozen = false;
+    void Freeze(bool enabled);
 
     bool isHudHidden = false;
     std::byte savedHudOption = std::byte(2);
