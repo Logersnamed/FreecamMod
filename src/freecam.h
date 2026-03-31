@@ -27,7 +27,7 @@ private:
     bool isRunning = true;
 
     void Update(GameData::GameRend* gameRend);
-	void ProcessInput(GameData::GameRend* gameRend);
+	void ProcessInput(GameData::GameRend* gameRend, float deltaTime);
     void ProcessNumRowKeys(GameData::GameRend* gameRend);
 
     struct NumRowKey {
@@ -38,6 +38,8 @@ private:
     int id = 0;
     bool isNumRowProcessed = true;
     bool isWaitingForOtherNumKeys = false;
+
+    float frameStepperTimePressed = 0.0f;
 
     using updateCameraMatrix_t = void(__fastcall*)(void*, void*, void*, void*);
     static inline updateCameraMatrix_t origUpdateCameraMatrix{};

@@ -26,7 +26,7 @@ public:
             if (wasPlayerFrozen)   gameStateManager.FreezePlayer(false);
         }
 
-        framesToStep += step + 1;   // https://cdn.7tv.app/emote/01JQK3VGYV3FBX6R7YGQPNG19J/4x.avif
+        framesToStep += step + (framesToStep == 0);
     }
 
     void Update() {

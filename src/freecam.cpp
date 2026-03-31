@@ -50,7 +50,7 @@ void Freecam::Run() {
     }
 }
 
-void Freecam::ProcessInput(GameData::GameRend* gameRend) {
+void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
 	freeCamera.SetMouseDelta(input.GetMouseDelta());
 
     if (actionManager.IsJustPressed(Action::ReloadConfig, input)) config.Reload(actionManager, freeCamera);
@@ -82,7 +82,16 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend) {
     if (actionManager.IsJustPressed(Action::StartEndRecording, input)) freeCamera.GetPathRecorder().Record();
     if (actionManager.IsJustPressed(Action::StartEndPlayingRecording, input)) freeCamera.GetPathRecorder().PlayRecord();
 
-    if (actionManager.IsJustPressed(Action::StepFrames, input)) freeCamera.StepFrames();
+    if (actionManager.IsPressed(Action::StepFrames, input)) {
+        constexpr float holdWaitTime = 1.0f;
+        if (frameStepperTimePressed <= 0 || frameStepperTimePressed >= holdWaitTime) {
+            freeCamera.StepFrames();
+        }
+        frameStepperTimePressed += deltaTime;
+    }
+    else {
+        frameStepperTimePressed = 0.0f;
+    }
 
     ProcessNumRowKeys(gameRend);
 }
@@ -153,8 +162,9 @@ void Freecam::Update(GameData::GameRend* gameRend) {
         config.Reload(actionManager, freeCamera);
     }
 
-    ProcessInput(gameRend);
-    freeCamera.Update(gameRend, std::clamp(Time::DeltaTime(), 0.0f, 0.4f));
+    float deltaTime = std::clamp(Time::DeltaTime(), 0.0f, 0.4f);
+    ProcessInput(gameRend, deltaTime);
+    freeCamera.Update(gameRend, deltaTime);
     input.Reset();
 }
 
