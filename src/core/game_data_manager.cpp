@@ -15,6 +15,7 @@ bool GameDataManager::Init() {
 		{ "gamePauseSig",	"0F 84 ? ? ? ? C6 ? ? ? ? ? 00 ? 8D ? ? ? ? ? ? 89 ? ? 89 ? ? ? 8B ? ? ? ? ? ? 85 ? 75", 
 			1, false, false, &gamePauseSig },
 		{ "updateCameraMatrixFuncSig",	"4C 8B 49 18 4C 8B D1 8B 42 50 41 89 41 50 8B 42", 0, false, true, &updateCameraMatrixFuncSig },
+		{ "daytimeUpdateSig",	"F3 0F 2C D0 85 D2 7E", 0, false, false, &daytimeUpdateSig },
 	};
 
 	for (SigEntry& sig : signatures) {
@@ -77,6 +78,10 @@ GameData::OptionData* GameDataManager::GetOptionData() {
 
 void* GameDataManager::GetUpdateCameraMatrixFunc() {
 	return reinterpret_cast<void*>(updateCameraMatrixFuncSig);
+}
+
+uintptr_t GameDataManager::GetDaytimeUpdateFunc() {
+	return daytimeUpdateSig;
 }
 
 void GameDataManager::PauseGame(bool enabled) {

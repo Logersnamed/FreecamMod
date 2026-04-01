@@ -195,7 +195,7 @@ namespace ModUtils
 		}
 	}
 
-	static void MemCopy(uintptr_t destination, uintptr_t source, size_t numBytes)
+	static void MemCopy(uintptr_t destination, uintptr_t source, size_t numBytes) 
 	{
 		ToggleMemoryProtection(false, destination, numBytes);
 		ToggleMemoryProtection(false, source, numBytes);
@@ -652,6 +652,6 @@ namespace ModUtils
 		MemSet(address, 0x90, clearance);
 		*(uintptr_t*)address = 0x0000000025ff;
 		MemCopy((address + 6), (uintptr_t)&destination, 8);
-		Log("Created jump from ", NumberToHexString(address), " to ", NumberToHexString(destination),  " with a clearance of ", clearance);
+		LOG_INFO("Created jump from %p to %p with a clearance of %d", address, destination, clearance);
 	}
 }

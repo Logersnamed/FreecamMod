@@ -57,28 +57,28 @@ void Input::Update(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
     int key = -1;
     switch (uMsg) {
-    case WM_KILLFOCUS:
-    case WM_ACTIVATEAPP:
-        OnWindowFocus(uMsg == WM_ACTIVATEAPP, wParam);
-        return;
+        case WM_KILLFOCUS:
+        case WM_ACTIVATEAPP:
+            OnWindowFocus(uMsg == WM_ACTIVATEAPP, wParam);
+            return;
 
-    case WM_KEYDOWN:
-    case WM_SYSKEYDOWN:
-    case WM_KEYUP:
-    case WM_SYSKEYUP:
-        key = (int)wParam;
-        break;
+        case WM_KEYDOWN:
+        case WM_SYSKEYDOWN:
+        case WM_KEYUP:
+        case WM_SYSKEYUP:
+            key = (int)wParam;
+            break;
 
-    case WM_LBUTTONDOWN: case WM_LBUTTONUP: key = VK_LBUTTON; break;
-    case WM_RBUTTONDOWN: case WM_RBUTTONUP: key = VK_RBUTTON; break;
-    case WM_MBUTTONDOWN: case WM_MBUTTONUP: key = VK_MBUTTON; break;
-    case WM_XBUTTONDOWN: case WM_XBUTTONUP:
-        key = (HIWORD(wParam) == XBUTTON1) ? VK_XBUTTON1 : VK_XBUTTON2;
-        break;
+        case WM_LBUTTONDOWN: case WM_LBUTTONUP: key = VK_LBUTTON; break;
+        case WM_RBUTTONDOWN: case WM_RBUTTONUP: key = VK_RBUTTON; break;
+        case WM_MBUTTONDOWN: case WM_MBUTTONUP: key = VK_MBUTTON; break;
+        case WM_XBUTTONDOWN: case WM_XBUTTONUP:
+            key = (HIWORD(wParam) == XBUTTON1) ? VK_XBUTTON1 : VK_XBUTTON2;
+            break;
 
-    case WM_MOUSEWHEEL:
-        scrollDelta += (float)GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA;
-        return;
+        case WM_MOUSEWHEEL:
+            scrollDelta += (float)GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA;
+            return;
     }
 
     if (key == -1 || key >= 256) return;

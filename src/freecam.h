@@ -32,6 +32,9 @@ private:
 
     float frameStepperTimePressed = 0.0f;
 
+    uint8_t save[16];
+    uintptr_t hookAddress;
+
     using updateCameraMatrix_t = void(__fastcall*)(void*, void*, void*, void*);
     static inline updateCameraMatrix_t origUpdateCameraMatrix{};
     static void __fastcall hkUpdateCameraMatrix(GameData::GameRend* gameRend, void* rdx, void* r8, void* r9);

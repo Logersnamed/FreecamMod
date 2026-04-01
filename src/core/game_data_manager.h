@@ -10,6 +10,7 @@ public:
 	static GameData::OptionData* GetOptionData();
 	static GameData::ChrIns* GetPlayer();
 	static void* GetUpdateCameraMatrixFunc();
+	static uintptr_t GetDaytimeUpdateFunc();
 
 	static void PauseGame(bool enabled);
 
@@ -30,4 +31,5 @@ private:
 	static inline uintptr_t gameDataManSig{};
 	static inline uintptr_t gamePauseSig{};
 	static inline uintptr_t updateCameraMatrixFuncSig{};
+	static inline uintptr_t daytimeUpdateSig{};
 };
