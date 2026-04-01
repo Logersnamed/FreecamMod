@@ -1,9 +1,12 @@
 #include "core/free_camera.h"
 
 #include <algorithm>
+#include <cmath>
+#include <cstdlib>
 
 #include "ModUtils.h"
 
+#include "core/game_data/game_data.h"
 #include "core/game_data_manager.h"
 #include "core/settings_backup.h"
 #include "utils/types.h"
@@ -16,7 +19,7 @@ void FreeCamera::Update(GameData::GameRend* gameRend, float deltaTime) {
         if (isEnabled) {
             LOG_INFO("Freecam wasn't disabled properly, disabling now...");
             DisableCamera(gameRend);
-		}
+        }
         return;
     }
 
@@ -24,9 +27,9 @@ void FreeCamera::Update(GameData::GameRend* gameRend, float deltaTime) {
     GameData::Camera* playerCamera = gameRend->csPersCam1;
     if (!freeCamera || !playerCamera) return;
 
-	UpdatePosition(freeCamera, deltaTime);
-	UpdateRotation(freeCamera, playerCamera, deltaTime);
-	UpdateFov(freeCamera, deltaTime);
+    UpdatePosition(freeCamera, deltaTime);
+    UpdateRotation(freeCamera, playerCamera, deltaTime);
+    UpdateFov(freeCamera, deltaTime);
 
     UpdateVelocity(deltaTime);
     UpdateZoomVelocity(deltaTime);
@@ -58,30 +61,29 @@ void FreeCamera::UpdateRotation(GameData::Camera* freeCamera, GameData::Camera* 
         return;
     }
 
+    RotationCache& c = rotationCache;
+
     float tiltSpeed = settings.flags.smoothCameraRotation ? settings.smoothTiltSpeed : settings.tiltSpeed;
     roll += rollVelocity * tiltSpeed * dt;
-    float rollSin = std::sin(roll);
-    float rollCos = std::cos(roll);
+    c.roll.CacheSinCos(roll);
 
     const float sensitivity = settings.flags.smoothCameraRotation ? settings.smoothSensitivity * 10.0f * dt : settings.sensitivity;
     const float sens = sensitivity * ComputeZoomFactor(freeCamera->fov) * 0.001f;
-    yawPitchVelocity += mouseDelta.rotate(rollSin, rollCos);
-    yaw   += yawPitchVelocity.x * sens;
-    pitch += yawPitchVelocity.y * sens;
+    yawPitchVelocity += mouseDelta.rotate(c.roll.sin, c.roll.cos);
 
+    yaw += yawPitchVelocity.x * sens;
+    pitch += yawPitchVelocity.y * sens;
     if (settings.pitchLimit) pitch = std::clamp(pitch, -settings.pitchLimit, settings.pitchLimit);
 
-    float yawSin = std::sin(yaw);
-    float yawCos = std::cos(yaw);
-    float pitchSin = std::sin(pitch);
-    float pitchCos = std::cos(pitch);
+    c.yaw.CacheSinCos(yaw);
+    c.pitch.CacheSinCos(pitch);
 
-    float3 forward = { yawSin * pitchCos, -pitchSin, yawCos * pitchCos };
-    float3 right = { yawCos, 0.0f, -yawSin };
+    float3 forward = { c.yaw.sin * c.pitch.cos, -c.pitch.sin, c.yaw.cos * c.pitch.cos };
+    float3 right = { c.yaw.cos, 0.0f, -c.yaw.sin };
     float3 up = float3::cross(forward, right);
 
-    float3 rolledRight = right * rollCos + up * rollSin;
-    float3 rolledUp = up * rollCos - right * rollSin;
+    float3 rolledRight = right * c.roll.cos + up * c.roll.sin;
+    float3 rolledUp = up * c.roll.cos - right * c.roll.sin;
 
     freeCamera->matrix.c0 = float4(rolledRight, 0.0f);
     freeCamera->matrix.c1 = float4(rolledUp, 0.0f);
@@ -108,7 +110,7 @@ void FreeCamera::UpdateFov(GameData::Camera* camera, float dt) {
 }
 
 void FreeCamera::UpdateVelocity(float dt) {
-	if (!settings.flags.smoothCameraMovement) {
+    if (!settings.flags.smoothCameraMovement) {
         velocity = float3(0);
         return;
     }
@@ -165,7 +167,7 @@ void FreeCamera::ResetSettings(GameData::Camera* freeCamera, GameData::Camera* p
 }
 
 float FreeCamera::ComputeZoomFactor(float fov) {
-	const float min_fov = 0.00001, max_fov = 3.14f;
+    const float min_fov = 0.00001, max_fov = 3.14f;
     float t = Math::clamp((fov - min_fov) / (max_fov - min_fov));
     return Math::quadraticEaseOut(t);
 }
@@ -185,7 +187,7 @@ void FreeCamera::CopyRotation(GameData::Camera* toCamera, GameData::Camera* from
 }
 
 void FreeCamera::Toggle(GameData::GameRend* rend) {
-	rend->IsFreecamEnabled() ? DisableCamera(rend) : EnableCamera(rend);
+    rend->IsFreecamEnabled() ? DisableCamera(rend) : EnableCamera(rend);
 }
 
 void FreeCamera::ToggleFreeze() {
@@ -246,13 +248,13 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
     zoomVelocity = 0.0f;
     rollVelocity = 0.0;
 
-	rend->EnableFreecam(settings.flags.disablePlayerControls);
+    rend->EnableFreecam(settings.flags.disablePlayerControls);
     isEnabled = true;
     LOG_INFO("Free camera enabled");
 }
 
 void FreeCamera::DisableCamera(GameData::GameRend* rend) {
-	rend->DisableFreecam();
+    rend->DisableFreecam();
 
     if (isHudHidden) {
         GameData::OptionData* optionData = GameDataManager::GetOptionData();
@@ -274,7 +276,7 @@ void FreeCamera::DisableCamera(GameData::GameRend* rend) {
 }
 
 void FreeCamera::DisableCamera() {
-	GameData::FieldArea* fieldArea = GameDataManager::GetFieldArea();
+    GameData::FieldArea* fieldArea = GameDataManager::GetFieldArea();
     if (!fieldArea) {
         LOG_WARN("FieldArea is null in FreeCamera::DisableCamera. Nothing to disable.");
         return;

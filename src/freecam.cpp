@@ -1,7 +1,8 @@
 #include "freecam.h"
 
 #include <algorithm>
-#include <optional>
+#include <cstdint>
+#include <vector>
 
 #include "ModUtils.h"
 
@@ -22,13 +23,13 @@ bool Freecam::Initialize() {
     config.Reload(actionManager, freeCamera);
 
     ModUtils::AttemptToGetWindowHandle();
-	if (!ModUtils::muWindow) return false;
+    if (!ModUtils::muWindow) return false;
 
     if (!GameDataManager::Init()) return false;
     if (!input.HookWndProc(ModUtils::muWindow)) return false;
 
     if (!hookManager.Initialize()) return false;
-    if (!hookManager.Create(GameDataManager::GetUpdateCameraMatrixFunc(), &hkUpdateCameraMatrix, (void**)&origUpdateCameraMatrix)) 
+    if (!hookManager.Create(GameDataManager::GetUpdateCameraMatrixFunc(), &hkUpdateCameraMatrix, (void**)&origUpdateCameraMatrix))
         return false;
     if (!hookManager.Create(&GetRawInputData, &Input::hkGetRawInputData, (void**)&Input::origGetRawInputData))
         return false;
@@ -51,17 +52,33 @@ void Freecam::Run() {
 }
 
 void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
-	freeCamera.SetMouseDelta(input.GetMouseDelta());
-
-    if (actionManager.IsJustPressed(Action::ReloadConfig, input)) config.Reload(actionManager, freeCamera);
-    if (actionManager.IsJustPressed(Action::ResetSettings, input)) freeCamera.ResetSettings(gameRend);
     if (actionManager.IsJustPressed(Action::Toggle, input)) {
         config.Reload(actionManager, freeCamera);
         freeCamera.Toggle(gameRend);
     }
 
+    if (actionManager.IsJustPressed(Action::ToggleFreeze, input)) freeCamera.ToggleFreeze();
+
+    if (actionManager.IsPressed(Action::StepFrames, input)) {
+        constexpr float holdWaitTime = 1.0f;
+        if (frameStepperTimePressed <= 0 || frameStepperTimePressed >= holdWaitTime) {
+            freeCamera.StepFrames();
+        }
+        frameStepperTimePressed += deltaTime;
+    }
+    else {
+        frameStepperTimePressed = 0.0f;
+    }
+
+    if (!gameRend->IsFreecamEnabled()) return;
+
+    freeCamera.SetMouseDelta(input.GetMouseDelta());
+
+    if (actionManager.IsJustPressed(Action::ReloadConfig, input)) config.Reload(actionManager, freeCamera);
+    if (actionManager.IsJustPressed(Action::ResetSettings, input)) freeCamera.ResetSettings(gameRend);
+
     freeCamera.SetIsSprinting(actionManager.IsPressed(Action::Sprint, input));
-    
+
     if (actionManager.IsPressed(Action::MoveForward, input)) freeCamera.AddVelocity(float3::forward());
     if (actionManager.IsPressed(Action::MoveBackward, input)) freeCamera.AddVelocity(float3::back());
     if (actionManager.IsPressed(Action::MoveLeft, input)) freeCamera.AddVelocity(float3::left());
@@ -82,85 +99,31 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
     if (actionManager.IsJustPressed(Action::StartEndRecording, input)) freeCamera.GetPathRecorder().Record();
     if (actionManager.IsJustPressed(Action::StartEndPlayingRecording, input)) freeCamera.GetPathRecorder().PlayRecord();
 
-    if (actionManager.IsPressed(Action::StepFrames, input)) {
-        constexpr float holdWaitTime = 1.0f;
-        if (frameStepperTimePressed <= 0 || frameStepperTimePressed >= holdWaitTime) {
-            freeCamera.StepFrames();
+    if (input.IsPressed(VK_CONTROL)) {
+        GameData::Camera* activeCamera = gameRend->GetActiveCamera();
+        if (activeCamera) {
+            for (int key = 0; key < 10; ++key) {
+                int keyCode = key + (int)'0';
+
+                if (input.IsJustPressed(keyCode)) {
+                    freeCamera.GetCameraStateManager().SaveState(activeCamera, key, freeCamera.GetYawPitchRoll());
+                }
+            }
         }
-        frameStepperTimePressed += deltaTime;
     }
     else {
-        frameStepperTimePressed = 0.0f;
-    }
-
-    if (actionManager.IsJustPressed(Action::ToggleFreeze, input)) freeCamera.ToggleFreeze();
-
-    ProcessNumRowKeys(gameRend);
-}
-
-void Freecam::ProcessNumRowKeys(GameData::GameRend* gameRend) {
-    if (input.IsPressed(VK_CONTROL)) {
-        GameData::Camera* activeCamera = gameRend->IsFreecamEnabled() ? gameRend->csDebugCam : gameRend->csPersCam1;
-        if (!activeCamera) return;
-
-        for (int key = 0; key < 10; ++key) {
-            int keyCode = key + (int)'0';
-
-            if (input.IsJustPressed(keyCode)) {
-                freeCamera.GetCameraStateManager().SaveState(activeCamera, key, freeCamera.GetYawPitchRoll());
+        std::vector<uint8_t> keysToProcess = input.GetReleasedNumkeysInOrder();
+        if (!keysToProcess.empty()) {
+            GameData::Camera* activeCamera = gameRend->GetActiveCamera();
+            if (activeCamera) {
+                freeCamera.GetCameraStateManager().StartLerpBetweenSlots(activeCamera, keysToProcess);
             }
         }
-
-        return;
-    }
-
-    bool isAtLeastOnePressed = false;
-    for (int key = 0; key < 10; ++key) {
-        int keyCode = key + (int)'0';
-
-        if (input.IsPressed(keyCode)) {
-            isAtLeastOnePressed = true;
-            isWaitingForOtherNumKeys = true;
-
-            numRowKeys[key].shouldBeProcessed = false;
-            if (input.IsJustPressed(keyCode)) {
-                numRowKeys[key].pressId = id++;
-            }
-        }
-
-        if (input.IsReleased(keyCode)) {
-            if (isWaitingForOtherNumKeys) isNumRowProcessed = false;
-
-            numRowKeys[key].shouldBeProcessed = true;
-        }
-    }
-
-    std::vector<uint8_t> keysToProcess;
-    if (!isNumRowProcessed && !isAtLeastOnePressed) {
-        for (int key = 0; key < 10; ++key) {
-            if (numRowKeys[key].shouldBeProcessed) {
-                numRowKeys[key].shouldBeProcessed = false;
-                keysToProcess.push_back(key);
-            }
-        }
-
-        isNumRowProcessed = true;
-        isWaitingForOtherNumKeys = false;
-        id = 0;
-    }
-
-    if (keysToProcess.size()) {
-        std::sort(keysToProcess.begin(), keysToProcess.end(), [&](const int& a, const int& b) {
-            return numRowKeys[a].pressId < numRowKeys[b].pressId;
-            });
-
-        GameData::Camera* activeCamera = gameRend->IsFreecamEnabled() ? gameRend->csDebugCam : gameRend->csPersCam1;
-        freeCamera.GetCameraStateManager().StartLerpBetweenSlots(activeCamera, keysToProcess);
     }
 }
 
 void Freecam::Update(GameData::GameRend* gameRend) {
-    if (input.IsWindowJustGetFocused()) {
+    if (gameRend->IsFreecamEnabled() && input.IsWindowJustGetFocused()) {
         config.Reload(actionManager, freeCamera);
     }
 
@@ -170,7 +133,7 @@ void Freecam::Update(GameData::GameRend* gameRend) {
     input.Reset();
 }
 
-void __fastcall Freecam::hkUpdateCameraMatrix(GameData::GameRend* gameRend,void* rdx, void* r8, void* r9) {
+void __fastcall Freecam::hkUpdateCameraMatrix(GameData::GameRend* gameRend, void* rdx, void* r8, void* r9) {
     origUpdateCameraMatrix(gameRend, rdx, r8, r9);
 
     if (instance && gameRend) instance->Update(gameRend);

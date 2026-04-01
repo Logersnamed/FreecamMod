@@ -1,6 +1,7 @@
 #pragma once
 #include <windows.h>
 
+#include "core/game_data/game_data.h"
 #include "core/input/action_system.h"
 #include "core/input/input.h"
 #include "core/config.h"
@@ -21,23 +22,13 @@ private:
     FreeCamera freeCamera{};
     Config config{};
     Input input{};
-	ActionManager actionManager{};
+    ActionManager actionManager{};
     HookManager hookManager{};
 
     bool isRunning = true;
 
     void Update(GameData::GameRend* gameRend);
-	void ProcessInput(GameData::GameRend* gameRend, float deltaTime);
-    void ProcessNumRowKeys(GameData::GameRend* gameRend);
-
-    struct NumRowKey {
-        bool shouldBeProcessed = false;
-        int pressId = 0;
-    } numRowKeys[10]{};
-
-    int id = 0;
-    bool isNumRowProcessed = true;
-    bool isWaitingForOtherNumKeys = false;
+    void ProcessInput(GameData::GameRend* gameRend, float deltaTime);
 
     float frameStepperTimePressed = 0.0f;
 

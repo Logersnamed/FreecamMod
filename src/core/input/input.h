@@ -2,6 +2,8 @@
 #include <windows.h>
 #include <windowsx.h>
 #include <cstdint>
+#include <vector>
+#include <algorithm>
 
 #include "utils/types.h"
 
@@ -38,11 +40,13 @@ public:
     float GetScrollDelta() const { return scrollDelta; }
     int2 GetMouseDelta() const { return mouseDelta; }
 
-    bool IsWindowJustGetFocused() { return isWindowJustFocused; }
+    bool IsWindowJustGetFocused() const { return isWindowJustFocused; }
 
     using getRawInputData_t = UINT(WINAPI*)(HRAWINPUT, UINT, LPVOID, PUINT, UINT);
     static inline getRawInputData_t origGetRawInputData{};
     static UINT WINAPI hkGetRawInputData(HRAWINPUT hRawInput, UINT uiCommand, LPVOID pData, PUINT pcbSize, UINT cbSizeHeader);
+
+    std::vector<uint8_t> GetReleasedNumkeysInOrder();
 
 private:
     static inline Input* instance = nullptr;
@@ -53,6 +57,13 @@ private:
     KeyState keyStates[256] = {};
     float scrollDelta = 0.0f;
     int2 mouseDelta = 0;
+
+    static constexpr int NUM_KEYS_COUNT = 10;
+    struct NumRowKey {
+        bool wasRecentlyReleased = false;
+        int pressId = 0;
+    } numRowKeys[NUM_KEYS_COUNT]{};
+    int id = 0;
 
     bool isWindowFocused = true;
     bool isWindowJustFocused = true;

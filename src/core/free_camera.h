@@ -95,14 +95,14 @@ private:
     float rollVelocity = 0.0f;
 
     int2 mouseDelta = 0;
-	float yaw = 0.0f;
-	float pitch = 0.0f;
-	float roll = 0.0f;
+    float yaw = 0.0f;
+    float pitch = 0.0f;
+    float roll = 0.0f;
 
     const float MIN_FOV = 0.000126f;
     const float MAX_FOV = 3.13f;
-    
-	bool isSprinting = false;
+
+    bool isSprinting = false;
     bool isFrozen = false;
     void Freeze(bool enabled);
 
@@ -113,8 +113,8 @@ private:
     void UpdatePosition(GameData::Camera* camera, float dt);
     void UpdateRotation(GameData::Camera* freeCamera, GameData::Camera* playerCamera, float dt);
     void UpdateFov(GameData::Camera* camera, float dt);
-	void UpdateVelocity(float dt);
-	void UpdateZoomVelocity(float dt);
+    void UpdateVelocity(float dt);
+    void UpdateZoomVelocity(float dt);
 
     void RestorePendingSettings();
     void ResetSettings(GameData::Camera* freeCamera, GameData::Camera* playerCamera);
@@ -137,4 +137,20 @@ private:
     void SetFov(GameData::Camera* cam, float newFov) { cam->fov = std::clamp(newFov, settings.minFov, settings.maxFov); }
     void SetMinFov(float newMinFov) { settings.minFov = std::clamp(newMinFov, MIN_FOV, MAX_FOV); }
     void SetMaxFov(float newMaxFov) { settings.maxFov = std::clamp(newMaxFov, MIN_FOV, MAX_FOV); }
+
+    struct RotationCache {
+        struct AngleCached {
+            float angle = 0;
+            float sin = 0;
+            float cos = 1;
+
+            void CacheSinCos(float _angle) {
+                if (angle != _angle) {
+                    angle = _angle;
+                    sin = std::sinf(angle);
+                    cos = std::cosf(angle);
+                }
+            }
+        } yaw, pitch, roll;
+    } rotationCache;
 };

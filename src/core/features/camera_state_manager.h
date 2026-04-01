@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <vector>
+#include <cstdint>
 
 #include "core/game_data/game_data.h"
 #include "utils/types.h"
@@ -19,7 +20,7 @@ class CameraStateManager {
 	} stateSlots[10]{};
 
 	bool isInterpolating = false;
-	std::vector<uint8_t> slotOrder;	
+	std::vector<uint8_t> slotOrder;
 	uint8_t interval = 0;
 	float time = 0;
 	float iTime = 3.0f;
@@ -33,19 +34,18 @@ public:
 		if (slot < 0 || slot >= MAX_SLOTS) return;
 		LOG_INFO("Saved slot %d", slot);
 
-		State state = {
+		stateSlots[slot] = {
 			camera->matrix.position(),
 			Quaternion::fromRotationMatrix(camera->matrix.rotation()),
 			camera->fov,
 			yawPitchRoll,
 			true
 		};
-
-		stateSlots[slot] = state;
 	}
 
 	void StartLerpBetweenSlots(GameData::Camera* camera, const std::vector<uint8_t>& positionSlots) {
 		slotOrder.clear();
+		if (positionSlots.empty()) return;
 		for (uint8_t slot : positionSlots) {
 			if (slot < 0 || slot >= MAX_SLOTS) continue;
 			if (stateSlots[(int)slot].isSaved) slotOrder.push_back(slot);
