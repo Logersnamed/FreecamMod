@@ -1,16 +1,16 @@
 option casemap:none
 
 ; From https://www.nexusmods.com/eldenring/mods/48
-PUBLIC DaytimeUpdate
+PUBLIC DaytimeUpdateFunc
 
 extern returnAddress    : QWORD
 extern funcAddress      : QWORD
 extern freeze_time_day  : BYTE
 extern set_morning      : BYTE
-extern cycleSpeed       : DWORD
+extern cycle_speed       : DWORD
 
 .code
-DaytimeUpdate PROC
+DaytimeUpdateFunc PROC
     cvttss2si edx, xmm0                 ; orig
 
     cmp byte ptr [freeze_time_day], 1
@@ -22,7 +22,7 @@ skip_freeze:
     cmp byte ptr [set_morning], 1
     jne cont
 
-    mov edx, cycleSpeed
+    mov edx, cycle_speed
 
 cont:
     test edx, edx                       ; orig
@@ -32,7 +32,7 @@ cont:
 
 skip_call:
     jmp qword ptr [returnAddress]
-DaytimeUpdate ENDP
+DaytimeUpdateFunc ENDP
 end
 
 

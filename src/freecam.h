@@ -6,13 +6,14 @@
 #include "core/input/input.h"
 #include "core/config.h"
 #include "core/free_camera.h"
-#include "core/hook_manager.h"
+#include "core/hook/hook_manager.h"
 
 class Freecam {
 public:
     static inline Freecam* instance = nullptr;
 
     Freecam(HMODULE hModule);
+
     bool Initialize();
     void Run();
     void Dispose();
@@ -31,9 +32,6 @@ private:
     void ProcessInput(GameData::GameRend* gameRend, float deltaTime);
 
     float frameStepperTimePressed = 0.0f;
-
-    uint8_t save[16];
-    uintptr_t hookAddress;
 
     using updateCameraMatrix_t = void(__fastcall*)(void*, void*, void*, void*);
     static inline updateCameraMatrix_t origUpdateCameraMatrix{};

@@ -9,19 +9,11 @@
 #include "core/features/path_recorder.h"
 #include "core/game_data_manager.h"
 #include "core/settings_backup.h"
+#include "core/hook/code_cave.h"
 #include "utils/time.h"
 #include "utils/memory.h"
 #include "utils/types.h"
 #include "utils/debug.h"
-
-extern "C" {
-    void DaytimeUpdate();
-    uintptr_t returnAddress = 0;
-    uintptr_t funcAddress = 0;
-    bool freeze_time_day = 0;
-    bool set_morning = 0;
-    int cycleSpeed = 1000000;
-}
 
 Freecam::Freecam(HMODULE hModule) : hModule(hModule) {
     instance = this;
@@ -38,30 +30,17 @@ bool Freecam::Initialize() {
     if (!input.HookWndProc(ModUtils::muWindow)) return false;
 
     if (!hookManager.Initialize()) return false;
-    if (!hookManager.Create(GameDataManager::GetUpdateCameraMatrixFunc(), &hkUpdateCameraMatrix, (void**)&origUpdateCameraMatrix))
+    if (!hookManager.Hook(GameDataManager::GetUpdateCameraMatrixFunc(), &hkUpdateCameraMatrix, (void**)&origUpdateCameraMatrix))
         return false;
-    if (!hookManager.Create(&GetRawInputData, &Input::hkGetRawInputData, (void**)&Input::origGetRawInputData))
+    if (!hookManager.Hook(&GetRawInputData, &Input::hkGetRawInputData, (void**)&Input::origGetRawInputData))
         return false;
     if (!hookManager.EnableAll()) return false;
+
+    if (!hookManager.GetDaytimeUpdateCave().Hook(GameDataManager::GetDaytimeUpdateFunc())) return false;
 
     SettingsBackup::SetFolderPath(config.GetConfigDirPath());
     freeCamera.SetHudValueToRestore(SettingsBackup::RestoreHudValue());
     SettingsBackup::SetEnabled(0);
-
-    hookAddress = GameDataManager::GetDaytimeUpdateFunc();
-    if (hookAddress != 0) {
-        ModUtils::ToggleMemoryProtection(false, hookAddress, 16);
-        memcpy(save, (void*)hookAddress, 16);
-        ModUtils::ToggleMemoryProtection(true, hookAddress, 16);
-
-        returnAddress = hookAddress + 16;
-
-        int32_t rel = *(int32_t*)(hookAddress + 12);
-        uintptr_t callInstr = hookAddress + 11;
-        funcAddress = callInstr + 5 + rel;
-
-        ModUtils::Hook(hookAddress, (uintptr_t)&DaytimeUpdate, 2);
-    }
 
     return true;
 }
@@ -76,9 +55,8 @@ void Freecam::Run() {
 }
 
 void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
-    if (input.IsJustPressed('P')) {
-        set_morning = !set_morning;
-        LOG_INFO("set_morning %d", set_morning);
+    if (input.IsJustPressed('U')) {
+        hookManager.GetDaytimeUpdateCave().ToggleFastDayCycle();
     }
 
     if (actionManager.IsJustPressed(Action::Toggle, input)) {
@@ -171,10 +149,6 @@ void __fastcall Freecam::hkUpdateCameraMatrix(GameData::GameRend* gameRend, void
 void Freecam::Dispose() {
     LOG_INFO("Disposing Freecam...");
     isRunning = false;
-
-    ModUtils::ToggleMemoryProtection(false, hookAddress, 16);
-    memcpy((void*)hookAddress, save, 16);
-    ModUtils::ToggleMemoryProtection(true, hookAddress, 16);
 
     freeCamera.DisableCamera();
     hookManager.Shutdown();

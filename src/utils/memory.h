@@ -29,6 +29,12 @@ namespace Memory {
 		{
 		}
 	}
+
+	inline uintptr_t GetCallTargetAddress(uintptr_t callInstructionAddress) {
+		if (*(uint8_t*)callInstructionAddress != 0xE8) return 0;
+		int32_t rel = *(int32_t*)(callInstructionAddress + 1);
+		return callInstructionAddress + 5 + rel;
+	}
 }
 
 class MemoryHandle
