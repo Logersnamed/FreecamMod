@@ -41,6 +41,7 @@ private:
         Keybind{"keybinds", "reload_config", Action::ReloadConfig, { VK_F5 }},
         Keybind{"keybinds", "reset_settings", Action::ResetSettings, { 'R' }},
         Keybind{"keybinds", "toggle_freeze", Action::ToggleFreeze, { 'P' }},
+        Keybind{"keybinds", "cycle_weather_time", Action::CycleWeatherTime, { VK_F3 }},
         Keybind{"keybinds", "exit_mod", Action::ExitMod, { VK_DELETE }},
         Keybind{"keybinds", "start/end_recording", Action::StartEndRecording, { VK_F8 }},
         Keybind{"keybinds", "strat/end_playing_recording", Action::StartEndPlayingRecording, { VK_F9}},

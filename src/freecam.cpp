@@ -55,16 +55,16 @@ void Freecam::Run() {
 }
 
 void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
-    if (input.IsJustPressed('U')) {
-        hookManager.GetDaytimeUpdateCave().ToggleFastDayCycle();
-    }
-
     if (actionManager.IsJustPressed(Action::Toggle, input)) {
         config.Reload(actionManager, freeCamera);
         freeCamera.Toggle(gameRend);
     }
 
     if (actionManager.IsJustPressed(Action::ToggleFreeze, input)) freeCamera.ToggleFreeze();
+
+    if (actionManager.IsJustPressed(Action::CycleWeatherTime, input)) {
+        hookManager.GetDaytimeUpdateCave().ToggleCycleWeatherTime();
+    }
 
     if (actionManager.IsPressed(Action::StepFrames, input)) {
         constexpr float holdWaitTime = 1.0f;
@@ -130,7 +130,7 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
 }
 
 void Freecam::Update(GameData::GameRend* gameRend) {
-    if (gameRend->IsFreecamEnabled() && input.IsWindowJustGetFocused()) {
+    if (input.IsWindowJustGetFocused()) {
         config.Reload(actionManager, freeCamera);
     }
 

@@ -13,6 +13,7 @@ public:
 		ReloadConfig,
 		ResetSettings,
 		ToggleFreeze,
+		CycleWeatherTime,
 		ExitMod,
 		StartEndRecording,
 		StartEndPlayingRecording,

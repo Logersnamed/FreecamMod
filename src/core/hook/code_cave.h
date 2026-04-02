@@ -24,13 +24,13 @@ public:
 
 class DaytimeUpdateCave : public CodeCave {
     bool* isDayTimeFrozen = nullptr;
-    bool* isFastDayCycle = nullptr;
+    bool* isCycleWeatherTime = nullptr;
     int* cycleSpeed = nullptr;
 
 public:
-    bool IsFastDayCycle() { return isFastDayCycle ? *isFastDayCycle : false; }
-    void SetFastDayCycle(bool enabled) { if (isFastDayCycle) *isFastDayCycle = enabled; }
-    void ToggleFastDayCycle() { if (isFastDayCycle) *isFastDayCycle = !(*isFastDayCycle); }
+    bool IsCycleWeatherTime() { return isCycleWeatherTime ? *isCycleWeatherTime : false; }
+    void SetCycleWeatherTime(bool enabled) { if (isCycleWeatherTime) *isCycleWeatherTime = enabled; }
+    void ToggleCycleWeatherTime() { if (isCycleWeatherTime) *isCycleWeatherTime = !(*isCycleWeatherTime); }
 
     void SaveOriginalBytes(uintptr_t hkAddress) override;
     uintptr_t GetDestinationAddress() override;

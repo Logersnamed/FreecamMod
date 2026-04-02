@@ -55,7 +55,7 @@ void DaytimeUpdateCave::SaveOriginalBytes(uintptr_t hkAddress) {
     DaytimeUpdateAsm::returnAddress = hkAddress + caveSize;
 
     isDayTimeFrozen = &DaytimeUpdateAsm::freeze_time_day;
-    isFastDayCycle = &DaytimeUpdateAsm::set_morning;
+    isCycleWeatherTime = &DaytimeUpdateAsm::set_morning;
     cycleSpeed = &DaytimeUpdateAsm::cycle_speed;
 }
 
