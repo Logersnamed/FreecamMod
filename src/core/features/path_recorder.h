@@ -96,6 +96,11 @@ public:
             EndRecord();
         }
 
+        if (!framesRecorded) {
+            LOG_INFO("Replay is empty");
+            return;
+        }
+
         framesPlayed = 0;
         isPlaying = true;
     }
