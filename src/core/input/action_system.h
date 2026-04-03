@@ -13,6 +13,7 @@ public:
 		ReloadConfig,
 		ResetSettings,
 		ToggleFreeze,
+		TeleportToCamera,
 		CycleWeatherTime,
 		ExitMod,
 		StartEndRecording,

@@ -60,7 +60,18 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
         freeCamera.Toggle(gameRend);
     }
 
-    if (actionManager.IsJustPressed(Action::ToggleFreeze, input)) freeCamera.ToggleFreeze();
+    if (actionManager.IsJustPressed(Action::TeleportToCamera, input)) {
+        config.Reload(actionManager, freeCamera);
+        freeCamera.Toggle(gameRend);
+
+        if (!freeCamera.IsEnabled()) {
+            if (GameData::ChrIns* player = GameDataManager::GetPlayer()) {
+                if (GameData::Camera* cam = gameRend->csDebugCam) {
+                    player->chrModules->chrPhysics->localPos = cam->matrix.position();
+                }
+            }
+        }
+    }
 
     if (actionManager.IsJustPressed(Action::CycleWeatherTime, input)) {
         hookManager.GetDaytimeUpdateCave().ToggleCycleWeatherTime();
@@ -78,6 +89,8 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
     }
 
     if (!gameRend->IsFreecamEnabled()) return;
+
+    if (actionManager.IsJustPressed(Action::ToggleFreeze, input)) freeCamera.ToggleFreeze();
 
     freeCamera.SetMouseDelta(input.GetMouseDelta());
 
