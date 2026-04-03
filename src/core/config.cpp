@@ -1,6 +1,5 @@
 #include "core/config.h"
 
-#include <filesystem>
 #include <cctype>
 #include <stdio.h>
 
@@ -9,19 +8,15 @@
 bool Config::Initialize(HMODULE hModule) {
     if (!findDllPath(hModule)) return false;
 
-    configDirPath = dllPath + configDirectoryName;
-    Logger::InitFile(configDirPath);
+    modDirectoryPath = dllPath / modDirectoryName;
+    configFilePath = modDirectoryPath / configFileName;
+
+    std::filesystem::create_directories(modDirectoryPath);
+
+    Logger::InitFile(modDirectoryPath);
     LOG_INFO("Initializing Config...");
-    LOG_INFO("DLL Path: %s", dllPath.c_str());
-
-    if (configDirPath.empty()) {
-        LOG_ERROR("Failed to determine config directory path");
-		return false;
-    }
-    CreateModDirectory();
-
-    configFilePath = configDirPath + configFileName;
-    LOG_INFO("Config path: %s", configFilePath.c_str());
+    LOG_INFO("DLL Path: %s", dllPath.string().c_str());
+    LOG_INFO("Config path: %s", configFilePath.string().c_str());
 
     file = mINI::INIFile(configFilePath);
 
@@ -29,7 +24,7 @@ bool Config::Initialize(HMODULE hModule) {
 }
 
 void Config::Reload(ActionManager &actionManager, FreeCamera &freeCamera) {
-    CreateModDirectory();
+    std::filesystem::create_directories(modDirectoryPath);
 
     ini.clear();
     bool fileExists = file.read(ini);
@@ -80,21 +75,6 @@ void Config::Reload(ActionManager &actionManager, FreeCamera &freeCamera) {
     else {
         if (!file.generate(ini, true)) LOG_WARN("Failed to generate config file");
     }
-}
-
-bool Config::CreateModDirectory() {
-    if (!std::filesystem::exists(configDirPath)) {
-        LOG_INFO("Creating config directory...");
-        try {
-            std::filesystem::create_directories(configDirPath);
-        }
-        catch (...) {
-            LOG_ERROR("Failed to create config directory");
-            return false;
-        }
-    }
-
-    return true;
 }
 
 template<typename T>
@@ -187,20 +167,16 @@ Action Config::ReadKeybind(const Keybind& keybind) {
 
 bool Config::findDllPath(HMODULE hModule) {
     char path[MAX_PATH];
-
     if (!GetModuleFileNameA(hModule, path, sizeof(path))) {
         LOG_ERROR("Failed to get module file name");
         return false;
     }
 
-    dllPath = path;
-
-    size_t pos = dllPath.find_last_of("\\/");
-    if (pos != std::string::npos)
-        dllPath.erase(pos + 1);
-
+    std::filesystem::path p(path);
+    dllPath = p.parent_path();
     return true;
 }
+
 
 int Config::ParseKey(std::string key) {
     std::transform(key.begin(), key.end(), key.begin(), ::toupper);

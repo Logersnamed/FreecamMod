@@ -1,11 +1,9 @@
 #include "utils/debug.h"
 
-void Logger::InitFile(const std::string& folderPath) {
-    std::filesystem::create_directories(folderPath);
-
-    std::string filename = folderPath + "/log.txt";
-
-    logFile.open(filename, std::ios::out | std::ios::trunc);
+void Logger::InitFile(std::filesystem::path modDirectoryPath) {
+    std::filesystem::create_directories(modDirectoryPath);
+    std::filesystem::path logPath = modDirectoryPath / logFileName;
+    logFile.open(logPath, std::ios::out | std::ios::trunc);
 }
 
 void Logger::Init(const char* title) {

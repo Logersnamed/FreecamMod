@@ -20,11 +20,13 @@
 #endif
 
 class Logger {
+	static inline const std::string logFileName = "log.txt";
+
 public:
     static void Init(const char* title = "Debug Console");
     static void Shutdown();
 
-    static void InitFile(const std::string& folderPath);
+    static void InitFile(std::filesystem::path folderPath);
 
     static void Log(const char* level, const char* fmt, ...);
 
