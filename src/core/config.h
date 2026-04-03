@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <string>
 #include <type_traits>
+#include <filesystem>
 #include <array>
 
 #include "mini/ini.h"
@@ -23,17 +24,17 @@ public:
     bool Initialize(HMODULE hModule);
     void Reload(ActionManager& actionManager, FreeCamera& freeCamera);
 
-    bool CreateModDirectory();
-    std::string GetConfigDirPath() const { return configDirPath; }
+    std::filesystem::path GetConfigDirPath() const { return modDirectoryPath; }
 
 private:
     mINI::INIFile file = mINI::INIFile("");
     mINI::INIStructure ini;
 
-    std::string dllPath = "";
-    std::string configFilePath = "";
-    std::string configDirPath = "";
-    const std::string configDirectoryName = "Freecam\\";
+    std::filesystem::path dllPath;
+    std::filesystem::path modDirectoryPath;
+    std::filesystem::path configFilePath;
+
+    const std::string modDirectoryName = "Freecam";
     const std::string configFileName = "config.ini";
 
     std::array<Keybind, Action::Count> keybinds = {

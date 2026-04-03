@@ -2,16 +2,17 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <filesystem>
 #include <optional>
 
 class SettingsBackup {
-	static inline std::string path{};
+	static inline std::filesystem::path path{};
 	static inline int savedHudValue = -1;
 
 public:
-	static void SetFolderPath(const std::string& folderPath) {
+	static void SetFolderPath(std::filesystem::path folderPath) {
 		if (folderPath.empty()) return;
-		path = folderPath + "settings.bak";
+		path = folderPath / "settings.bak";
 	}
 
 	static std::optional<int> RestoreHudValue() {
