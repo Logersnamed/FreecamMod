@@ -4,7 +4,6 @@
 #include <cstdarg>
 #include <ctime>
 #include <string>
-#include <mutex>
 #include <fstream>
 #include <filesystem>
 
@@ -44,6 +43,5 @@ private:
 
     static inline bool isInitialized = false;
     static inline bool enabled = false;
-    static inline std::mutex mutex;
     static inline std::ofstream logFile;
 };

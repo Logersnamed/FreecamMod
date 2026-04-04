@@ -32,8 +32,6 @@ void Logger::Enable(bool enable) {
 }
 
 void Logger::Print(const char* level, const char* fmt, va_list args) {
-    std::lock_guard<std::mutex> lock(mutex);
-
     char buffer[2048];
     vsnprintf(buffer, sizeof(buffer), fmt, args);
 
