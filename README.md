@@ -5,13 +5,14 @@ Works with Seamless Co-op, ER Reforged. Tested on EldenModLoader, modengine2, me
 ![Freecam preview](https://github.com/user-attachments/assets/9b9569fb-8401-4d98-a025-8c6dc6ec98fa)
 ## Features
 - Freeze game, player, and entities independently
-- Adjustable FOV
-- Automatic HUD disabling
+- Change weather/daytime 
+- Teleport to camera
 - Frame stepper
 - Save / load state + interpolation between states
-- Path recorder
+- Path recorder 
+- Adjustable FOV
+- Automatic HUD disabling
 - Disable / enable player controls
-- Full 3-axis rotation (pitch, yaw, roll)
 - Configurable keybinds and settings via config file
 
 ## Controls
@@ -54,4 +55,5 @@ The built DLL will be located in: `build/Release/FreecamMod.dll`
 [EldenRing-PostureBarMod](https://github.com/Mordrog/EldenRing-PostureBarMod) – Reference  
 [Techiew ModUtils](https://github.com/techiew/EldenRingMods/blob/master/ModUtils.h) - Elden ring mod utils  
 [The Grand Archives](https://github.com/The-Grand-Archives/Elden-Ring-CT-TGA) - Cheat Table  
+[Elden Ring Ultimate Cheat Engine Table](https://www.nexusmods.com/eldenring/mods/48) - Cheat Table  
 [Universal-WndProc-Hook](https://github.com/M0rtale/Universal-WndProc-Hook) – WndProc hooking library  
