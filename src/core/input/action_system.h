@@ -32,6 +32,9 @@ public:
 		TiltRight,
 		ScrollZoomModifier,
 		ScrollCameraSpeedModifier,
+		ScrollSpeedhackModifier,
+		ToggleSpeedhack,
+		ResetSpeedhackSpeed,
 		Count
 	};
 

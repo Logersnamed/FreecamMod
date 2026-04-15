@@ -23,7 +23,7 @@ bool Config::Initialize(HMODULE hModule) {
     return true;
 }
 
-void Config::Reload(ActionManager &actionManager, FreeCamera &freeCamera) {
+void Config::Reload(ActionManager &actionMgr, FreeCamera &freeCamera) {
     std::filesystem::create_directories(modDirectoryPath);
 
     ini.clear();
@@ -66,7 +66,7 @@ void Config::Reload(ActionManager &actionManager, FreeCamera &freeCamera) {
     freeCamera.SetSettings(settings);
 
     for (const Keybind& keybind : keybinds) {
-        actionManager.BindAction(ReadKeybind(keybind));
+        actionMgr.BindAction(ReadKeybind(keybind));
     }
 
     if (fileExists) {
@@ -176,7 +176,6 @@ bool Config::findDllPath(HMODULE hModule) {
     dllPath = p.parent_path();
     return true;
 }
-
 
 int Config::ParseKey(std::string key) {
     std::transform(key.begin(), key.end(), key.begin(), ::toupper);

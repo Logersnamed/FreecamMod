@@ -22,7 +22,7 @@ public:
     };
 
     bool Initialize(HMODULE hModule);
-    void Reload(ActionManager& actionManager, FreeCamera& freeCamera);
+    void Reload(ActionManager& actionMgr, FreeCamera& freeCamera);
 
     std::filesystem::path GetConfigDirPath() const { return modDirectoryPath; }
 
@@ -40,7 +40,7 @@ private:
     std::array<Keybind, Action::Count> keybinds = {
         Keybind{"keybinds", "toggle", Action::Toggle, { VK_F1 }},
         Keybind{"keybinds", "reload_config", Action::ReloadConfig, { VK_F5 }},
-        Keybind{"keybinds", "reset_settings", Action::ResetSettings, { 'R' }},
+        Keybind{"keybinds", "reset_settings", Action::ResetSettings, { 'R' }, { VK_CONTROL }},
         Keybind{"keybinds", "toggle_freeze", Action::ToggleFreeze, { 'P' }},
         Keybind{"keybinds", "teleport_to_camera", Action::TeleportToCamera, { VK_F3 }},
         Keybind{"keybinds", "cycle_weather_time", Action::CycleWeatherTime, { VK_F4 }},
@@ -60,7 +60,10 @@ private:
         Keybind{"keybinds", "tilt_left", Action::TiltLeft, { 'Q' }},
         Keybind{"keybinds", "tilt_right", Action::TiltRight, { 'E'}},
         Keybind{"keybinds", "scroll_zoom_modifier", Action::ScrollZoomModifier, { VK_CONTROL }},
-        Keybind{"keybinds", "scroll_camera_speed_modifier", Action::ScrollCameraSpeedModifier, {}, { VK_CONTROL }},
+        Keybind{"keybinds", "scroll_camera_speed_modifier", Action::ScrollCameraSpeedModifier, {}, { VK_CONTROL, 'V' }},
+        Keybind{"keybinds", "scroll_speedhack_modifier", Action::ScrollSpeedhackModifier, { 'V' }},
+        Keybind{"keybinds", "toggle_speedhack", Action::ToggleSpeedhack, { VK_F7 }},
+        Keybind{"keybinds", "reset_speedhack_speed", Action::ResetSpeedhackSpeed, { VK_CONTROL, 'V', 'R' }},
     };
 
     bool findDllPath(HMODULE hModule);

@@ -21,7 +21,7 @@ Freecam::Freecam(HMODULE hModule) : hModule(hModule) {
 
 bool Freecam::Initialize() {
     if (!config.Initialize(hModule)) return false;
-    config.Reload(actionManager, freeCamera);
+    config.Reload(actionMgr, freeCamera);
 
     ModUtils::AttemptToGetWindowHandle();
     if (!ModUtils::muWindow) return false;
@@ -54,19 +54,23 @@ void Freecam::Run() {
     if (!Initialize()) return;
 
     while (isRunning) {
-        if (actionManager.IsPressed(Action::ExitMod, input)) break;
+        if (actionMgr.IsPressed(Action::ExitMod, input)) break;
         Sleep(10);
     }
 }
 
 void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
-    if (actionManager.IsJustPressed(Action::Toggle, input)) {
-        config.Reload(actionManager, freeCamera);
+	bool isFreecamEnabled = gameRend->IsFreecamEnabled();
+	float scrollDelta = input.GetScrollDelta();
+
+    if (actionMgr.IsJustPressed(Action::Toggle, input)) {
+        config.Reload(actionMgr, freeCamera);
         freeCamera.Toggle(gameRend);
     }
 
-    if (actionManager.IsJustPressed(Action::TeleportToCamera, input)) {
-        config.Reload(actionManager, freeCamera);
+    // TeleportToCamera
+    if (actionMgr.IsJustPressed(Action::TeleportToCamera, input)) {
+        config.Reload(actionMgr, freeCamera);
         freeCamera.Toggle(gameRend);
 
         if (!freeCamera.IsEnabled()) {
@@ -78,11 +82,12 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
         }
     }
 
-    if (actionManager.IsJustPressed(Action::CycleWeatherTime, input)) {
+    if (actionMgr.IsJustPressed(Action::CycleWeatherTime, input)) {
         hookManager.GetDaytimeUpdateCave().ToggleCycleWeatherTime();
     }
 
-    if (actionManager.IsPressed(Action::StepFrames, input)) {
+    // FrameStepper
+    if (actionMgr.IsPressed(Action::StepFrames, input)) {
         constexpr float holdWaitTime = 1.0f;
         if (frameStepperTimePressed <= 0 || frameStepperTimePressed >= holdWaitTime) {
             freeCamera.StepFrames();
@@ -93,56 +98,44 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
         frameStepperTimePressed = 0.0f;
     }
 
-    if (input.IsPressed('V')) {
-        float scale = speedhack.GetTimeScale();
-        float delta = -input.GetScrollDelta() * 0.05f;
+    // Speedhack
+    if (actionMgr.IsJustPressed(Action::ToggleSpeedhack, input)) 
+        speedhack.IsEnabled() ? speedhack.Disable() : speedhack.Enable();
+    if (actionMgr.IsPressed(Action::ScrollSpeedhackModifier, input) && speedhack.IsEnabled()) 
+        speedhack.AddTimeScale(-scrollDelta * 0.05f);
+    if (actionMgr.IsJustPressed(Action::ResetSpeedhackSpeed, input)) speedhack.SetTimeScale(1.0);
 
-        float sensitivity = 1.0f;
-        for (float i = 0.1f; i >= 0.0001f; i *= 0.1f) {
-            if (scale > i) break;
-            sensitivity *= 0.1f;
-        }
-
-        delta *= sensitivity;
-        scale = std::clamp(scale - delta, 0.00005f, 2.0f);
-
-        speedhack.SetTimeScale(scale);
-        if (delta) LOG_INFO("Time scale: %.6f", scale);
-    }
-
-    if (!gameRend->IsFreecamEnabled()) return;
-
-    if (actionManager.IsJustPressed(Action::ToggleFreeze, input)) freeCamera.ToggleFreeze();
+    // Free camera only
+    if (!isFreecamEnabled) return;
 
     freeCamera.SetMouseDelta(input.GetMouseDelta());
+    freeCamera.SetIsSprinting(actionMgr.IsPressed(Action::Sprint, input));
 
-    if (actionManager.IsJustPressed(Action::ReloadConfig, input)) config.Reload(actionManager, freeCamera);
-    if (actionManager.IsJustPressed(Action::ResetSettings, input)) freeCamera.ResetSettings(gameRend);
+    if (actionMgr.IsJustPressed(Action::ToggleFreeze, input)) freeCamera.ToggleFreeze();
+    if (actionMgr.IsJustPressed(Action::ResetSettings, input)) freeCamera.ResetSettings(gameRend);
+    if (actionMgr.IsJustPressed(Action::ReloadConfig, input)) config.Reload(actionMgr, freeCamera);
 
-    freeCamera.SetIsSprinting(actionManager.IsPressed(Action::Sprint, input));
+    if (actionMgr.IsPressed(Action::MoveForward, input)) freeCamera.AddVelocity(float3::forward());
+    if (actionMgr.IsPressed(Action::MoveBackward, input)) freeCamera.AddVelocity(float3::back());
+    if (actionMgr.IsPressed(Action::MoveLeft, input)) freeCamera.AddVelocity(float3::left());
+    if (actionMgr.IsPressed(Action::MoveRight, input)) freeCamera.AddVelocity(float3::right());
+    if (actionMgr.IsPressed(Action::MoveUp, input)) freeCamera.AddVelocity(float3::up());
+    if (actionMgr.IsPressed(Action::MoveDown, input)) freeCamera.AddVelocity(float3::down());
+    if (actionMgr.IsPressed(Action::TiltLeft, input)) freeCamera.AddRollVelocity(1.0f);
+    if (actionMgr.IsPressed(Action::TiltRight, input)) freeCamera.AddRollVelocity(-1.0f);
 
-    if (actionManager.IsPressed(Action::MoveForward, input)) freeCamera.AddVelocity(float3::forward());
-    if (actionManager.IsPressed(Action::MoveBackward, input)) freeCamera.AddVelocity(float3::back());
-    if (actionManager.IsPressed(Action::MoveLeft, input)) freeCamera.AddVelocity(float3::left());
-    if (actionManager.IsPressed(Action::MoveRight, input)) freeCamera.AddVelocity(float3::right());
+    if (actionMgr.IsPressed(Action::ZoomIn, input)) freeCamera.AddZoomVelocity(-1.0f);
+    if (actionMgr.IsPressed(Action::ZoomOut, input)) freeCamera.AddZoomVelocity(1.0f);
 
-    if (actionManager.IsPressed(Action::TiltLeft, input)) freeCamera.AddRollVelocity(1.0f);
-    if (actionManager.IsPressed(Action::TiltRight, input)) freeCamera.AddRollVelocity(-1.0f);
+    if (actionMgr.IsPressed(Action::ScrollZoomModifier, input)) freeCamera.AddZoomVelocity(-scrollDelta);
+    if (actionMgr.IsPressed(Action::ScrollCameraSpeedModifier, input)) freeCamera.AddSpeed(scrollDelta);
 
-    if (actionManager.IsPressed(Action::MoveUp, input)) freeCamera.AddVelocity(float3::up());
-    if (actionManager.IsPressed(Action::MoveDown, input)) freeCamera.AddVelocity(float3::down());
+    if (actionMgr.IsJustPressed(Action::StartEndRecording, input)) freeCamera.GetPathRecorder().Record();
+    if (actionMgr.IsJustPressed(Action::StartEndPlayingRecording, input)) freeCamera.GetPathRecorder().PlayRecord();
 
-    if (actionManager.IsPressed(Action::ZoomIn, input)) freeCamera.AddZoomVelocity(-1.0f);
-    if (actionManager.IsPressed(Action::ZoomOut, input)) freeCamera.AddZoomVelocity(1.0f);
-
-    if (actionManager.IsPressed(Action::ScrollZoomModifier, input)) freeCamera.AddZoomVelocity(-input.GetScrollDelta());
-    if (input.IsReleased('V') && actionManager.IsPressed(Action::ScrollCameraSpeedModifier, input)) 
-        freeCamera.AddSpeed(input.GetScrollDelta());
-
-    if (actionManager.IsJustPressed(Action::StartEndRecording, input)) freeCamera.GetPathRecorder().Record();
-    if (actionManager.IsJustPressed(Action::StartEndPlayingRecording, input)) freeCamera.GetPathRecorder().PlayRecord();
-
+    // Number keys row
     if (input.IsPressed(VK_CONTROL)) {
+        // Save states
         GameData::Camera* activeCamera = gameRend->GetActiveCamera();
         if (activeCamera) {
             for (int key = 0; key < 10; ++key) {
@@ -155,6 +148,7 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
         }
     }
     else {
+        // Load states
         std::vector<uint8_t> keysToProcess = input.GetReleasedNumkeysInOrder();
         if (!keysToProcess.empty()) {
             GameData::Camera* activeCamera = gameRend->GetActiveCamera();
@@ -167,7 +161,7 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
 
 void Freecam::Update(GameData::GameRend* gameRend) {
     if (input.IsWindowJustGetFocused()) {
-        config.Reload(actionManager, freeCamera);
+        config.Reload(actionMgr, freeCamera);
     }
 
     float deltaTime = std::clamp(Time::DeltaTime() / speedhack.GetTimeScale(), 0.0f, 0.4f);

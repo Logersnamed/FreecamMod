@@ -1,6 +1,7 @@
 #pragma once
 #include <windows.h>
 #include <array>
+#include <algorithm>
 
 class Speedhack {
     struct SpeedhackHook {
@@ -10,6 +11,8 @@ class Speedhack {
     };
 
     static inline double timeScale = 1.0;
+    double lastTimeScale = 0.5;
+    bool isEnabled = false;
 
     static inline DWORD last32 = 0;
     static inline ULONGLONG last64 = 0;
@@ -67,6 +70,30 @@ class Speedhack {
 public:
     float GetTimeScale() const { return timeScale; }
     void SetTimeScale(double scale) { timeScale = scale; }
+
+	void AddTimeScale(double delta) { 
+        float sensitivity = 1.0f;
+        for (float i = 0.1f; i >= 0.0001f; i *= 0.1f) {
+            if (timeScale > i) break;
+            sensitivity *= 0.1f;
+        }
+
+        delta *= sensitivity;
+        SetTimeScale(std::clamp(timeScale - delta, 0.00005, 2.0));
+    }
+
+	bool IsEnabled() const { return isEnabled; }
+
+    void Enable() {
+        isEnabled = true;
+        SetTimeScale(lastTimeScale);
+    }
+
+    void Disable() {
+        isEnabled = false;
+        lastTimeScale = timeScale;
+        SetTimeScale(1.0);
+	}
 
     const std::array<SpeedhackHook, 3>& GetSpeedhackHooks() const {
         static std::array<SpeedhackHook, 3> hooks = {

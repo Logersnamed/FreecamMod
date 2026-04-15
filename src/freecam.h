@@ -24,7 +24,7 @@ private:
     FreeCamera freeCamera{};
     Config config{};
     Input input{};
-    ActionManager actionManager{};
+    ActionManager actionMgr{};
     HookManager hookManager{};
     Speedhack speedhack{};
 
