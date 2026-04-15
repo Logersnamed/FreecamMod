@@ -17,13 +17,13 @@ LRESULT __stdcall Input::hkWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 UINT WINAPI Input::hkGetRawInputData(HRAWINPUT hRawInput, UINT uiCommand, LPVOID pData, PUINT pcbSize, UINT cbSizeHeader) {
     UINT orig = origGetRawInputData(hRawInput, uiCommand, pData, pcbSize, cbSizeHeader);
 
-    if (Input::instance->isShouldGetInput) {
+    if (instance->isShouldGetInput) {
         if (orig != (UINT)-1 && uiCommand == RID_INPUT && pData) {
             RAWINPUT* raw = (RAWINPUT*)pData;
 
             if (raw->header.dwType == RIM_TYPEMOUSE) {
-                Input::instance->mouseDelta.x += raw->data.mouse.lLastX;
-                Input::instance->mouseDelta.y += raw->data.mouse.lLastY;
+                instance->mouseDelta.x += raw->data.mouse.lLastX;
+                instance->mouseDelta.y += raw->data.mouse.lLastY;
             }
         }
     }

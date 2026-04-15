@@ -34,6 +34,11 @@ bool Freecam::Initialize() {
         return false;
     if (!hookManager.Hook(&GetRawInputData, &Input::hkGetRawInputData, (void**)&Input::origGetRawInputData))
         return false;
+    for (const auto& hook : speedhack.GetSpeedhackHooks()) {
+        if (!hookManager.Hook(hook.target, hook.detour, hook.original))
+            return false;
+    }
+
     if (!hookManager.EnableAll()) return false;
 
     if (!hookManager.GetDaytimeUpdateCave().Hook(GameDataManager::GetDaytimeUpdateFunc())) return false;
@@ -88,6 +93,23 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
         frameStepperTimePressed = 0.0f;
     }
 
+    if (input.IsPressed('V')) {
+        float scale = speedhack.GetTimeScale();
+        float delta = -input.GetScrollDelta() * 0.05f;
+
+        float sensitivity = 1.0f;
+        for (float i = 0.1f; i >= 0.0001f; i *= 0.1f) {
+            if (scale > i) break;
+            sensitivity *= 0.1f;
+        }
+
+        delta *= sensitivity;
+        scale = std::clamp(scale - delta, 0.00005f, 2.0f);
+
+        speedhack.SetTimeScale(scale);
+        if (delta) LOG_INFO("Time scale: %.6f", scale);
+    }
+
     if (!gameRend->IsFreecamEnabled()) return;
 
     if (actionManager.IsJustPressed(Action::ToggleFreeze, input)) freeCamera.ToggleFreeze();
@@ -114,7 +136,8 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
     if (actionManager.IsPressed(Action::ZoomOut, input)) freeCamera.AddZoomVelocity(1.0f);
 
     if (actionManager.IsPressed(Action::ScrollZoomModifier, input)) freeCamera.AddZoomVelocity(-input.GetScrollDelta());
-    if (actionManager.IsPressed(Action::ScrollCameraSpeedModifier, input)) freeCamera.AddSpeed(input.GetScrollDelta());
+    if (input.IsReleased('V') && actionManager.IsPressed(Action::ScrollCameraSpeedModifier, input)) 
+        freeCamera.AddSpeed(input.GetScrollDelta());
 
     if (actionManager.IsJustPressed(Action::StartEndRecording, input)) freeCamera.GetPathRecorder().Record();
     if (actionManager.IsJustPressed(Action::StartEndPlayingRecording, input)) freeCamera.GetPathRecorder().PlayRecord();
@@ -147,7 +170,7 @@ void Freecam::Update(GameData::GameRend* gameRend) {
         config.Reload(actionManager, freeCamera);
     }
 
-    float deltaTime = std::clamp(Time::DeltaTime(), 0.0f, 0.4f);
+    float deltaTime = std::clamp(Time::DeltaTime() / speedhack.GetTimeScale(), 0.0f, 0.4f);
     ProcessInput(gameRend, deltaTime);
     freeCamera.Update(gameRend, deltaTime);
     input.Reset();
@@ -155,7 +178,7 @@ void Freecam::Update(GameData::GameRend* gameRend) {
 
 void __fastcall Freecam::hkUpdateCameraMatrix(GameData::GameRend* gameRend, void* rdx, void* r8, void* r9) {
     origUpdateCameraMatrix(gameRend, rdx, r8, r9);
-
+    
     if (instance && gameRend) instance->Update(gameRend);
 }
 
@@ -164,6 +187,7 @@ void Freecam::Dispose() {
     isRunning = false;
 
     freeCamera.DisableCamera();
+	speedhack.SetTimeScale(1.0f);
     hookManager.Shutdown();
     input.UnhookWndProc(ModUtils::muWindow);
     Logger::Shutdown();

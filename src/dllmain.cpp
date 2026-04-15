@@ -16,13 +16,13 @@ DWORD WINAPI MainThread(LPVOID lpParam) {
     return 0;
 }
 
-BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
+BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID reserved) {
     if (reason == DLL_PROCESS_ATTACH) {
         DisableThreadLibraryCalls(module);
         CreateThread(0, 0, MainThread, module, 0, NULL);
     }
     else if (reason == DLL_PROCESS_DETACH) {
-		if (Freecam::instance) Freecam::instance->Dispose();
-	}
+        if (Freecam::instance) Freecam::instance->Dispose();
+    }
     return TRUE;
 }

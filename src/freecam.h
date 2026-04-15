@@ -1,6 +1,7 @@
 #pragma once
 #include <windows.h>
 
+#include "core/features/speedhack.h"
 #include "core/game_data/game_data.h"
 #include "core/input/action_system.h"
 #include "core/input/input.h"
@@ -25,6 +26,7 @@ private:
     Input input{};
     ActionManager actionManager{};
     HookManager hookManager{};
+    Speedhack speedhack{};
 
     bool isRunning = true;
 
