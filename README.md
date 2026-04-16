@@ -10,6 +10,7 @@ Works with Seamless Co-op, ER Reforged. Tested on EldenModLoader, modengine2, me
 - Frame stepper
 - Save / load state + interpolation between states
 - Path recorder 
+- Speedhack
 - Adjustable FOV
 - Automatic HUD disabling
 - Disable / enable player controls
