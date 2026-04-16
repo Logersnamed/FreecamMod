@@ -4,3 +4,6 @@
 [submodule "extern/mINI"]
 	path = extern/mINI
 	url = https://github.com/metayeti/mINI.git
+[submodule "extern/MinSpeedhack"]
+	path = extern/MinSpeedhack
+	url = https://github.com/Logersnamed/minspeedhack.git

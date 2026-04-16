@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "ModUtils.h"
+#include "MinSpeedhack.h"
 
 #include "core/features/path_recorder.h"
 #include "core/game_data_manager.h"
@@ -34,8 +35,11 @@ bool Freecam::Initialize() {
         return false;
     if (!hookManager.Hook(&GetRawInputData, &Input::hkGetRawInputData, (void**)&Input::origGetRawInputData))
         return false;
-    for (const auto& hook : speedhack.GetSpeedhackHooks()) {
-        if (!hookManager.Hook(hook.target, hook.detour, hook.original))
+
+    size_t hookCount = 0;
+    const auto* hooks = MS::GetHooks(hookCount);
+    for (size_t i = 0; i < hookCount; ++i) {
+        if (!hookManager.Hook(hooks[i].target, hooks[i].detour, hooks[i].original))
             return false;
     }
 
