@@ -276,7 +276,7 @@ void FreeCamera::DisableCamera(GameData::GameRend* rend) {
 }
 
 void FreeCamera::DisableCamera() {
-    GameData::FieldArea* fieldArea = GameDataManager::GetFieldArea();
+    GameData::FieldArea* fieldArea = GameDataManager::FieldArea.Get();
     if (!fieldArea) {
         LOG_WARN("FieldArea is null in FreeCamera::DisableCamera. Nothing to disable.");
         return;

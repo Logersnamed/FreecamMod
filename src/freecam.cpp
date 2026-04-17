@@ -31,7 +31,7 @@ bool Freecam::Initialize() {
     if (!input.HookWndProc(ModUtils::muWindow)) return false;
 
     if (!hookManager.Initialize()) return false;
-    if (!hookManager.Hook(GameDataManager::GetUpdateCameraMatrixFunc(), &hkUpdateCameraMatrix, (void**)&origUpdateCameraMatrix))
+    if (!hookManager.Hook(&GameDataManager::UpdateCameraMatrixFunc, &hkUpdateCameraMatrix, (void**)&origUpdateCameraMatrix))
         return false;
     if (!hookManager.Hook(&GetRawInputData, &Input::hkGetRawInputData, (void**)&Input::origGetRawInputData))
         return false;
@@ -45,7 +45,7 @@ bool Freecam::Initialize() {
 
     if (!hookManager.EnableAll()) return false;
 
-    if (!hookManager.GetDaytimeUpdateCave().Hook(GameDataManager::GetDaytimeUpdateFunc())) return false;
+    if (!hookManager.GetDaytimeUpdateCave().Hook(GameDataManager::DaytimeUpdateFunc.address)) return false;
 
     speedhack.Initialize();
 

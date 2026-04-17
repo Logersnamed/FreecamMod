@@ -17,13 +17,13 @@ class Speedhack {
 
 public:
 	bool Initialize() {
-		uintptr_t framelimitAddress = GameDataManager::GetFrametimeLimitAddress();
+		uintptr_t framelimitAddress = GameDataManager::FrametimeLimit.Get();
 		if (!framelimitAddress) return false;
 
 		frametimeLimit = reinterpret_cast<float*>(framelimitAddress);
 		if (!frametimeLimit) return false;
 
-		uintptr_t fullscreenLimitAddress = GameDataManager::GetFullscreenLimit();
+		uintptr_t fullscreenLimitAddress = GameDataManager::FullscreenLimit.Get();
 		if (!fullscreenLimitAddress) return false;
 
 		// Removing 60 FPS fullscreen limit: https://github.com/techiew/EldenRingMods/blob/master/UnlockTheFps/DllMain.cpp

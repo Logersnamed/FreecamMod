@@ -16,7 +16,7 @@ public:
 		if (areEntitiesFrozen == enabled) return;
 		areEntitiesFrozen = enabled;
 
-		GameData::WorldChrMan* world = GameDataManager::GetWorldChrMan();
+		GameData::WorldChrMan* world = GameDataManager::WorldChrMan.Get();
 		if (!world) return;
 
 		GameData::Players* players = world->players;
