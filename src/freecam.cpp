@@ -47,6 +47,8 @@ bool Freecam::Initialize() {
 
     if (!hookManager.GetDaytimeUpdateCave().Hook(GameDataManager::GetDaytimeUpdateFunc())) return false;
 
+    speedhack.Initialize();
+
     SettingsBackup::SetFolderPath(config.GetConfigDirPath());
     freeCamera.SetHudValueToRestore(SettingsBackup::RestoreHudValue());
     SettingsBackup::SetEnabled(0);
@@ -106,7 +108,7 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
     if (actionMgr.IsJustPressed(Action::ToggleSpeedhack, input)) 
         speedhack.IsEnabled() ? speedhack.Disable() : speedhack.Enable();
     if (actionMgr.IsPressed(Action::ScrollSpeedhackModifier, input) && speedhack.IsEnabled()) 
-        speedhack.AddTimeScale(-scrollDelta * 0.05f);
+        speedhack.AddTimeScale(scrollDelta * 0.05f);
     if (actionMgr.IsJustPressed(Action::ResetSpeedhackSpeed, input)) speedhack.SetTimeScale(1.0);
 
     // Free camera only
