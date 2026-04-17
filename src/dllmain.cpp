@@ -4,7 +4,7 @@
 
 DWORD WINAPI MainThread(LPVOID lpParam) {
     Sleep(500);
-
+    
     {
         Freecam freecam((HMODULE)lpParam);
         freecam.Run();

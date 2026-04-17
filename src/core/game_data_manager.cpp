@@ -12,7 +12,9 @@ bool GameDataManager::Init() {
 		{ "fieldAreaSig",   "48 8B 3D ? ? ? ? 49 8B D8 48 8B F2 4C 8B F1 48 85 FF", 3, true, true, &fieldAreaSig },
 		{ "worldChrManSig", "48 8B 05 ? ? ? ? 48 85 C0 74 0F 48 39 88",				3, true, true, &worldChrManSig },
 		{ "gameDataManSig",	"48 8B 05 ? ? ? ? 48 85 C0 74 05 48 8B 40 58 C3 C3",	3, true, false, &gameDataManSig },
-		{ "gamePauseSig",	"0F 84 ? ? ? ? C6 ? ? ? ? ? 00 ? 8D ? ? ? ? ? ? 89 ? ? 89 ? ? ? 8B ? ? ? ? ? ? 85 ? 75", 
+		{ "frametimeLimitSig",	"C7 ? ? ? ? ? ? EB ? 89 ? 18 EB ? 89 ? 18 C7",		3, false, false, &frametimeLimitSig },
+		{ "fullscreenLimitSig",	"C7 ? EF ? 00 00 00 C7 ? F3 01 00 00 00 8B 87",		0, false, false, &fullscreenLimitSig },
+		{ "gamePauseSig",		"0F 84 ? ? ? ? C6 ? ? ? ? ? 00 ? 8D ? ? ? ? ? ? 89 ? ? 89 ? ? ? 8B ? ? ? ? ? ? 85 ? 75", 
 			1, false, false, &gamePauseSig },
 		{ "updateCameraMatrixFuncSig",	"4C 8B 49 18 4C 8B D1 8B 42 50 41 89 41 50 8B 42", 0, false, true, &updateCameraMatrixFuncSig },
 		{ "daytimeUpdateSig",	"F3 0F 2C D0 85 D2 7E", 0, false, false, &daytimeUpdateSig },
@@ -82,6 +84,14 @@ void* GameDataManager::GetUpdateCameraMatrixFunc() {
 
 uintptr_t GameDataManager::GetDaytimeUpdateFunc() {
 	return daytimeUpdateSig;
+}
+
+uintptr_t GameDataManager::GetFrametimeLimitAddress() {
+	return frametimeLimitSig;
+}
+
+uintptr_t GameDataManager::GetFullscreenLimit() {
+	return fullscreenLimitSig;
 }
 
 void GameDataManager::PauseGame(bool enabled) {

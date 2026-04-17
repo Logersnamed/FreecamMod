@@ -11,7 +11,8 @@ public:
 	static GameData::ChrIns* GetPlayer();
 	static void* GetUpdateCameraMatrixFunc();
 	static uintptr_t GetDaytimeUpdateFunc();
-
+	static uintptr_t GetFrametimeLimitAddress();
+	static uintptr_t GetFullscreenLimit();
 	static void PauseGame(bool enabled);
 
 private:
@@ -29,6 +30,8 @@ private:
 	static inline uintptr_t fieldAreaSig{};
 	static inline uintptr_t worldChrManSig{};
 	static inline uintptr_t gameDataManSig{};
+	static inline uintptr_t frametimeLimitSig{};
+	static inline uintptr_t fullscreenLimitSig{};
 	static inline uintptr_t gamePauseSig{};
 	static inline uintptr_t updateCameraMatrixFuncSig{};
 	static inline uintptr_t daytimeUpdateSig{};

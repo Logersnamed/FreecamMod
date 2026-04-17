@@ -55,6 +55,7 @@ The built DLL will be located in: `build/Release/FreecamMod.dll`
 [EROverlay](https://github.com/koalabear420/EROverlay) – Reference and partial code usage  
 [EldenRing-PostureBarMod](https://github.com/Mordrog/EldenRing-PostureBarMod) – Reference  
 [Techiew ModUtils](https://github.com/techiew/EldenRingMods/blob/master/ModUtils.h) - Elden ring mod utils  
+[Techiew EldenRingMods](https://github.com/techiew/EldenRingMods) - Reference and partial code usage   
 [The Grand Archives](https://github.com/The-Grand-Archives/Elden-Ring-CT-TGA) - Cheat Table  
 [Elden Ring Ultimate Cheat Engine Table](https://www.nexusmods.com/eldenring/mods/48) - Cheat Table  
 [Universal-WndProc-Hook](https://github.com/M0rtale/Universal-WndProc-Hook) – WndProc hooking library  
