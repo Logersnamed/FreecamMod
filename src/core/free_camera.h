@@ -49,6 +49,8 @@ public:
 
     FreeCamera() : frameStepper(gameStateManager) {}
 
+    bool Initialize();
+
     void Update(GameData::GameRend* gameRend, float deltaTime);
 
     void Toggle(GameData::GameRend* rend);
@@ -74,8 +76,6 @@ public:
     void AddRollVelocity(float deltaRoll) { rollVelocity += deltaRoll; }
     void AddZoomVelocity(float deltaZoom) { zoomVelocity += deltaZoom; }
     void AddFov(GameData::Camera* cam, float deltaFov) { SetFov(cam, cam->fov + deltaFov); }
-
-    void SetHudValueToRestore(std::optional<int> value) { hudValueToRestore = value; }
 
 private:
     bool isEnabled = false;
@@ -106,17 +106,13 @@ private:
     bool isFrozen = false;
     void Freeze(bool enabled);
 
-    bool isHudHidden = false;
-    std::byte savedHudOption = std::byte(2);
-    std::optional<int> hudValueToRestore = std::nullopt;
-
     void UpdatePosition(GameData::Camera* camera, float dt);
     void UpdateRotation(GameData::Camera* freeCamera, GameData::Camera* playerCamera, float dt);
     void UpdateFov(GameData::Camera* camera, float dt);
     void UpdateVelocity(float dt);
     void UpdateZoomVelocity(float dt);
 
-    void RestorePendingSettings();
+    void RestorePendingOptions();
     void ResetSettings(GameData::Camera* freeCamera, GameData::Camera* playerCamera);
 
     void CopyPositionAndFov(GameData::Camera* toCamera, GameData::Camera* fromCamera);

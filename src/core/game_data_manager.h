@@ -32,7 +32,7 @@ class GameDataManager {
 			return true;
 		}
 
-		T Get() const {
+		T Get() const {	
 			if constexpr (std::is_pointer_v<T>) {
 				uintptr_t ptr = Memory::RPM<uintptr_t>(address);
 				return ptr ? reinterpret_cast<T>(ptr) : nullptr;
@@ -57,6 +57,7 @@ public:
 		if (!FieldArea.Scan()) return false;
 		if (!WorldChrMan.Scan()) return false;
 		if (!GameDataMan.Scan()) return false;
+		if (!Window.Scan()) return false;
 		if (!FrametimeLimit.Scan()) return false;
 		if (!FullscreenLimit.Scan()) return false;
 		if (!GamePausePatch.Scan()) return false;
@@ -77,6 +78,8 @@ public:
 		"48 8B 05 ? ? ? ? 48 85 C0 74 0F 48 39 88" };
 	static inline PatternEntry<GameData::GameDataMan*> GameDataMan { 3, RESOLVE_RIP, NOT_REQUIRED, "GameDataMan", 
 		"48 8B 05 ? ? ? ? 48 85 C0 74 05 48 8B 40 58 C3 C3" };
+	static inline PatternEntry<GameData::Window*> Window { 3, RESOLVE_RIP, NOT_REQUIRED, "Window",
+		"48 8B 0D ? ? ? ? 48 85 C9 74 ? 48 83 C1 ? 48 8D 45" };
 	static inline PatternEntry<uintptr_t> FrametimeLimit { 3, NOT_RESOLVE_RIP, NOT_REQUIRED, "FrametimeLimit", 
 		"C7 ? ? ? ? ? ? EB ? 89 ? 18 EB ? 89 ? 18 C7" };
 	static inline PatternEntry<uintptr_t> FullscreenLimit { 0, NOT_RESOLVE_RIP, NOT_REQUIRED, "FullscreenLimit", 
