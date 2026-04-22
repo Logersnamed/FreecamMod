@@ -30,16 +30,17 @@ void Config::Reload(ActionManager &actionMgr, FreeCamera &freeCamera) {
     bool fileExists = file.read(ini);
 
 #define READ(sec, key, var) var = ReadValue(sec, key, var)
+#define READ_BITFLAG(sec, key, var) settings.flags.set(var, ReadValue(sec, key, settings.flags.get(var)))
 
     FreeCamera::Settings settings{};
 
-    READ("freecam", "hide_hud", settings.flags.hideHud);
-    READ("freecam", "freeze_game", settings.flags.freezeGame);
-    READ("freecam", "freeze_entities", settings.flags.freezeEntities);
-    READ("freecam", "freeze_player", settings.flags.freezePlayer);
-    READ("freecam", "disable_player_controls", settings.flags.disablePlayerControls);
-    READ("freecam", "reset_camera_settings", settings.flags.resetCameraSettings);
-    READ("freecam", "always_use_custom_rotation", settings.flags.alwaysUseCustomRotation);
+    READ_BITFLAG("freecam", "hide_hud", hideHud);
+    READ_BITFLAG("freecam", "freeze_game", freezeGame);
+    READ_BITFLAG("freecam", "freeze_entities", freezeEntities);
+    READ_BITFLAG("freecam", "freeze_player", freezePlayer);
+    READ_BITFLAG("freecam", "disable_player_controls", disablePlayerControls);
+    READ_BITFLAG("freecam", "reset_camera_settings", resetCameraSettings);
+    READ_BITFLAG("freecam", "always_use_custom_rotation", alwaysUseCustomRotation);
 
     READ("camera_settings", "sensitivity", settings.sensitivity);
     READ("camera_settings", "default_speed", settings.defaultSpeed);
@@ -51,8 +52,8 @@ void Config::Reload(ActionManager &actionMgr, FreeCamera &freeCamera) {
     settings.maxFov = Math::toRadians(ReadValue("camera_settings", "max_fov_degrees", Math::radToDegrees(settings.maxFov)));
     settings.pitchLimit = Math::toRadians(ReadValue("camera_settings", "pitch_limit_degrees", Math::radToDegrees(settings.pitchLimit)));
 
-    READ("smooth_camera_settings", "smooth_camera_movement", settings.flags.smoothCameraMovement);
-    READ("smooth_camera_settings", "smooth_camera_rotation", settings.flags.smoothCameraRotation);
+    READ_BITFLAG("smooth_camera_settings", "smooth_camera_movement", smoothCameraMovement);
+    READ_BITFLAG("smooth_camera_settings", "smooth_camera_rotation", smoothCameraRotation);
     READ("smooth_camera_settings", "sensitivity", settings.smoothSensitivity);
     READ("smooth_camera_settings", "tilt_speed", settings.smoothTiltSpeed);
 
@@ -61,7 +62,7 @@ void Config::Reload(ActionManager &actionMgr, FreeCamera &freeCamera) {
     READ("camera_state_manager", "interpolation_time", settings.interpolationTime);
 
     Logger::Enable(ReadValue("hidden", "debug_console", 0));
-    READ("hidden", "freeze_by_setting_zero_speed", settings.flags.zeroSpeedFreeze);
+    READ_BITFLAG("hidden", "freeze_by_setting_zero_speed", zeroSpeedFreeze);
 
     freeCamera.SetSettings(settings);
 

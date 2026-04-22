@@ -11,24 +11,28 @@
 #include "core/features/camera_state_manager.h"
 #include "core/game_data/game_data.h"
 #include "utils/debug.h"
+#include "utils/bitflags.h"
+
+enum FreecamFlag : uint16_t {
+    hideHud                 = 1 << 0,
+    freezeGame              = 1 << 1,
+    freezeEntities          = 1 << 2,
+    freezePlayer            = 1 << 3,
+    disablePlayerControls   = 1 << 4,
+    resetCameraSettings     = 1 << 5,
+    alwaysUseCustomRotation = 1 << 6,
+    smoothCameraMovement    = 1 << 7,
+    smoothCameraRotation    = 1 << 8,
+    zeroSpeedFreeze         = 1 << 9,
+};
 
 class FreeCamera {
 public:
     struct Settings {
-        struct Flags {
-            bool hideHud = true;
-            bool freezeGame = true;
-            bool freezeEntities = true;
-            bool freezePlayer = true;
-            bool disablePlayerControls = true;
-            bool resetCameraSettings = true;
-            bool alwaysUseCustomRotation = true;
-
-            bool smoothCameraMovement = true;
-            bool smoothCameraRotation = false;
-
-            bool zeroSpeedFreeze = false;
-        } flags{};
+		Flags<FreecamFlag> flags {
+			hideHud | freezeGame | freezeEntities | freezePlayer | disablePlayerControls | 
+            resetCameraSettings | alwaysUseCustomRotation | smoothCameraMovement
+        };
 
         float sensitivity = 1.0f;
         float defaultSpeed = 10.0f;
@@ -123,9 +127,11 @@ private:
     void CopyRotation(GameData::Camera* toCamera, GameData::Camera* fromCamera);
     float ComputeZoomFactor(float fov);
 
+    bool flaged(FreecamFlag flag) const { return settings.flags.get(flag); }
+
     bool IsUsingCustomRotation() const {
-        if (!settings.flags.alwaysUseCustomRotation) return false;
-        return settings.flags.freezeGame || !settings.flags.resetCameraSettings || settings.flags.alwaysUseCustomRotation;
+        if (!flaged(alwaysUseCustomRotation)) return false;
+        return flaged(freezeGame) || !flaged(resetCameraSettings) || flaged(alwaysUseCustomRotation);
     }
 
     void GetCameraPitchYaw(GameData::Camera* camera, float* _pitch, float* _yaw);
