@@ -13,7 +13,7 @@
 #include "utils/debug.h"
 #include "utils/bitflags.h"
 
-enum FreecamFlag : uint16_t {
+enum class FreecamFlag : uint16_t {
     freezeGame              = 1 << 0,
     freezeEntities          = 1 << 1,
     freezePlayer            = 1 << 2,
@@ -28,6 +28,8 @@ enum FreecamFlag : uint16_t {
 };
 
 class FreeCamera {
+    using enum FreecamFlag;
+
 public:
     struct Settings {
 		Flags<FreecamFlag> flags {
@@ -63,16 +65,11 @@ public:
     void EnableCamera(GameData::GameRend* rend);
     void DisableCamera(GameData::GameRend* rend);
     void DisableCamera();
+
+    void ToggleFreeze();
     void ResetSettings(GameData::GameRend* gameRend);
     void SetSettings(const Settings& s);
-    void ToggleFreeze();
 
-    PathRecorder& GetPathRecorder() { return pathRecorder; }
-    CameraStateManager& GetCameraStateManager() { return cameraStateManager; }
-    void StepFrames() { frameStepper.StepFrames(settings.step); }
-
-    bool IsEnabled() const { return isEnabled; }
-    float3 GetYawPitchRoll() const { return { yaw, pitch, roll }; }
 
     void SetMouseDelta(int2 delta) { mouseDelta = delta; }
     void SetIsSprinting(bool enabled) { isSprinting = enabled; }
@@ -83,9 +80,18 @@ public:
     void AddZoomVelocity(float deltaZoom) { zoomVelocity += deltaZoom; }
     void AddFov(GameData::Camera* cam, float deltaFov) { SetFov(cam, cam->fov + deltaFov); }
 
+    bool IsEnabled() const { return isEnabled; }
+    float3 GetYawPitchRoll() const { return { yaw, pitch, roll }; }
+
+    PathRecorder& GetPathRecorder() { return pathRecorder; }
+    CameraStateManager& GetCameraStateManager() { return cameraStateManager; }
+    void StepFrames() { frameStepper.StepFrames(settings.step); }
+
 private:
     bool isEnabled = false;
     bool isFirstEnabled = true;
+    bool isSprinting = false;
+    bool isFrozen = false;
 
     GameStateManager gameStateManager{};
     FrameStepper frameStepper;
@@ -105,12 +111,8 @@ private:
     float pitch = 0.0f;
     float roll = 0.0f;
 
-    const float MIN_FOV = 0.000126f;
-    const float MAX_FOV = 3.13f;
-
-    bool isSprinting = false;
-    bool isFrozen = false;
-    void Freeze(bool enabled);
+    static constexpr float MIN_FOV = 0.000126f;
+    static constexpr float MAX_FOV = 3.13f;
 
     void UpdatePosition(GameData::Camera* camera, float dt);
     void UpdateRotation(GameData::Camera* freeCamera, GameData::Camera* playerCamera, float dt);
@@ -118,6 +120,8 @@ private:
     void UpdateVelocity(float dt);
     void UpdateZoomVelocity(float dt);
 
+    void ApplyFreezeState(bool enabled);
+    void ApplyGameOptions(bool enabled);
     void RestorePendingOptions();
     void ResetSettings(GameData::Camera* freeCamera, GameData::Camera* playerCamera);
 
@@ -125,9 +129,7 @@ private:
     void CopyRotation(GameData::Camera* toCamera, GameData::Camera* fromCamera);
     float ComputeZoomFactor(float fov);
 
-    bool flaged(FreecamFlag flag) const { return settings.flags.get(flag); }
-     
-    const bool isUsingCustomRotation = true;
+    bool flagged(FreecamFlag flag) const { return settings.flags.get(flag); }
 
     void GetCameraPitchYaw(GameData::Camera* camera, float* _pitch, float* _yaw);
 
@@ -138,6 +140,8 @@ private:
     void SetFov(GameData::Camera* cam, float newFov) { cam->fov = std::clamp(newFov, settings.minFov, settings.maxFov); }
     void SetMinFov(float newMinFov) { settings.minFov = std::clamp(newMinFov, MIN_FOV, MAX_FOV); }
     void SetMaxFov(float newMaxFov) { settings.maxFov = std::clamp(newMaxFov, MIN_FOV, MAX_FOV); }
+
+    static constexpr bool isUsingCustomRotation = true;
 
     struct RotationCache {
         struct AngleCached {

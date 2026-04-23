@@ -58,7 +58,7 @@ public:
 		time = 0;
 	}
 
-	void Update(GameData::Camera* camera, float3_ref& yawPitchRoll, float dt) {
+	void Update(GameData::Camera* camera, float3_ref yawPitchRoll, float dt) {
 		if (!isInterpolating) return;
 		if (slotOrder.empty()) {
 			isInterpolating = false;

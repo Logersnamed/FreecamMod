@@ -66,7 +66,7 @@ void Freecam::Run() {
 }
 
 void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
-	bool isFreecamEnabled = gameRend->IsFreecamEnabled();
+    bool isFreecamEnabled = gameRend->IsFreecamEnabled();
 	float scrollDelta = input.GetScrollDelta();
 
     if (actionMgr.IsJustPressed(Action::Toggle, input)) {

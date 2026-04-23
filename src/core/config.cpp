@@ -34,6 +34,7 @@ void Config::Reload(ActionManager &actionMgr, FreeCamera &freeCamera) {
 #define READ_EULER_ANGLE(sec, key, var) var = Math::toRadians(ReadValue(sec, key, Math::radToDegrees(var)))
 
     FreeCamera::Settings settings{};
+    using enum FreecamFlag;
 
     READ_BITFLAG("freecam", "freeze_game", freezeGame);
     READ_BITFLAG("freecam", "freeze_entities", freezeEntities);
