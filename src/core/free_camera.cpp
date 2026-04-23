@@ -13,8 +13,21 @@
 #include "utils/debug.h"
 #include "utils/math.h"
 
+bool FreeCamera::Initialize() {
+    auto wasFreecamEnabled = SettingsBackup::RestoreOptionValue(OptionType::Freecam);
+    if (wasFreecamEnabled.has_value()) {
+        if (wasFreecamEnabled.value() == 1) {
+            gameStateManager.SetOptionValueToRestore(OptionType::HUD, SettingsBackup::RestoreOptionValue(OptionType::HUD));
+            gameStateManager.SetOptionValueToRestore(OptionType::AA, SettingsBackup::RestoreOptionValue(OptionType::AA));
+            gameStateManager.SetOptionValueToRestore(OptionType::MotionBlur, SettingsBackup::RestoreOptionValue(OptionType::MotionBlur));
+        }
+    }
+
+    return true;
+}
+
 void FreeCamera::Update(GameData::GameRend* gameRend, float deltaTime) {
-    RestorePendingSettings();
+    RestorePendingOptions();
     if (!gameRend->IsFreecamEnabled()) {
         if (isEnabled) {
             LOG_INFO("Freecam wasn't disabled properly, disabling now...");
@@ -146,14 +159,9 @@ void FreeCamera::SetSettings(const Settings& s) {
     cameraStateManager.SetInterpolationTime(settings.interpolationTime);
 }
 
-void FreeCamera::RestorePendingSettings() {
-    if (!hudValueToRestore.has_value()) return;
-
-    GameData::OptionData* optionData = GameDataManager::GetOptionData();
-    if (optionData) {
-        LOG_INFO("Restored hud option from %d to %d", optionData->HUD, hudValueToRestore);
-        optionData->HUD = std::byte(hudValueToRestore.value());
-        hudValueToRestore = std::nullopt;
+void FreeCamera::RestorePendingOptions() {
+    if (gameStateManager.RestoreOptions()) {
+        SettingsBackup::SaveOptionValue(OptionType::Freecam, isEnabled);
     }
 }
 
@@ -218,17 +226,16 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
     GameData::Camera* playerCamera = rend->csPersCam1;
     if (!freeCamera || !playerCamera) return;
 
+    SettingsBackup::SaveOptionValue(OptionType::Freecam, 1);
     if (flaged(hideHud)) {
-        GameData::OptionData* optionData = GameDataManager::GetOptionData();
-        if (optionData) {
-            savedHudOption = optionData->HUD;
-            optionData->HUD = std::byte(0);
-            isHudHidden = true;
-        }
+        gameStateManager.DisableOption(OptionType::HUD, true);
     }
-
-    SettingsBackup::SetEnabled(1);
-    SettingsBackup::SaveHudValue((int)savedHudOption);
+    if (flaged(disableAA)) {
+        gameStateManager.DisableOption(OptionType::AA, true);
+    }
+    if (flaged(disableMotionBlur)) {
+        gameStateManager.DisableOption(OptionType::MotionBlur, true);
+    }
 
     if (flaged(resetCameraSettings) || isFirstEnabled) {
         ResetSettings(freeCamera, playerCamera);
@@ -256,15 +263,10 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
 void FreeCamera::DisableCamera(GameData::GameRend* rend) {
     rend->DisableFreecam();
 
-    if (isHudHidden) {
-        GameData::OptionData* optionData = GameDataManager::GetOptionData();
-        if (optionData) {
-            optionData->HUD = savedHudOption;
-            isHudHidden = false;
-        }
-    }
-
-    SettingsBackup::SetEnabled(0);
+    SettingsBackup::SaveOptionValue(OptionType::Freecam, 0);
+    gameStateManager.DisableOption(OptionType::HUD, false);
+    gameStateManager.DisableOption(OptionType::AA, false);
+    gameStateManager.DisableOption(OptionType::MotionBlur, false);
 
     Freeze(false);
 

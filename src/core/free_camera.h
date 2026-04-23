@@ -14,24 +14,26 @@
 #include "utils/bitflags.h"
 
 enum FreecamFlag : uint16_t {
-    hideHud                 = 1 << 0,
-    freezeGame              = 1 << 1,
-    freezeEntities          = 1 << 2,
-    freezePlayer            = 1 << 3,
-    disablePlayerControls   = 1 << 4,
-    resetCameraSettings     = 1 << 5,
-    alwaysUseCustomRotation = 1 << 6,
-    smoothCameraMovement    = 1 << 7,
-    smoothCameraRotation    = 1 << 8,
-    zeroSpeedFreeze         = 1 << 9,
+    freezeGame              = 1 << 0,
+    freezeEntities          = 1 << 1,
+    freezePlayer            = 1 << 2,
+    disablePlayerControls   = 1 << 3,
+    resetCameraSettings     = 1 << 4,
+    alwaysUseCustomRotation = 1 << 5,
+    hideHud                 = 1 << 6,
+    disableAA               = 1 << 7,
+    disableMotionBlur       = 1 << 8,
+    smoothCameraMovement    = 1 << 9,
+    smoothCameraRotation    = 1 << 10,
+    zeroSpeedFreeze         = 1 << 11,
 };
 
 class FreeCamera {
 public:
     struct Settings {
 		Flags<FreecamFlag> flags {
-			hideHud | freezeGame | freezeEntities | freezePlayer | disablePlayerControls | 
-            resetCameraSettings | alwaysUseCustomRotation | smoothCameraMovement
+			freezeGame | freezeEntities | freezePlayer | disablePlayerControls | 
+            resetCameraSettings | alwaysUseCustomRotation | hideHud | smoothCameraMovement
         };
 
         float sensitivity = 1.0f;
@@ -52,6 +54,8 @@ public:
     };
 
     FreeCamera() : frameStepper(gameStateManager) {}
+
+    bool Initialize();
 
     void Update(GameData::GameRend* gameRend, float deltaTime);
 
@@ -78,8 +82,6 @@ public:
     void AddRollVelocity(float deltaRoll) { rollVelocity += deltaRoll; }
     void AddZoomVelocity(float deltaZoom) { zoomVelocity += deltaZoom; }
     void AddFov(GameData::Camera* cam, float deltaFov) { SetFov(cam, cam->fov + deltaFov); }
-
-    void SetHudValueToRestore(std::optional<int> value) { hudValueToRestore = value; }
 
 private:
     bool isEnabled = false;
@@ -110,17 +112,13 @@ private:
     bool isFrozen = false;
     void Freeze(bool enabled);
 
-    bool isHudHidden = false;
-    std::byte savedHudOption = std::byte(2);
-    std::optional<int> hudValueToRestore = std::nullopt;
-
     void UpdatePosition(GameData::Camera* camera, float dt);
     void UpdateRotation(GameData::Camera* freeCamera, GameData::Camera* playerCamera, float dt);
     void UpdateFov(GameData::Camera* camera, float dt);
     void UpdateVelocity(float dt);
     void UpdateZoomVelocity(float dt);
 
-    void RestorePendingSettings();
+    void RestorePendingOptions();
     void ResetSettings(GameData::Camera* freeCamera, GameData::Camera* playerCamera);
 
     void CopyPositionAndFov(GameData::Camera* toCamera, GameData::Camera* fromCamera);

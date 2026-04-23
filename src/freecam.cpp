@@ -50,8 +50,8 @@ bool Freecam::Initialize() {
     speedhack.Initialize();
 
     SettingsBackup::SetFolderPath(config.GetConfigDirPath());
-    freeCamera.SetHudValueToRestore(SettingsBackup::RestoreHudValue());
-    SettingsBackup::SetEnabled(0);
+
+    freeCamera.Initialize();
 
     return true;
 }

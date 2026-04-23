@@ -31,10 +31,10 @@ void Config::Reload(ActionManager &actionMgr, FreeCamera &freeCamera) {
 
 #define READ(sec, key, var) var = ReadValue(sec, key, var)
 #define READ_BITFLAG(sec, key, var) settings.flags.set(var, ReadValue(sec, key, settings.flags.get(var)))
+#define READ_EULER_ANGLE(sec, key, var) var = Math::toRadians(ReadValue(sec, key, Math::radToDegrees(var)))
 
     FreeCamera::Settings settings{};
 
-    READ_BITFLAG("freecam", "hide_hud", hideHud);
     READ_BITFLAG("freecam", "freeze_game", freezeGame);
     READ_BITFLAG("freecam", "freeze_entities", freezeEntities);
     READ_BITFLAG("freecam", "freeze_player", freezePlayer);
@@ -42,15 +42,19 @@ void Config::Reload(ActionManager &actionMgr, FreeCamera &freeCamera) {
     READ_BITFLAG("freecam", "reset_camera_settings", resetCameraSettings);
     READ_BITFLAG("freecam", "always_use_custom_rotation", alwaysUseCustomRotation);
 
+    READ_BITFLAG("options", "hide_hud", hideHud);
+    READ_BITFLAG("options", "disable_anti_aliasing", disableAA);
+    READ_BITFLAG("options", "disable_motion_blur", disableMotionBlur);
+
     READ("camera_settings", "sensitivity", settings.sensitivity);
     READ("camera_settings", "default_speed", settings.defaultSpeed);
     READ("camera_settings", "tilt_speed", settings.tiltSpeed);
     READ("camera_settings", "speed_multiplier", settings.speedMult);
     READ("camera_settings", "zoom_speed", settings.zoomSpeed);
 
-    settings.minFov = Math::toRadians(ReadValue("camera_settings", "min_fov_degrees", Math::radToDegrees(settings.minFov)));
-    settings.maxFov = Math::toRadians(ReadValue("camera_settings", "max_fov_degrees", Math::radToDegrees(settings.maxFov)));
-    settings.pitchLimit = Math::toRadians(ReadValue("camera_settings", "pitch_limit_degrees", Math::radToDegrees(settings.pitchLimit)));
+    READ_EULER_ANGLE("camera_settings", "min_fov_degrees", settings.minFov);
+    READ_EULER_ANGLE("camera_settings", "max_fov_degrees", settings.maxFov);
+    READ_EULER_ANGLE("camera_settings", "pitch_limit_degrees", settings.pitchLimit);
 
     READ_BITFLAG("smooth_camera_settings", "smooth_camera_movement", smoothCameraMovement);
     READ_BITFLAG("smooth_camera_settings", "smooth_camera_rotation", smoothCameraRotation);
