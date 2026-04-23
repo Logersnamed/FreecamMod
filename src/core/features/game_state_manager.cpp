@@ -9,9 +9,9 @@ void GameStateManager::FreezeGame(bool enabled) {
 	}
 }
 
+
 void GameStateManager::FreezeEntities(bool enabled) {
 	if (areEntitiesFrozen == enabled) return;
-	areEntitiesFrozen = enabled;
 
 	GameData::WorldChrMan* world = GameDataManager::WorldChrMan.Get();
 	if (!world) return;
@@ -24,13 +24,18 @@ void GameStateManager::FreezeEntities(bool enabled) {
 		return;
 	}
 
-	GameData::ChrIns* player = players->player0;
+	areEntitiesFrozen = enabled;
 
+	GameData::ChrIns* player = players->player0;
 	const size_t length = world->GetEntityListLength();
+
 	LOG_INFO("Set FreezeEntity = %d to %zu entities", enabled, length);
+
 	for (size_t i = 0; i < length; ++i) {
 		GameData::ChrIns* entity = world->begin[i];
-		if (entity && entity != player) FreezeEntity(entity, enabled);
+		if (entity && entity != player) {
+			FreezeEntity(entity, enabled);
+		}
 	}
 }
 
@@ -38,11 +43,14 @@ void GameStateManager::FreezePlayer(bool enabled) {
 	if (isPlayerFrozen == enabled) return;
 	isPlayerFrozen = enabled;
 
-	GameData::ChrIns* player = GameDataManager::GetPlayer();
-	if (player) FreezeEntity(player, enabled);
+	if (GameData::ChrIns* player = GameDataManager::GetPlayer()) {
+		FreezeEntity(player, enabled);
+	}
 }
 
 void GameStateManager::FreezeEntity(GameData::ChrIns* entity, bool enabled) {
+	if (!entity) return;
+
 	if (isZeroSpeedFreeze) {
 		entity->chrModules->chrBehavior->animationSpeed = !enabled;
 	}
@@ -55,18 +63,16 @@ void GameStateManager::FreezeEntity(GameData::ChrIns* entity, bool enabled) {
 }
 
 void GameStateManager::SetOptionValueToRestore(OptionType type, std::optional<uint8_t> value) {
-	switch (type) {
-		case OptionType::HUD:			hud.valueToRestore = value; break;
-		case OptionType::AA:			aa.valueToRestore = value; break;
-		case OptionType::MotionBlur:	mb.valueToRestore = value; break;
+	if (Option* option = GetOption(type)) {
+		option->valueToRestore = value;
 	}
 }
 
-void GameStateManager::DisableOption(OptionType optionType, bool enabled) {
+void GameStateManager::DisableOption(OptionType type, bool enabled) {
 	GameData::OptionData* optionData = GameDataManager::GetOptionData();
 	GameData::Window* window = GameDataManager::Window.Get();
 
-	switch (optionType) {
+	switch (type) {
 		case OptionType::HUD:			if (optionData) hud.Disable(&optionData->HUD, enabled); break;
 		case OptionType::AA:			if (window) aa.Disable(&window->AA, enabled); break;
 		case OptionType::MotionBlur:	if (window) mb.Disable(&window->motionBlur, enabled); break;
@@ -74,7 +80,7 @@ void GameStateManager::DisableOption(OptionType optionType, bool enabled) {
 }
 
 bool GameStateManager::RestoreOptions() {
-	if (wereRestored) return wereRestored;
+	if (wereRestored) return true;
 
 	if (GameData::OptionData* optionData = GameDataManager::GetOptionData()) {
 		hud.Restore(&optionData->HUD);
@@ -85,52 +91,49 @@ bool GameStateManager::RestoreOptions() {
 	}
 
 	wereRestored = true;
-	return wereRestored;
+	return true;
 }
 
 void GameStateManager::Option::Disable(uint8_t* gameOption, bool enabled) {
-	if (!gameOption) return;
+	if (!gameOption || enabled == isDisabled) return;
 
 	if (enabled) {
 		savedValue = *gameOption;
 		*gameOption = 0;
-		isDisabled = true;
-
 		SettingsBackup::SaveOptionValue(type, savedValue);
 	}
 	else {
-		if (isDisabled) {
-			*gameOption = savedValue;
-			isDisabled = false;
-		}
+		*gameOption = savedValue;
 	}
+
+	isDisabled = enabled;
 }
 
 void GameStateManager::Option::Restore(uint8_t* gameOption) {
-	if (!gameOption || !valueToRestore.has_value()) return;
-	if (*gameOption == valueToRestore.value()) return;
+	if (!gameOption || !valueToRestore) return;
 
-	static constexpr const size_t optionCount = static_cast<size_t>(OptionType::Count);
-	static constexpr const char* optionNames[optionCount] = {
+	uint8_t newValue = *valueToRestore;
+	if (*gameOption == newValue) return;
+
+	static constexpr const char* optionNames[] = {
 		"Freecam", "HUD", "Anti-aliasing", "Motion Blur"
 	};
 
-	static constexpr const char* valueNames[][optionCount] = {
-		{ "OFF", "ON", "", "" },				// Freecam
-		{ "OFF", "ON", "AUTO", "" },			// HUD
-		{ "OFF", "LOW", "", "HIGH" },			// AA
-		{ "OFF", "LOW", "MEDIUM", "HIGH"}		// MotionBlur
+	static constexpr const char* valueNames[][4] = {
+		{ "OFF", "ON", "", "" },
+		{ "OFF", "ON", "AUTO", "" },
+		{ "OFF", "LOW", "", "HIGH" },
+		{ "OFF", "LOW", "MEDIUM", "HIGH" }
 	};
 
 	const size_t t = static_cast<size_t>(type);
 	uint8_t oldValue = *gameOption;
-	uint8_t newValue = valueToRestore.value();
-	LOG_INFO("Restored \"%s\" option from \"%s\" to \"%s\"", 
-		optionNames[t], 
-		((t < std::size(valueNames) && oldValue < optionCount)	? valueNames[t][oldValue] : "?"),
-		((t < std::size(valueNames) && newValue < optionCount)	? valueNames[t][newValue] : "?")
-	);
+
+	const char* oldStr = (t < std::size(valueNames) && oldValue < 4) ? valueNames[t][oldValue] : "?";
+	const char* newStr = (t < std::size(valueNames) && newValue < 4) ? valueNames[t][newValue] : "?";
+
+	LOG_INFO("Restored \"%s\" option from \"%s\" to \"%s\"", optionNames[t], oldStr, newStr);
 
 	*gameOption = newValue;
-	valueToRestore = std::nullopt;
+	valueToRestore.reset();
 }

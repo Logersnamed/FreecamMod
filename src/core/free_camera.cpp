@@ -33,7 +33,6 @@ void FreeCamera::OnConfigReload() {
     gameStateManager.DisableOption(OptionType::AA, flaged(disableAA));
     gameStateManager.DisableOption(OptionType::MotionBlur, flaged(disableMotionBlur));
     
-
    if (flaged(freezeGame)) {
        gameStateManager.FreezeGame(true);
    }
@@ -41,6 +40,11 @@ void FreeCamera::OnConfigReload() {
        gameStateManager.FreezeGame(false);
        gameStateManager.FreezeEntities(flaged(freezeEntities));
        gameStateManager.FreezePlayer(flaged(freezePlayer));
+   }
+
+   GameData::FieldArea* fieldArea = GameDataManager::FieldArea.Get();
+   if (fieldArea && fieldArea->gameRend) {
+       fieldArea->gameRend->EnableFreecam(flaged(disablePlayerControls));
    }
 }
 
@@ -87,7 +91,7 @@ void FreeCamera::UpdatePosition(GameData::Camera* camera, float dt) {
 }
 
 void FreeCamera::UpdateRotation(GameData::Camera* freeCamera, GameData::Camera* playerCamera, float dt) {
-    if (!IsUsingCustomRotation()) {
+    if (!isUsingCustomRotation) {
         CopyRotation(freeCamera, playerCamera);
         return;
     }
@@ -260,7 +264,7 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
         isFirstEnabled = false;
     }
 
-    if (IsUsingCustomRotation()) {
+    if (isUsingCustomRotation) {
         GetCameraPitchYaw(freeCamera, &pitch, &yaw);
     }
 

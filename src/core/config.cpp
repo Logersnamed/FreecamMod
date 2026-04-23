@@ -40,7 +40,6 @@ void Config::Reload(ActionManager &actionMgr, FreeCamera &freeCamera) {
     READ_BITFLAG("freecam", "freeze_player", freezePlayer);
     READ_BITFLAG("freecam", "disable_player_controls", disablePlayerControls);
     READ_BITFLAG("freecam", "reset_camera_settings", resetCameraSettings);
-    READ_BITFLAG("freecam", "always_use_custom_rotation", alwaysUseCustomRotation);
 
     READ_BITFLAG("game_options", "hide_hud", hideHud);
     READ_BITFLAG("game_options", "disable_anti_aliasing", disableAA);

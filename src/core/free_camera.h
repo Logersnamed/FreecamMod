@@ -19,13 +19,12 @@ enum FreecamFlag : uint16_t {
     freezePlayer            = 1 << 2,
     disablePlayerControls   = 1 << 3,
     resetCameraSettings     = 1 << 4,
-    alwaysUseCustomRotation = 1 << 5,
-    hideHud                 = 1 << 6,
-    disableAA               = 1 << 7,
-    disableMotionBlur       = 1 << 8,
-    smoothCameraMovement    = 1 << 9,
-    smoothCameraRotation    = 1 << 10,
-    zeroSpeedFreeze         = 1 << 11,
+    hideHud                 = 1 << 5,
+    disableAA               = 1 << 6,
+    disableMotionBlur       = 1 << 7,
+    smoothCameraMovement    = 1 << 8,
+    smoothCameraRotation    = 1 << 9,
+    zeroSpeedFreeze         = 1 << 10
 };
 
 class FreeCamera {
@@ -33,7 +32,7 @@ public:
     struct Settings {
 		Flags<FreecamFlag> flags {
 			freezeGame | freezeEntities | freezePlayer | disablePlayerControls | 
-            resetCameraSettings | alwaysUseCustomRotation | hideHud | smoothCameraMovement
+            resetCameraSettings | hideHud | smoothCameraMovement
         };
 
         float sensitivity = 1.0f;
@@ -127,11 +126,8 @@ private:
     float ComputeZoomFactor(float fov);
 
     bool flaged(FreecamFlag flag) const { return settings.flags.get(flag); }
-
-    bool IsUsingCustomRotation() const {
-        if (!flaged(alwaysUseCustomRotation)) return false;
-        return flaged(freezeGame) || !flaged(resetCameraSettings) || flaged(alwaysUseCustomRotation);
-    }
+     
+    const bool isUsingCustomRotation = true;
 
     void GetCameraPitchYaw(GameData::Camera* camera, float* _pitch, float* _yaw);
 

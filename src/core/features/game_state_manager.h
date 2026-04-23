@@ -25,10 +25,9 @@ public:
 
 private:
 	struct Option {
-		Option(OptionType type) : type(type) {}
+        constexpr explicit Option(OptionType type) : type(type) {}
 
 		const OptionType type;
-
 		bool isDisabled = false;
 		uint8_t savedValue = 1;
 		std::optional<uint8_t> valueToRestore = std::nullopt;
@@ -41,10 +40,19 @@ private:
 	Option aa  { OptionType::AA };
 	Option mb  { OptionType::MotionBlur };
 
+	Option* GetOption(OptionType type) {
+		switch (type) {
+			case OptionType::HUD:        return &hud;
+			case OptionType::AA:         return &aa;
+			case OptionType::MotionBlur: return &mb;
+		}
+		return nullptr;
+	}
+
 	bool wereRestored = false;
 
 public:
 	void SetOptionValueToRestore(OptionType type, std::optional<uint8_t> value);
-	void DisableOption(OptionType optionType, bool enabled);
+	void DisableOption(OptionType type, bool enabled);
 	bool RestoreOptions();
 };
