@@ -27,7 +27,7 @@ private:
 	struct Option {
 		Option(OptionType type) : type(type) {}
 
-		OptionType type = OptionType::None;
+		const OptionType type;
 
 		bool isDisabled = false;
 		uint8_t savedValue = 1;

@@ -16,13 +16,16 @@ class FreeCamera {
 public:
     struct Settings {
         struct Flags {
-            bool hideHud = true;
             bool freezeGame = true;
             bool freezeEntities = true;
             bool freezePlayer = true;
             bool disablePlayerControls = true;
             bool resetCameraSettings = true;
             bool alwaysUseCustomRotation = true;
+
+            bool hideHud = true;
+            bool disableAA = false;
+            bool disableMotionBlur = false;
 
             bool smoothCameraMovement = true;
             bool smoothCameraRotation = false;

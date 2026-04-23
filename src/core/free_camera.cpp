@@ -230,10 +230,10 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
     if (settings.flags.hideHud) {
         gameStateManager.DisableOption(OptionType::HUD, true);
     }
-    if (true) { // add config setting
+    if (settings.flags.disableAA) {
         gameStateManager.DisableOption(OptionType::AA, true);
     }
-    if (true) { // add config setting
+    if (settings.flags.disableMotionBlur) {
         gameStateManager.DisableOption(OptionType::MotionBlur, true);
     }
 

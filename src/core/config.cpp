@@ -33,13 +33,16 @@ void Config::Reload(ActionManager &actionMgr, FreeCamera &freeCamera) {
 
     FreeCamera::Settings settings{};
 
-    READ("freecam", "hide_hud", settings.flags.hideHud);
     READ("freecam", "freeze_game", settings.flags.freezeGame);
     READ("freecam", "freeze_entities", settings.flags.freezeEntities);
     READ("freecam", "freeze_player", settings.flags.freezePlayer);
     READ("freecam", "disable_player_controls", settings.flags.disablePlayerControls);
     READ("freecam", "reset_camera_settings", settings.flags.resetCameraSettings);
     READ("freecam", "always_use_custom_rotation", settings.flags.alwaysUseCustomRotation);
+
+    READ("options", "hide_hud", settings.flags.hideHud);
+    READ("options", "disable_anti_aliasing", settings.flags.disableAA);
+    READ("options", "disable_motion_blur", settings.flags.disableMotionBlur);
 
     READ("camera_settings", "sensitivity", settings.sensitivity);
     READ("camera_settings", "default_speed", settings.defaultSpeed);
