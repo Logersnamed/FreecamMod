@@ -42,9 +42,9 @@ void Config::Reload(ActionManager &actionMgr, FreeCamera &freeCamera) {
     READ_BITFLAG("freecam", "reset_camera_settings", resetCameraSettings);
     READ_BITFLAG("freecam", "always_use_custom_rotation", alwaysUseCustomRotation);
 
-    READ_BITFLAG("options", "hide_hud", hideHud);
-    READ_BITFLAG("options", "disable_anti_aliasing", disableAA);
-    READ_BITFLAG("options", "disable_motion_blur", disableMotionBlur);
+    READ_BITFLAG("game_options", "hide_hud", hideHud);
+    READ_BITFLAG("game_options", "disable_anti_aliasing", disableAA);
+    READ_BITFLAG("game_options", "disable_motion_blur", disableMotionBlur);
 
     READ("camera_settings", "sensitivity", settings.sensitivity);
     READ("camera_settings", "default_speed", settings.defaultSpeed);
@@ -80,6 +80,8 @@ void Config::Reload(ActionManager &actionMgr, FreeCamera &freeCamera) {
     else {
         if (!file.generate(ini, true)) LOG_WARN("Failed to generate config file");
     }
+
+    freeCamera.OnConfigReload();
 }
 
 template<typename T>

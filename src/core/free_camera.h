@@ -57,6 +57,7 @@ public:
 
     bool Initialize();
 
+    void OnConfigReload();
     void Update(GameData::GameRend* gameRend, float deltaTime);
 
     void Toggle(GameData::GameRend* rend);

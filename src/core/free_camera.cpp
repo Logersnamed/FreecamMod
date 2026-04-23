@@ -26,6 +26,24 @@ bool FreeCamera::Initialize() {
     return true;
 }
 
+void FreeCamera::OnConfigReload() {
+    if (!isEnabled) return;
+    
+    gameStateManager.DisableOption(OptionType::HUD, flaged(hideHud));
+    gameStateManager.DisableOption(OptionType::AA, flaged(disableAA));
+    gameStateManager.DisableOption(OptionType::MotionBlur, flaged(disableMotionBlur));
+    
+
+   if (flaged(freezeGame)) {
+       gameStateManager.FreezeGame(true);
+   }
+   else {
+       gameStateManager.FreezeGame(false);
+       gameStateManager.FreezeEntities(flaged(freezeEntities));
+       gameStateManager.FreezePlayer(flaged(freezePlayer));
+   }
+}
+
 void FreeCamera::Update(GameData::GameRend* gameRend, float deltaTime) {
     RestorePendingOptions();
     if (!gameRend->IsFreecamEnabled()) {

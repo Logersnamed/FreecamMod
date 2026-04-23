@@ -21,8 +21,8 @@ Freecam::Freecam(HMODULE hModule) : hModule(hModule) {
 }
 
 bool Freecam::Initialize() {
-    if (!config.Initialize(hModule)) return false;
-    config.Reload(actionMgr, freeCamera);
+    if (!config.Initialize(hModule)) return false;  // 3
+    config.Reload(actionMgr, freeCamera);           // 11
 
     ModUtils::AttemptToGetWindowHandle();
     if (!ModUtils::muWindow) return false;
