@@ -36,6 +36,9 @@ void FreeCamera::OnConfigReload() {
     if (fieldArea && fieldArea->gameRend) {
         fieldArea->gameRend->EnableFreecam(flagged(disablePlayerControls));
     }
+
+    gameStateManager.SetZeroSpeedFreeze(flagged(zeroSpeedFreeze));
+    cameraStateManager.SetInterpolationTime(settings.interpolationTime);
 }
 
 void FreeCamera::Update(GameData::GameRend* gameRend, float deltaTime) {
@@ -53,12 +56,12 @@ void FreeCamera::Update(GameData::GameRend* gameRend, float deltaTime) {
     if (!freeCamera || !playerCamera) return;
 
     UpdatePosition(freeCamera, deltaTime);
-    UpdateRotation(freeCamera, playerCamera, deltaTime);
+    UpdateRotation(freeCamera, deltaTime);
     UpdateFov(freeCamera, deltaTime);
 
     UpdateVelocity(deltaTime);
     UpdateZoomVelocity(deltaTime);
-    isSprinting = false;
+    //isSprinting = false;          // ensure this is not needed
 
     if (pathRecorder.IsRecording()) pathRecorder.RecordFrame(freeCamera);
     if (pathRecorder.IsPlaying()) pathRecorder.PlayNextFrame(freeCamera);
@@ -77,25 +80,23 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
     GameData::Camera* playerCamera = rend->csPersCam1;
     if (!freeCamera || !playerCamera) return;
 
-    SettingsBackup::SaveOptionValue(OptionType::Freecam, true);
-    ApplyGameOptions(true);
-    ApplyFreezeState(true);
-
-    if (flagged(resetCameraSettings) || isFirstEnabled) {
-        ResetSettings(freeCamera, playerCamera);
-        isFirstEnabled = false;
+    if (flagged(resetCameraView) || isFirstEnable) {
+        ResetCameraView(freeCamera, playerCamera);
+        isFirstEnable = false;
     }
 
-    if (isUsingCustomRotation) {
-        GetCameraPitchYaw(freeCamera, &pitch, &yaw);
-    }
-
-    frameStepper.Reset();
+    GetCameraPitchYaw(freeCamera, &pitch, &yaw);
 
     velocity = float3(0);
     yawPitchVelocity = float2(0);
     zoomVelocity = 0.0f;
     rollVelocity = 0.0f;
+
+    frameStepper.Reset();
+
+    SettingsBackup::SaveOptionValue(OptionType::Freecam, true);
+    ApplyGameOptions(true);
+    ApplyFreezeState(true);
 
     rend->EnableFreecam(flagged(disablePlayerControls));
     isEnabled = true;
@@ -105,12 +106,12 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
 void FreeCamera::DisableCamera(GameData::GameRend* rend) {
     rend->DisableFreecam();
 
+    if (pathRecorder.IsRecording()) pathRecorder.EndRecord();
+    if (pathRecorder.IsPlaying()) pathRecorder.EndPlay();
+
     SettingsBackup::SaveOptionValue(OptionType::Freecam, false);
     ApplyGameOptions(false);
     ApplyFreezeState(false);
-
-    if (pathRecorder.IsRecording()) pathRecorder.EndRecord();
-    if (pathRecorder.IsPlaying()) pathRecorder.EndPlay();
 
     isEnabled = false;
     LOG_INFO("Free camera disabled");
@@ -130,24 +131,11 @@ void FreeCamera::ToggleFreeze() {
     ApplyFreezeState(!isFrozen);
 }
 
-void FreeCamera::ResetSettings(GameData::GameRend* gameRend) {
+void FreeCamera::ResetCameraView(GameData::GameRend* gameRend) {
     GameData::Camera* freeCamera = gameRend->csDebugCam;
     GameData::Camera* playerCamera = gameRend->csPersCam1;
     if (!freeCamera || !playerCamera) return;
-    ResetSettings(freeCamera, playerCamera);
-}
-
-void FreeCamera::SetSettings(const Settings& s) {
-    settings = s;
-    SetDefaultSpeed(settings.defaultSpeed);
-    SetSpeedMult(settings.speedMult);
-    SetZoomSpeed(settings.zoomSpeed);
-
-    SetMinFov(settings.minFov);
-    SetMaxFov(settings.maxFov);
-
-    gameStateManager.SetZeroSpeedFreeze(flagged(zeroSpeedFreeze));
-    cameraStateManager.SetInterpolationTime(settings.interpolationTime);
+    ResetCameraView(freeCamera, playerCamera);
 }
 
 void FreeCamera::UpdatePosition(GameData::Camera* camera, float dt) {
@@ -162,12 +150,7 @@ void FreeCamera::UpdatePosition(GameData::Camera* camera, float dt) {
     camera->matrix.position() += vel * cameraSpeed;
 }
 
-void FreeCamera::UpdateRotation(GameData::Camera* freeCamera, GameData::Camera* playerCamera, float dt) {
-    if (!isUsingCustomRotation) {
-        CopyRotation(freeCamera, playerCamera);
-        return;
-    }
-
+void FreeCamera::UpdateRotation(GameData::Camera* freeCamera, float dt) {
     RotationCache& c = rotationCache;
 
     float tiltSpeed = flagged(smoothCameraRotation) ? settings.smoothTiltSpeed : settings.tiltSpeed;
@@ -254,7 +237,7 @@ void FreeCamera::RestorePendingOptions() {
     }
 }
 
-void FreeCamera::ResetSettings(GameData::Camera* freeCamera, GameData::Camera* playerCamera) {
+void FreeCamera::ResetCameraView(GameData::Camera* freeCamera, GameData::Camera* playerCamera) {
     CopyPositionAndFov(freeCamera, playerCamera);
     CopyRotation(freeCamera, playerCamera);
     speed = settings.defaultSpeed;

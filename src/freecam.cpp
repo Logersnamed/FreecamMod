@@ -118,7 +118,7 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
     freeCamera.SetIsSprinting(actionMgr.IsPressed(Action::Sprint, input));
 
     if (actionMgr.IsJustPressed(Action::ToggleFreeze, input)) freeCamera.ToggleFreeze();
-    if (actionMgr.IsJustPressed(Action::ResetSettings, input)) freeCamera.ResetSettings(gameRend);
+    if (actionMgr.IsJustPressed(Action::ResetSettings, input)) freeCamera.ResetCameraView(gameRend);
     if (actionMgr.IsJustPressed(Action::ReloadConfig, input)) config.Reload(actionMgr, freeCamera);
 
     if (actionMgr.IsPressed(Action::MoveForward, input)) freeCamera.AddVelocity(float3::forward());

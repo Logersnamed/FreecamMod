@@ -18,7 +18,7 @@ enum class FreecamFlag : uint16_t {
     freezeEntities          = 1 << 1,
     freezePlayer            = 1 << 2,
     disablePlayerControls   = 1 << 3,
-    resetCameraSettings     = 1 << 4,
+    resetCameraView         = 1 << 4,
     hideHud                 = 1 << 5,
     disableAA               = 1 << 6,
     disableMotionBlur       = 1 << 7,
@@ -34,7 +34,7 @@ public:
     struct Settings {
 		Flags<FreecamFlag> flags {
 			freezeGame | freezeEntities | freezePlayer | disablePlayerControls | 
-            resetCameraSettings | hideHud | smoothCameraMovement
+            resetCameraView | hideHud | smoothCameraMovement
         };
 
         float sensitivity = 1.0f;
@@ -52,6 +52,16 @@ public:
 
         int step = 1;
         float interpolationTime = 3.0f;
+
+        Settings operator=(Settings other) {
+            other.speedMult = max(other.speedMult, 0.0f);
+            other.defaultSpeed = max(other.defaultSpeed, 0.0f);
+            other.zoomSpeed = max(other.zoomSpeed, 0.0f);
+
+            other.minFov = std::clamp(other.minFov, MIN_FOV, MAX_FOV);
+            other.maxFov = std::clamp(other.maxFov, MIN_FOV, MAX_FOV);
+            return other;
+        }
     };
 
     FreeCamera() : frameStepper(gameStateManager) {}
@@ -67,8 +77,8 @@ public:
     void DisableCamera();
 
     void ToggleFreeze();
-    void ResetSettings(GameData::GameRend* gameRend);
-    void SetSettings(const Settings& s);
+    void ResetCameraView(GameData::GameRend* gameRend);
+    void SetSettings(const Settings& s) { settings = s; };
 
 
     void SetMouseDelta(int2 delta) { mouseDelta = delta; }
@@ -89,7 +99,7 @@ public:
 
 private:
     bool isEnabled = false;
-    bool isFirstEnabled = true;
+    bool isFirstEnable = true;
     bool isSprinting = false;
     bool isFrozen = false;
 
@@ -115,7 +125,7 @@ private:
     static constexpr float MAX_FOV = 3.13f;
 
     void UpdatePosition(GameData::Camera* camera, float dt);
-    void UpdateRotation(GameData::Camera* freeCamera, GameData::Camera* playerCamera, float dt);
+    void UpdateRotation(GameData::Camera* freeCamera, float dt);
     void UpdateFov(GameData::Camera* camera, float dt);
     void UpdateVelocity(float dt);
     void UpdateZoomVelocity(float dt);
@@ -123,7 +133,7 @@ private:
     void ApplyFreezeState(bool enabled);
     void ApplyGameOptions(bool enabled);
     void RestorePendingOptions();
-    void ResetSettings(GameData::Camera* freeCamera, GameData::Camera* playerCamera);
+    void ResetCameraView(GameData::Camera* freeCamera, GameData::Camera* playerCamera);
 
     void CopyPositionAndFov(GameData::Camera* toCamera, GameData::Camera* fromCamera);
     void CopyRotation(GameData::Camera* toCamera, GameData::Camera* fromCamera);
@@ -134,14 +144,7 @@ private:
     void GetCameraPitchYaw(GameData::Camera* camera, float* _pitch, float* _yaw);
 
     void SetSpeed(float newSpeed) { speed = max(newSpeed, 0.0f); }
-    void SetSpeedMult(float newMult) { settings.speedMult = max(newMult, 0.0f); }
-    void SetDefaultSpeed(float newDefaultSpeed) { settings.defaultSpeed = max(newDefaultSpeed, 0.0f); }
-    void SetZoomSpeed(float newZoomSpeed) { settings.zoomSpeed = max(newZoomSpeed, 0.0f); }
     void SetFov(GameData::Camera* cam, float newFov) { cam->fov = std::clamp(newFov, settings.minFov, settings.maxFov); }
-    void SetMinFov(float newMinFov) { settings.minFov = std::clamp(newMinFov, MIN_FOV, MAX_FOV); }
-    void SetMaxFov(float newMaxFov) { settings.maxFov = std::clamp(newMaxFov, MIN_FOV, MAX_FOV); }
-
-    static constexpr bool isUsingCustomRotation = true;
 
     struct RotationCache {
         struct AngleCached {
