@@ -61,14 +61,13 @@ void FreeCamera::Update(GameData::GameRend* gameRend, float deltaTime) {
 
     UpdateVelocity(deltaTime);
     UpdateZoomVelocity(deltaTime);
-    //isSprinting = false;          // ensure this is not needed
 
     if (pathRecorder.IsRecording()) pathRecorder.RecordFrame(freeCamera);
     if (pathRecorder.IsPlaying()) pathRecorder.PlayNextFrame(freeCamera);
 
     frameStepper.Update();
 
-    cameraStateManager.Update(freeCamera, float3_ref(yaw, pitch, roll), deltaTime);
+    cameraStateManager.Update(freeCamera, rotation, deltaTime);
 }
 
 void FreeCamera::Toggle(GameData::GameRend* rend) {
@@ -80,13 +79,12 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
     GameData::Camera* playerCamera = rend->csPersCam1;
     if (!freeCamera || !playerCamera) return;
 
-    if (flagged(resetCameraView) || isFirstEnable) {
-        ResetCameraView(freeCamera, playerCamera);
+    if (flagged(resetCameraState) || isFirstEnable) {
+        ResetCameraState(freeCamera, playerCamera);
         isFirstEnable = false;
     }
 
-    GetCameraPitchYaw(freeCamera, &pitch, &yaw);
-
+    rotation = freeCamera->GetRotation();
     velocity = float3(0);
     yawPitchVelocity = float2(0);
     zoomVelocity = 0.0f;
@@ -127,22 +125,18 @@ void FreeCamera::DisableCamera() {
     DisableCamera(fieldArea->gameRend);
 }
 
-void FreeCamera::ToggleFreeze() {
-    ApplyFreezeState(!isFrozen);
-}
-
-void FreeCamera::ResetCameraView(GameData::GameRend* gameRend) {
+void FreeCamera::ResetCameraState(GameData::GameRend* gameRend) {
     GameData::Camera* freeCamera = gameRend->csDebugCam;
     GameData::Camera* playerCamera = gameRend->csPersCam1;
     if (!freeCamera || !playerCamera) return;
-    ResetCameraView(freeCamera, playerCamera);
+    ResetCameraState(freeCamera, playerCamera);
 }
 
 void FreeCamera::UpdatePosition(GameData::Camera* camera, float dt) {
     const float cameraSpeed = speed * (isSprinting ? settings.speedMult : 1.0f) * dt;
 
-    const float3& right = camera->matrix.c0.xyz();
-    const float3& forward = camera->matrix.c2.xyz();
+    const float3& right = camera->right();
+    const float3& forward = camera->forward();
     float3 vel = right * velocity.x + forward * velocity.z + float3(0.0f, velocity.y, 0.0f);
 
     if (vel.lengthSquared() > 1.0f) vel = vel.normalized();
@@ -154,19 +148,21 @@ void FreeCamera::UpdateRotation(GameData::Camera* freeCamera, float dt) {
     RotationCache& c = rotationCache;
 
     float tiltSpeed = flagged(smoothCameraRotation) ? settings.smoothTiltSpeed : settings.tiltSpeed;
-    roll += rollVelocity * tiltSpeed * dt;
-    c.roll.CacheSinCos(roll);
+    rotation.roll += rollVelocity * tiltSpeed * dt;
+    c.roll.CacheSinCos(rotation.roll);
 
     const float sensitivity = flagged(smoothCameraRotation) ? settings.smoothSensitivity * 10.0f * dt : settings.sensitivity;
     const float sens = sensitivity * ComputeZoomFactor(freeCamera->fov) * 0.001f;
     yawPitchVelocity += mouseDelta.rotate(c.roll.sin, c.roll.cos);
 
-    yaw += yawPitchVelocity.x * sens;
-    pitch += yawPitchVelocity.y * sens;
-    if (settings.pitchLimit) pitch = std::clamp(pitch, -settings.pitchLimit, settings.pitchLimit);
+    rotation.yaw += yawPitchVelocity.x * sens;
+    rotation.pitch += yawPitchVelocity.y * sens;
+    if (settings.pitchLimit) rotation.pitch = std::clamp(
+        rotation.pitch, -settings.pitchLimit, settings.pitchLimit
+    );
 
-    c.yaw.CacheSinCos(yaw);
-    c.pitch.CacheSinCos(pitch);
+    c.yaw.CacheSinCos(rotation.yaw);
+    c.pitch.CacheSinCos(rotation.pitch);
 
     float3 forward = { c.yaw.sin * c.pitch.cos, -c.pitch.sin, c.yaw.cos * c.pitch.cos };
     float3 right = { c.yaw.cos, 0.0f, -c.yaw.sin };
@@ -237,13 +233,11 @@ void FreeCamera::RestorePendingOptions() {
     }
 }
 
-void FreeCamera::ResetCameraView(GameData::Camera* freeCamera, GameData::Camera* playerCamera) {
+void FreeCamera::ResetCameraState(GameData::Camera* freeCamera, GameData::Camera* playerCamera) {
     CopyPositionAndFov(freeCamera, playerCamera);
     CopyRotation(freeCamera, playerCamera);
     speed = settings.defaultSpeed;
-
-    GetCameraPitchYaw(freeCamera, &pitch, &yaw);
-    roll = 0;
+    rotation = freeCamera->GetRotation();
 }
 
 void FreeCamera::CopyPositionAndFov(GameData::Camera* toCamera, GameData::Camera* fromCamera) {
@@ -258,10 +252,4 @@ float FreeCamera::ComputeZoomFactor(float fov) {
     const float min_fov = 0.00001, max_fov = 3.14f;
     float t = Math::clamp((fov - min_fov) / (max_fov - min_fov));
     return Math::quadraticEaseOut(t);
-}
-
-void FreeCamera::GetCameraPitchYaw(GameData::Camera* camera, float* _pitch, float* _yaw) {
-    float3 forward = camera->matrix.c2.xyz();
-    *_yaw = std::atan2(forward.x, forward.z);
-    *_pitch = std::asin(-forward.y);
 }

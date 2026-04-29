@@ -1,6 +1,8 @@
 #pragma once
 #include <algorithm>
 
+#include "utils/types.h"
+
 namespace Math {
     constexpr float PI = 3.14159265358979323846f;
 

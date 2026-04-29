@@ -9,15 +9,17 @@
 #include "utils/debug.h"
 
 class CameraStateManager {
+	static constexpr int MAX_SLOTS = 10;
+
 	struct State {
 		float3 pos = 0.0f;
 		Quaternion rotation{};
 		float fov = 1.0f;
-		float3 yawPitchRoll = 0;
+		Rotation yawPitchRoll{};
 		bool isSaved = false;
 
 		bool operator==(const State& other) const { return pos == other.pos && rotation == other.rotation && fov == other.fov; }
-	} stateSlots[10]{};
+	} stateSlots[MAX_SLOTS]{};
 
 	bool isInterpolating = false;
 	std::vector<uint8_t> slotOrder;
@@ -25,12 +27,10 @@ class CameraStateManager {
 	float time = 0;
 	float iTime = 3.0f;
 
-	const int MAX_SLOTS = 10;
-
 public:
 	void SetInterpolationTime(float newTime) { iTime = newTime; }
 
-	void SaveState(GameData::Camera* camera, int slot, float3 yawPitchRoll) {
+	void SaveState(GameData::Camera* camera, int slot, const Rotation& yawPitchRoll) {
 		if (slot < 0 || slot >= MAX_SLOTS) return;
 		LOG_INFO("Saved slot %d", slot);
 
@@ -58,7 +58,7 @@ public:
 		time = 0;
 	}
 
-	void Update(GameData::Camera* camera, float3_ref yawPitchRoll, float dt) {
+	void Update(GameData::Camera* camera, Rotation& yawPitchRoll, float dt) {
 		if (!isInterpolating) return;
 		if (slotOrder.empty()) {
 			isInterpolating = false;

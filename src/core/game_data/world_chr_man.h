@@ -26,7 +26,7 @@ namespace GameData {
 
 	struct ChrPhysics {
 		char pad[0x70];
-		float3 localPos;				// 0x70
+		float3 localPos;					// 0x70
 	};
 
 	struct ChrModules {

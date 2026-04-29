@@ -21,8 +21,8 @@ Freecam::Freecam(HMODULE hModule) : hModule(hModule) {
 }
 
 bool Freecam::Initialize() {
-    if (!config.Initialize(hModule)) return false;  // 3
-    config.Reload(actionMgr, freeCamera);           // 11
+    if (!config.Initialize(hModule)) return false;
+    config.Reload(actionMgr, freeCamera);
 
     ModUtils::AttemptToGetWindowHandle();
     if (!ModUtils::muWindow) return false;
@@ -118,7 +118,7 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
     freeCamera.SetIsSprinting(actionMgr.IsPressed(Action::Sprint, input));
 
     if (actionMgr.IsJustPressed(Action::ToggleFreeze, input)) freeCamera.ToggleFreeze();
-    if (actionMgr.IsJustPressed(Action::ResetSettings, input)) freeCamera.ResetCameraView(gameRend);
+    if (actionMgr.IsJustPressed(Action::ResetSettings, input)) freeCamera.ResetCameraState(gameRend);
     if (actionMgr.IsJustPressed(Action::ReloadConfig, input)) config.Reload(actionMgr, freeCamera);
 
     if (actionMgr.IsPressed(Action::MoveForward, input)) freeCamera.AddVelocity(float3::forward());
@@ -148,7 +148,7 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
                 int keyCode = key + (int)'0';
 
                 if (input.IsJustPressed(keyCode)) {
-                    freeCamera.GetCameraStateManager().SaveState(activeCamera, key, freeCamera.GetYawPitchRoll());
+                    freeCamera.GetCameraStateManager().SaveState(activeCamera, key, freeCamera.GetRotation());
                 }
             }
         }

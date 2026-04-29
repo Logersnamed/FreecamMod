@@ -298,3 +298,12 @@ struct Quaternion : float4 {
     bool operator==(const Quaternion& other) const { return x == other.x && y == other.y && z == other.z && w == other.w; }
     bool operator!=(const Quaternion& other) { return !(*this == other); }
 };
+
+struct Rotation {
+    Rotation() = default;
+    Rotation(float yaw, float pitch, float roll) : yaw(yaw), pitch(pitch), roll(roll) {}
+
+    float yaw = 0.0f;
+    float pitch = 0.0f;
+    float roll = 0.0f;
+};

@@ -1,6 +1,8 @@
 #pragma once
 #include "core/game_data/common.h"
 
+#include "utils/math.h"
+
 namespace GameData {
 	enum FreecamMode {
 		Disabled = 0,
@@ -16,6 +18,18 @@ namespace GameData {
 		float fov;							// 0x50
 		char pad3[0x08];
 		float renderDistance;				// 0x5C
+
+		float3 right() const { return matrix.c0.xyz(); }
+		float3 up() const { return matrix.c1.xyz(); }
+		float3 forward() const { return matrix.c2.xyz(); }
+
+		Rotation GetRotation() const {
+			const float3 forward = this->forward();
+			const float yaw = std::atan2(forward.x, forward.z);
+			const float pitch = std::asin(-forward.y);
+			const float roll = std::atan2(up().x, right().x);
+			return Rotation(yaw, pitch, roll);
+		}
 	};
 
 	struct GameRend {

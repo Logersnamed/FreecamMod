@@ -5,7 +5,6 @@
 #include "utils/types.h"
 #include "utils/debug.h"
 
-// todo: use interpolation to not record every frame
 class PathRecorder {
     template<typename T>
     struct FrameDataBuffer {

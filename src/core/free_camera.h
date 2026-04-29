@@ -10,6 +10,7 @@
 #include "core/features/path_recorder.h"
 #include "core/features/camera_state_manager.h"
 #include "core/game_data/game_data.h"
+#include "utils/types.h"
 #include "utils/debug.h"
 #include "utils/bitflags.h"
 
@@ -18,7 +19,7 @@ enum class FreecamFlag : uint16_t {
     freezeEntities          = 1 << 1,
     freezePlayer            = 1 << 2,
     disablePlayerControls   = 1 << 3,
-    resetCameraView         = 1 << 4,
+    resetCameraState        = 1 << 4,
     hideHud                 = 1 << 5,
     disableAA               = 1 << 6,
     disableMotionBlur       = 1 << 7,
@@ -34,7 +35,7 @@ public:
     struct Settings {
 		Flags<FreecamFlag> flags {
 			freezeGame | freezeEntities | freezePlayer | disablePlayerControls | 
-            resetCameraView | hideHud | smoothCameraMovement
+            resetCameraState | hideHud | smoothCameraMovement
         };
 
         float sensitivity = 1.0f;
@@ -76,8 +77,8 @@ public:
     void DisableCamera(GameData::GameRend* rend);
     void DisableCamera();
 
-    void ToggleFreeze();
-    void ResetCameraView(GameData::GameRend* gameRend);
+    void ToggleFreeze() { ApplyFreezeState(!isFrozen); }
+    void ResetCameraState(GameData::GameRend* gameRend);
     void SetSettings(const Settings& s) { settings = s; };
 
 
@@ -91,7 +92,7 @@ public:
     void AddFov(GameData::Camera* cam, float deltaFov) { SetFov(cam, cam->fov + deltaFov); }
 
     bool IsEnabled() const { return isEnabled; }
-    float3 GetYawPitchRoll() const { return { yaw, pitch, roll }; }
+    Rotation& GetRotation() { return rotation; }
 
     PathRecorder& GetPathRecorder() { return pathRecorder; }
     CameraStateManager& GetCameraStateManager() { return cameraStateManager; }
@@ -117,9 +118,7 @@ private:
     float rollVelocity = 0.0f;
 
     int2 mouseDelta = 0;
-    float yaw = 0.0f;
-    float pitch = 0.0f;
-    float roll = 0.0f;
+    Rotation rotation{};
 
     static constexpr float MIN_FOV = 0.000126f;
     static constexpr float MAX_FOV = 3.13f;
@@ -133,15 +132,13 @@ private:
     void ApplyFreezeState(bool enabled);
     void ApplyGameOptions(bool enabled);
     void RestorePendingOptions();
-    void ResetCameraView(GameData::Camera* freeCamera, GameData::Camera* playerCamera);
+    void ResetCameraState(GameData::Camera* freeCamera, GameData::Camera* playerCamera);
 
     void CopyPositionAndFov(GameData::Camera* toCamera, GameData::Camera* fromCamera);
     void CopyRotation(GameData::Camera* toCamera, GameData::Camera* fromCamera);
     float ComputeZoomFactor(float fov);
 
     bool flagged(FreecamFlag flag) const { return settings.flags.get(flag); }
-
-    void GetCameraPitchYaw(GameData::Camera* camera, float* _pitch, float* _yaw);
 
     void SetSpeed(float newSpeed) { speed = max(newSpeed, 0.0f); }
     void SetFov(GameData::Camera* cam, float newFov) { cam->fov = std::clamp(newFov, settings.minFov, settings.maxFov); }
