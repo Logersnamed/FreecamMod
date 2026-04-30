@@ -84,7 +84,7 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
         isFirstEnable = false;
     }
 
-    rotation = freeCamera->GetRotation();
+    rotation = freeCamera->GetEuler();
     velocity = float3(0);
     yawPitchVelocity = float2(0);
     zoomVelocity = 0.0f;
@@ -237,7 +237,7 @@ void FreeCamera::ResetCameraState(GameData::Camera* freeCamera, GameData::Camera
     CopyPositionAndFov(freeCamera, playerCamera);
     CopyRotation(freeCamera, playerCamera);
     speed = settings.defaultSpeed;
-    rotation = freeCamera->GetRotation();
+    rotation = freeCamera->GetEuler();
 }
 
 void FreeCamera::CopyPositionAndFov(GameData::Camera* toCamera, GameData::Camera* fromCamera) {

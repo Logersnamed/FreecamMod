@@ -23,12 +23,16 @@ namespace GameData {
 		float3 up() const { return matrix.c1.xyz(); }
 		float3 forward() const { return matrix.c2.xyz(); }
 
-		Rotation GetRotation() const {
-			const float3 forward = this->forward();
-			const float yaw = std::atan2(forward.x, forward.z);
-			const float pitch = std::asin(-forward.y);
-			const float roll = std::atan2(up().x, right().x);
-			return Rotation(yaw, pitch, roll);
+		EulerAngles GetEuler() const {
+			const float3 r = right();
+			const float3 u = up();
+			const float3 f = forward();
+
+			const float yaw = std::atan2(f.x, f.z);
+			const float pitch = std::asin(-f.y);
+			const float roll = std::atan2(-r.y, u.y);
+
+			return EulerAngles(yaw, pitch, roll);
 		}
 	};
 

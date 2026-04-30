@@ -92,7 +92,7 @@ public:
     void AddFov(GameData::Camera* cam, float deltaFov) { SetFov(cam, cam->fov + deltaFov); }
 
     bool IsEnabled() const { return isEnabled; }
-    Rotation& GetRotation() { return rotation; }
+    EulerAngles& GetEuler() { return rotation; }
 
     PathRecorder& GetPathRecorder() { return pathRecorder; }
     CameraStateManager& GetCameraStateManager() { return cameraStateManager; }
@@ -118,7 +118,7 @@ private:
     float rollVelocity = 0.0f;
 
     int2 mouseDelta = 0;
-    Rotation rotation{};
+    EulerAngles rotation{};
 
     static constexpr float MIN_FOV = 0.000126f;
     static constexpr float MAX_FOV = 3.13f;

@@ -63,6 +63,7 @@ struct float3 {
     float3& operator+=(const float3& v) { x += v.x; y += v.y; z += v.z; return *this; }
     float3& operator-=(const float3& v) { x -= v.x; y -= v.y; z -= v.z; return *this; }
     float3& operator*=(float s) { x *= s; y *= s; z *= s; return *this; }
+    float3& operator/=(float s) { x /= s; y /= s; z /= s; return *this; }
 
     bool operator==(const float3& other) const { return x == other.x && y == other.y && z == other.z; }
     bool operator!=(const float3& other) const { return !(*this == other); }
@@ -180,7 +181,7 @@ struct matrix4x4 {
     matrix3x3 rotation() const { return { {c0.x, c0.y, c0.z}, {c1.x, c1.y, c1.z}, {c2.x, c2.y, c2.z} }; }
 
     bool operator==(const matrix4x4& other) const { return c0 == other.c0 && c1 == other.c1 && c2 == other.c2 && c3 == other.c3; }
-    bool operator!=(const matrix4x4& other) { return !(*this == other); }
+    bool operator!=(const matrix4x4& other) const { return !(*this == other); }
 };
 
 struct Quaternion : float4 {
@@ -296,12 +297,12 @@ struct Quaternion : float4 {
     }
 
     bool operator==(const Quaternion& other) const { return x == other.x && y == other.y && z == other.z && w == other.w; }
-    bool operator!=(const Quaternion& other) { return !(*this == other); }
+    bool operator!=(const Quaternion& other) const { return !(*this == other); }
 };
 
-struct Rotation {
-    Rotation() = default;
-    Rotation(float yaw, float pitch, float roll) : yaw(yaw), pitch(pitch), roll(roll) {}
+struct EulerAngles {
+    EulerAngles() = default;
+    EulerAngles(float yaw, float pitch, float roll) : yaw(yaw), pitch(pitch), roll(roll) {}
 
     float yaw = 0.0f;
     float pitch = 0.0f;

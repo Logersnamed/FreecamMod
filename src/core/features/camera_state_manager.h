@@ -15,7 +15,7 @@ class CameraStateManager {
 		float3 pos = 0.0f;
 		Quaternion rotation{};
 		float fov = 1.0f;
-		Rotation yawPitchRoll{};
+		EulerAngles yawPitchRoll{};
 		bool isSaved = false;
 
 		bool operator==(const State& other) const { return pos == other.pos && rotation == other.rotation && fov == other.fov; }
@@ -30,7 +30,7 @@ class CameraStateManager {
 public:
 	void SetInterpolationTime(float newTime) { iTime = newTime; }
 
-	void SaveState(GameData::Camera* camera, int slot, const Rotation& yawPitchRoll) {
+	void SaveState(GameData::Camera* camera, int slot, const EulerAngles& yawPitchRoll) {
 		if (slot < 0 || slot >= MAX_SLOTS) return;
 		LOG_INFO("Saved slot %d", slot);
 
@@ -58,7 +58,7 @@ public:
 		time = 0;
 	}
 
-	void Update(GameData::Camera* camera, Rotation& yawPitchRoll, float dt) {
+	void Update(GameData::Camera* camera, EulerAngles& yawPitchRoll, float dt) {
 		if (!isInterpolating) return;
 		if (slotOrder.empty()) {
 			isInterpolating = false;
