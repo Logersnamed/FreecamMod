@@ -6,49 +6,48 @@
 
 #include "core/input/input.h"
 
-class Action {
-public:
-	enum Type : int8_t {
-		Toggle,
-		ReloadConfig,
-		ResetSettings,
-		ToggleFreeze,
-		TeleportToCamera,
-		CycleWeatherTime,
-		ExitMod,
-		StartEndRecording,
-		StartEndPlayingRecording,
-		StepFrames,
-		MoveForward,
-		MoveBackward,
-		MoveLeft,
-		MoveRight,
-		MoveUp,
-		MoveDown,
-		Sprint,
-		ZoomIn,
-		ZoomOut,
-		TiltLeft,
-		TiltRight,
-		ScrollZoomModifier,
-		ScrollCameraSpeedModifier,
-		ScrollSpeedhackModifier,
-		ToggleSpeedhack,
-		ResetSpeedhackSpeed,
-		Count
-	};
+enum class ActionType : int8_t {
+	Toggle,
+	ReloadConfig,
+	ResetSettings,
+	ToggleFreeze,
+	TeleportToCamera,
+	CycleWeatherTime,
+	ExitMod,
+	StartEndRecording,
+	StartEndPlayingRecording,
+	StepFrames,
+	MoveForward,
+	MoveBackward,
+	MoveLeft,
+	MoveRight,
+	MoveUp,
+	MoveDown,
+	Sprint,
+	ZoomIn,
+	ZoomOut,
+	TiltLeft,
+	TiltRight,
+	ScrollZoomModifier,
+	ScrollCameraSpeedModifier,
+	ScrollSpeedhackModifier,
+	ToggleSpeedhack,
+	ResetSpeedhackSpeed,
+	Count
+};
 
+class Action {
 private:
-	Type type;
+	ActionType type;
 
 	std::vector<int> keysRequired;
 	std::vector<int> keysRestricted;
 
 public:
-	Action(Type type, const std::vector<int>& keysRequired, const std::vector<int>& keysRestricted = {})
+	Action(ActionType type, const std::vector<int>& keysRequired, const std::vector<int>& keysRestricted = {})
 		: type(type), keysRequired(keysRequired), keysRestricted(keysRestricted) {	}
 
-	Type GetType() const { return type; }
+	ActionType GetType() const { return type; }
 
 	bool IsPressed(const Input& input) const {
 		for (int key : keysRequired) {
@@ -74,16 +73,16 @@ public:
 };
 
 class ActionManager {
-	std::unordered_map<Action::Type, Action> actionKeyMap{};
+	std::unordered_map<ActionType, Action> actionKeyMap{};
 
 public:
-	bool IsPressed(Action::Type actionType, const Input& input) const {
+	bool IsPressed(ActionType actionType, const Input& input) const {
 		const auto action = actionKeyMap.find(actionType);
 		if (action == actionKeyMap.end()) return false;
 		return action->second.IsPressed(input);
 	}
 
-	bool IsJustPressed(Action::Type actionType, const Input& input) const {
+	bool IsJustPressed(ActionType actionType, const Input& input) const {
 		const auto action = actionKeyMap.find(actionType);
 		if (action == actionKeyMap.end()) return false;
 		return action->second.IsJustPressed(input);

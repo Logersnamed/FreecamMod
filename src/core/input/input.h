@@ -1,11 +1,14 @@
 #pragma once
 #include <windows.h>
 #include <windowsx.h>
+#include <Xinput.h>
 #include <cstdint>
 #include <vector>
 #include <algorithm>
 
 #include "utils/types.h"
+
+#pragma comment(lib, "Xinput9_1_0.lib")
 
 class Input {
     struct KeyState {
@@ -69,6 +72,22 @@ private:
     bool isWindowJustFocused = true;
 
     static LRESULT __stdcall hkWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+    XINPUT_STATE state;
+    float2 thumbLeft{};
+    float2 thumbRight{};
+	float leftTrigger{};
+	float rightTrigger{};
+
+public:
+    bool IsGamepadPressed(WORD button) const { return (state.Gamepad.wButtons & button) != 0; }
+	float2 GetThumbLeft() const { return thumbLeft; }
+	float2 GetThumbRight() const { return thumbRight; }
+	float GetLeftTrigger() const { return leftTrigger; }
+	float GetRightTrigger() const { return rightTrigger; }
+    void Update();
+
+private:
 
     void Update(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     void OnWindowFocus(bool getFocused, WPARAM wParam);

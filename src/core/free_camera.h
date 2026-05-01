@@ -53,16 +53,6 @@ public:
 
         int step = 1;
         float interpolationTime = 3.0f;
-
-        Settings operator=(Settings other) {
-            other.speedMult = max(other.speedMult, 0.0f);
-            other.defaultSpeed = max(other.defaultSpeed, 0.0f);
-            other.zoomSpeed = max(other.zoomSpeed, 0.0f);
-
-            other.minFov = std::clamp(other.minFov, MIN_FOV, MAX_FOV);
-            other.maxFov = std::clamp(other.maxFov, MIN_FOV, MAX_FOV);
-            return other;
-        }
     };
 
     FreeCamera() : frameStepper(gameStateManager) {}
@@ -79,10 +69,20 @@ public:
 
     void ToggleFreeze() { ApplyFreezeState(!isFrozen); }
     void ResetCameraState(GameData::GameRend* gameRend);
-    void SetSettings(const Settings& s) { settings = s; };
+    void SetSettings(Settings s) {
+        s.defaultSpeed = max(s.defaultSpeed, 0.0f);
+        s.speedMult = max(s.speedMult, 0.0f);
+        s.zoomSpeed = max(s.zoomSpeed, 0.0f);
+
+        s.minFov = std::clamp(s.minFov, MIN_FOV, MAX_FOV);
+        s.maxFov = std::clamp(s.maxFov, MIN_FOV, MAX_FOV);
+
+        settings = s;
+    }
 
 
     void SetMouseDelta(int2 delta) { mouseDelta = delta; }
+    void SetGamepadDelta(float2 delta) { gamepadDelta = delta; }
     void SetIsSprinting(bool enabled) { isSprinting = enabled; }
 
     void AddSpeed(float deltaSpeed) { SetSpeed(speed + deltaSpeed * (0.05f * speed + 0.01f)); }
@@ -118,6 +118,8 @@ private:
     float rollVelocity = 0.0f;
 
     int2 mouseDelta = 0;
+    float2 gamepadDelta = 0;
+
     EulerAngles rotation{};
 
     static constexpr float MIN_FOV = 0.000126f;

@@ -4,6 +4,7 @@
 
 #include "utils/debug.h"
 
+
 Input::Input() {
     instance = this;
 }
@@ -50,6 +51,28 @@ void Input::UnhookWndProc(HWND hWnd) {
     }
 
     SetWindowLongPtrW(hWnd, GWLP_WNDPROC, origWndProc);
+}
+
+void Input::Update() {
+    ZeroMemory(&state, sizeof(XINPUT_STATE));
+    if (XInputGetState(0, &state) != ERROR_SUCCESS) return;
+
+    auto normalizeTrigger = [](BYTE trigger) -> float { return trigger / 255.0f; };
+    auto normalizeStick = [](float2 stick) -> float2 {
+        const float deadzone = 0.1f;
+        float x = stick.x / 32767.0f;
+        float y = stick.y / 32767.0f;
+
+        return float2(
+            fabs(x) < deadzone ? 0.0f : x,
+            fabs(y) < deadzone ? 0.0f : y
+        );
+    };
+
+    thumbLeft = normalizeStick(float2(state.Gamepad.sThumbLX, state.Gamepad.sThumbLY));
+    thumbRight = normalizeStick(float2(state.Gamepad.sThumbRX, -state.Gamepad.sThumbRY));
+    leftTrigger = normalizeTrigger(state.Gamepad.bLeftTrigger);
+    rightTrigger = normalizeTrigger(state.Gamepad.bRightTrigger);
 }
 
 void Input::Update(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {

@@ -153,7 +153,8 @@ void FreeCamera::UpdateRotation(GameData::Camera* freeCamera, float dt) {
 
     const float sensitivity = flagged(smoothCameraRotation) ? settings.smoothSensitivity * 10.0f * dt : settings.sensitivity;
     const float sens = sensitivity * ComputeZoomFactor(freeCamera->fov) * 0.001f;
-    yawPitchVelocity += mouseDelta.rotate(c.roll.sin, c.roll.cos);
+	const float2 devicesDelta = (float2)mouseDelta + gamepadDelta * 60.0f;
+    yawPitchVelocity += devicesDelta.rotated(c.roll.sin, c.roll.cos);
 
     rotation.yaw += yawPitchVelocity.x * sens;
     rotation.pitch += yawPitchVelocity.y * sens;

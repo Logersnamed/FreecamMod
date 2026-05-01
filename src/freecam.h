@@ -33,6 +33,9 @@ private:
     void Update(GameData::GameRend* gameRend);
     void ProcessInput(GameData::GameRend* gameRend, float deltaTime);
 
+    bool IsPressed(ActionType actionType) const { return actionMgr.IsPressed(actionType, input); }
+    bool IsJustPressed(ActionType actionType) const { return actionMgr.IsJustPressed(actionType, input); }
+
     float frameStepperTimePressed = 0.0f;
 
     using updateCameraMatrix_t = void(__fastcall*)(void*, void*, void*, void*);
