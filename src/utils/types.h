@@ -25,9 +25,17 @@ struct float2 {
 
     inline float length() const { return std::sqrt(x * x + y * y); }
     inline float lengthSquared() const { return x * x + y * y; }
+
     float2 normalized() const {
         float l = length();
         return l == 0.0f ? float2(0) : *this / l;
+    }
+
+    float2 rotated(float sinAngle, float cosAngle) const {
+        return {
+            x * cosAngle - y * sinAngle,
+            x * sinAngle + y * cosAngle
+        };
     }
 
     static float dot(const float2& a, const float2& b) { return a.x * b.x + a.y * b.y; }
@@ -40,11 +48,8 @@ struct int2 {
     constexpr int2(int t) : x(t), y(t) {}
     constexpr int2(int x, int y) : x(x), y(y) {}
 
-    float2 rotate(float sin, float cos) const {
-        return {
-             x * cos + y * sin,
-            -x * sin + y * cos
-        };
+    constexpr explicit operator float2() const {
+        return { static_cast<float>(x), static_cast<float>(y) };
     }
 };
 

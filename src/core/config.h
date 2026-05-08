@@ -12,11 +12,12 @@
 #include "utils/debug.h"
 
 class Config {
+	using enum ActionType;
+
 public:
     struct Keybind {
-        const char* section;
         const char* name;
-        Action::Type type;
+        ActionType type;
         std::vector<int> defaultKeys;
         std::vector<int> defaultRestricted = {};
     };
@@ -37,33 +38,33 @@ private:
     const std::string modDirectoryName = "Freecam";
     const std::string configFileName = "config.ini";
 
-    std::array<Keybind, Action::Count> keybinds = {
-        Keybind{"keybinds", "toggle", Action::Toggle, { VK_F1 }},
-        Keybind{"keybinds", "reload_config", Action::ReloadConfig, { VK_F5 }},
-        Keybind{"keybinds", "reset_settings", Action::ResetSettings, { 'R' }, { VK_CONTROL }},
-        Keybind{"keybinds", "toggle_freeze", Action::ToggleFreeze, { 'P' }},
-        Keybind{"keybinds", "teleport_to_camera", Action::TeleportToCamera, { VK_F3 }},
-        Keybind{"keybinds", "cycle_weather_time", Action::CycleWeatherTime, { VK_F4 }},
-        Keybind{"keybinds", "exit_mod", Action::ExitMod, { VK_DELETE }},
-        Keybind{"keybinds", "start/end_recording", Action::StartEndRecording, { VK_F8 }},
-        Keybind{"keybinds", "strat/end_playing_recording", Action::StartEndPlayingRecording, { VK_F9}},
-        Keybind{"keybinds", "step_frames", Action::StepFrames, { VK_F2}},
-        Keybind{"keybinds", "move_forward", Action::MoveForward, { 'W' }},
-        Keybind{"keybinds", "move_backward", Action::MoveBackward, { 'S' }},
-        Keybind{"keybinds", "move_left", Action::MoveLeft, { 'A' }},
-        Keybind{"keybinds", "move_right", Action::MoveRight, { 'D' }},
-        Keybind{"keybinds", "move_up", Action::MoveUp, { VK_SPACE }},
-        Keybind{"keybinds", "move_down", Action::MoveDown, { VK_SHIFT }},
-        Keybind{"keybinds", "sprint", Action::Sprint, { VK_LBUTTON }},
-        Keybind{"keybinds", "zoom_in", Action::ZoomIn, { VK_OEM_PLUS }},
-        Keybind{"keybinds", "zoom_out", Action::ZoomOut, { VK_OEM_MINUS }},
-        Keybind{"keybinds", "tilt_left", Action::TiltLeft, { 'Q' }},
-        Keybind{"keybinds", "tilt_right", Action::TiltRight, { 'E'}},
-        Keybind{"keybinds", "scroll_zoom_modifier", Action::ScrollZoomModifier, { VK_CONTROL }},
-        Keybind{"keybinds", "scroll_camera_speed_modifier", Action::ScrollCameraSpeedModifier, {}, { VK_CONTROL, 'V' }},
-        Keybind{"keybinds", "scroll_speedhack_modifier", Action::ScrollSpeedhackModifier, { 'V' }},
-        Keybind{"keybinds", "toggle_speedhack", Action::ToggleSpeedhack, { VK_F7 }},
-        Keybind{"keybinds", "reset_speedhack_speed", Action::ResetSpeedhackSpeed, { VK_CONTROL, 'V', 'R' }},
+    std::array<Keybind, static_cast<size_t>(ActionType::Count)> keybinds = {
+        Keybind{"toggle", Toggle, { VK_F1 }},
+        Keybind{"reload_config", ReloadConfig, { VK_F5 }},
+        Keybind{"reset_settings", ResetSettings, { 'R' }, { VK_CONTROL }},
+        Keybind{"toggle_freeze", ToggleFreeze, { 'P' }},
+        Keybind{"teleport_to_camera", TeleportToCamera, { VK_F3 }},
+        Keybind{"cycle_weather_time", CycleWeatherTime, { VK_F4 }},
+        Keybind{"exit_mod", ExitMod, { VK_DELETE }},
+        Keybind{"start/end_recording", StartEndRecording, { VK_F8 }},
+        Keybind{"strat/end_playing_recording", StartEndPlayingRecording, { VK_F9}},
+        Keybind{"step_frames", StepFrames, { VK_F2}},
+        Keybind{"move_forward", MoveForward, { 'W' }},
+        Keybind{"move_backward", MoveBackward, { 'S' }},
+        Keybind{"move_left", MoveLeft, { 'A' }},
+        Keybind{"move_right", MoveRight, { 'D' }},
+        Keybind{"move_up", MoveUp, { VK_SPACE }},
+        Keybind{"move_down", MoveDown, { VK_SHIFT }},
+        Keybind{"sprint", Sprint, { VK_LBUTTON }},
+        Keybind{"zoom_in", ZoomIn, { VK_OEM_PLUS }},
+        Keybind{"zoom_out", ZoomOut, { VK_OEM_MINUS }},
+        Keybind{"tilt_left", TiltLeft, { 'Q' }},
+        Keybind{"tilt_right", TiltRight, { 'E'}},
+        Keybind{"scroll_zoom_modifier", ScrollZoomModifier, { VK_CONTROL }},
+        Keybind{"scroll_camera_speed_modifier", ScrollCameraSpeedModifier, {}, { VK_CONTROL, 'V' }},
+        Keybind{"scroll_speedhack_modifier", ScrollSpeedhackModifier, { 'V' }},
+        Keybind{"toggle_speedhack", ToggleSpeedhack, { VK_F7 }},
+        Keybind{"reset_speedhack_speed", ResetSpeedhackSpeed, { VK_CONTROL, 'V', 'R' }},
     };
 
     bool findDllPath(HMODULE hModule);

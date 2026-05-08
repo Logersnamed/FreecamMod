@@ -29,18 +29,18 @@ void Config::Reload(ActionManager &actionMgr, FreeCamera &freeCamera) {
     ini.clear();
     bool fileExists = file.read(ini);
 
+    FreeCamera::Settings settings{};
+    using enum FreecamFlag;
+
 #define READ(sec, key, var) var = ReadValue(sec, key, var)
 #define READ_BITFLAG(sec, key, var) settings.flags.set(var, ReadValue(sec, key, settings.flags.get(var)))
 #define READ_EULER_ANGLE(sec, key, var) var = Math::toRadians(ReadValue(sec, key, Math::radToDegrees(var)))
-
-    FreeCamera::Settings settings{};
-    using enum FreecamFlag;
 
     READ_BITFLAG("freecam", "freeze_game", freezeGame);
     READ_BITFLAG("freecam", "freeze_entities", freezeEntities);
     READ_BITFLAG("freecam", "freeze_player", freezePlayer);
     READ_BITFLAG("freecam", "disable_player_controls", disablePlayerControls);
-    READ_BITFLAG("freecam", "reset_camera_view", resetCameraState);
+    READ_BITFLAG("freecam", "reset_camera_state", resetCameraState);
 
     READ_BITFLAG("game_options", "hide_hud", hideHud);
     READ_BITFLAG("game_options", "disable_anti_aliasing", disableAA);
@@ -114,8 +114,9 @@ T Config::ReadValue(const std::string& section, const std::string& name, T defau
 }
 
 Action Config::ReadKeybind(const Keybind& keybind) {
-    if (ini.has(keybind.section)) {
-        auto& collection = ini[keybind.section];
+	static const char* keybindSection = "keybinds";
+    if (ini.has(keybindSection)) {
+        auto& collection = ini[keybindSection];
 
         if (collection.has(keybind.name)) {
             std::vector<int> keyStates;
@@ -167,7 +168,7 @@ Action Config::ReadKeybind(const Keybind& keybind) {
             finalStr += " + ";
     }
 
-    ini[keybind.section][keybind.name] = finalStr;
+    ini[keybindSection][keybind.name] = finalStr;
 
     return Action(keybind.type, keybind.defaultKeys, keybind.defaultRestricted);
 }

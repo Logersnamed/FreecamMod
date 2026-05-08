@@ -9,7 +9,7 @@ Input::Input() {
 }
 
 LRESULT __stdcall Input::hkWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    instance->Update(hWnd, uMsg, wParam, lParam);
+    instance->UpdateKeyboard(hWnd, uMsg, wParam, lParam);
 
     return CallWindowProcW((WNDPROC)Input::origWndProc, hWnd, uMsg, wParam, lParam);
 }
@@ -27,7 +27,7 @@ UINT WINAPI Input::hkGetRawInputData(HRAWINPUT hRawInput, UINT uiCommand, LPVOID
             }
         }
     }
-
+    
     return orig;
 }
 
@@ -52,7 +52,31 @@ void Input::UnhookWndProc(HWND hWnd) {
     SetWindowLongPtrW(hWnd, GWLP_WNDPROC, origWndProc);
 }
 
-void Input::Update(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+void Input::UpdateGamepad() {
+    prevState = state;
+
+    ZeroMemory(&state, sizeof(XINPUT_STATE));
+    if (XInputGetState(0, &state) != ERROR_SUCCESS) return;
+
+    auto normalizeTrigger = [](BYTE trigger) -> float { return trigger / 255.0f; };
+    auto normalizeStick = [](float2 stick) -> float2 {
+        stick = stick / 32767.0f;
+
+        const float deadzone = 0.1f;
+        const float lenght = stick.length();
+        if (lenght < deadzone) return float2(0);
+
+        const float scale = (lenght - deadzone) / (lenght * (1.0f - deadzone));
+        return stick * scale;
+    };
+
+    thumbLeft = normalizeStick(float2(state.Gamepad.sThumbLX, state.Gamepad.sThumbLY));
+    thumbRight = normalizeStick(float2(state.Gamepad.sThumbRX, -state.Gamepad.sThumbRY));
+    leftTrigger = normalizeTrigger(state.Gamepad.bLeftTrigger);
+    rightTrigger = normalizeTrigger(state.Gamepad.bRightTrigger);
+}
+
+void Input::UpdateKeyboard(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     isShouldGetInput = !IsCursorVisible() && isWindowFocused;
 
     int key = -1;
