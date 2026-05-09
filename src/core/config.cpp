@@ -115,14 +115,17 @@ T Config::ReadValue(const std::string& section, const std::string& name, T defau
 
 Action Config::ReadKeybind(const Keybind& keybind) {
 	static const char* keybindSection = "keybinds";
+	const char* keybindName = keybind.name;
+    const Action defaultAction = keybind.defaultAction;
+
     if (ini.has(keybindSection)) {
         auto& collection = ini[keybindSection];
 
-        if (collection.has(keybind.name)) {
-            std::vector<int> keyStates;
-            std::vector<int> restricted;
+        if (collection.has(keybindName)) {
+            Action::Keys required;
+            Action::Keys restricted;
 
-            std::string keyBindStr = collection[keybind.name];
+            std::string keyBindStr = collection[keybindName];
             std::stringstream ss(keyBindStr);
             std::string token;
 
@@ -142,24 +145,28 @@ Action Config::ReadKeybind(const Keybind& keybind) {
                 int key = ParseKey(token);
 
                 if (key != -1) {
-                    if (isRestricted)
-                        restricted.push_back(key);
-                    else
-                        keyStates.push_back(key);
+                    if (isRestricted) {
+                        if (!restricted.try_push_back(key))
+                            LOG_WARN("Too many restricted keys for action \"%s\"", defaultAction.GetName());
+                    }
+                    else {
+                        if (!required.try_push_back(key))
+                            LOG_WARN("Too many required keys for action \"%s\"", defaultAction.GetName());
+                    }
                 }
             }
 
-            return Action(keybind.type, keyStates, restricted);
+            return Action(defaultAction.GetType(), required, restricted);
         }
     }
 
     std::vector<std::string> allTokens;
 
-    for (int k : keybind.defaultKeys)
-        allTokens.push_back(KeyToString(k));
+    for (auto key : defaultAction.GetRequiredKeys())
+        allTokens.push_back(KeyToString(key));
 
-    for (int k : keybind.defaultRestricted)
-        allTokens.push_back("!" + KeyToString(k));
+    for (auto key : defaultAction.GetRestrictedKeys())
+        allTokens.push_back("!" + KeyToString(key));
 
     std::string finalStr;
     for (size_t i = 0; i < allTokens.size(); ++i) {
@@ -168,9 +175,9 @@ Action Config::ReadKeybind(const Keybind& keybind) {
             finalStr += " + ";
     }
 
-    ini[keybindSection][keybind.name] = finalStr;
+    ini[keybindSection][keybindName] = finalStr;
 
-    return Action(keybind.type, keybind.defaultKeys, keybind.defaultRestricted);
+    return defaultAction;
 }
 
 bool Config::findDllPath(HMODULE hModule) {

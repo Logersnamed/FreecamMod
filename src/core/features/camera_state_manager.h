@@ -4,6 +4,7 @@
 #include <cstdint>
 
 #include "core/game_data/game_data.h"
+#include "core/input/input.h"
 #include "utils/types.h"
 #include "utils/math.h"
 #include "utils/debug.h"
@@ -22,8 +23,8 @@ class CameraStateManager {
 	} stateSlots[MAX_SLOTS]{};
 
 	bool isInterpolating = false;
-	std::vector<uint8_t> slotOrder;
-	uint8_t interval = 0;
+	Input::ReleasedNumkeys slotOrder;
+	size_t interval = 0;
 	float time = 0;
 	float iTime = 3.0f;
 
@@ -43,7 +44,7 @@ public:
 		};
 	}
 
-	void StartLerpBetweenSlots(GameData::Camera* camera, const std::vector<uint8_t>& positionSlots) {
+	void StartLerpBetweenSlots(GameData::Camera* camera, Input::ReleasedNumkeys& positionSlots) {
 		slotOrder.clear();
 		if (positionSlots.empty()) return;
 		for (uint8_t slot : positionSlots) {

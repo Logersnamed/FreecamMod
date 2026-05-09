@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "ModUtils.h"
-#include "MinSpeedhack.h"
 
 #include "core/features/path_recorder.h"
 #include "core/game_data_manager.h"
@@ -36,18 +35,11 @@ bool Freecam::Initialize() {
     if (!hookManager.Hook(&GetRawInputData, &Input::hkGetRawInputData, (void**)&Input::origGetRawInputData))
         return false;
 
-    size_t hookCount = 0;
-    const auto* hooks = MS::GetHooks(hookCount);
-    for (size_t i = 0; i < hookCount; ++i) {
-        if (!hookManager.Hook(hooks[i].target, hooks[i].detour, hooks[i].original))
-            return false;
-    }
+    speedhack.Initialize(hookManager);
 
     if (!hookManager.EnableAll()) return false;
 
     if (!hookManager.GetDaytimeUpdateCave().Hook(GameDataManager::DaytimeUpdateFunc.address)) return false;
-
-    speedhack.Initialize();
 
     SettingsBackup::SetFolderPath(config.GetConfigDirPath());
 
@@ -159,7 +151,7 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
     }
     else {
         // Load states
-        std::vector<uint8_t> keysToProcess = input.GetReleasedNumkeysInOrder();
+        auto keysToProcess = input.GetReleasedNumkeys();
         if (!keysToProcess.empty()) {
             GameData::Camera* activeCamera = gameRend->GetActiveCamera();
             if (activeCamera) {

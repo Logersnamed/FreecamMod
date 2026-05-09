@@ -6,6 +6,7 @@
 #include <string>
 #include <fstream>
 #include <filesystem>
+#include <intrin.h>
 
 #ifdef LOG_LOCATION
     #define __FILENAME__ Logger::Filename(__FILE__)
@@ -45,3 +46,20 @@ private:
     static inline bool enabled = false;
     static inline std::ofstream logFile;
 };
+
+struct ScopeProfiler {
+    const char* func_name;
+    unsigned __int64 start;
+
+    ScopeProfiler(const char* func_name) : func_name(func_name) {
+        _mm_lfence();
+        start = __rdtsc();
+    }
+
+    ~ScopeProfiler() {
+        _mm_lfence();
+        LOG_INFO("%s: %llu cycles", func_name, __rdtsc() - start);
+    }
+};
+
+#define PROFILE_SCOPE() ScopeProfiler pm_(__func__)

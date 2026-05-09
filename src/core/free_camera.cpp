@@ -154,8 +154,9 @@ void FreeCamera::UpdateRotation(GameData::Camera* freeCamera, float dt) {
     const float sensitivity = flagged(smoothCameraRotation) ? settings.smoothSensitivity * 10.0f * dt : settings.sensitivity;
     const float sens = sensitivity * ComputeZoomFactor(freeCamera->fov) * 0.001f;
 	const float2 devicesDelta = (float2)mouseDelta + gamepadDelta * 60.0f;
-    yawPitchVelocity += devicesDelta.rotated(c.roll.sin, c.roll.cos);
+    yawPitchVelocity += devicesDelta.rotated(-c.roll.sin, c.roll.cos);
 
+    // todo: make pitch limit depend on roll
     rotation.yaw += yawPitchVelocity.x * sens;
     rotation.pitch += yawPitchVelocity.y * sens;
     if (settings.pitchLimit) rotation.pitch = std::clamp(

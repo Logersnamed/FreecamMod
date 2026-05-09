@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "utils/debug.h"
+#include "utils/types.h"
 
 Input::Input() {
     instance = this;
@@ -142,7 +143,7 @@ void Input::Reset() {
     isWindowJustFocused = false;
 }
 
-std::vector<uint8_t> Input::GetReleasedNumkeysInOrder() {
+Input::ReleasedNumkeys Input::GetReleasedNumkeys() {
     bool isAnyPressed = false;
     for (int key = 0; key < NUM_KEYS_COUNT; ++key) {
         int keyCode = key + (int)'0';
@@ -163,7 +164,7 @@ std::vector<uint8_t> Input::GetReleasedNumkeysInOrder() {
 
     if (isAnyPressed || id == 0) return {};
 
-    std::vector<uint8_t> result;
+    ReleasedNumkeys result{};
     for (int key = 0; key < NUM_KEYS_COUNT; ++key) {
         if (numRowKeys[key].wasRecentlyReleased) {
             numRowKeys[key].wasRecentlyReleased = false;
@@ -172,8 +173,7 @@ std::vector<uint8_t> Input::GetReleasedNumkeysInOrder() {
     }
 
     if (!result.empty()) {
-        std::sort(result.begin(), result.end(),
-            [this](uint8_t a, uint8_t b) {
+        std::sort(result.begin(), result.end(), [this](uint8_t a, uint8_t b) {
                 return numRowKeys[a].pressId < numRowKeys[b].pressId;
             }
         );

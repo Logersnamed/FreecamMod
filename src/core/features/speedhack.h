@@ -7,6 +7,7 @@
 #include "ModUtils.h"
 
 #include "core/game_data_manager.h"
+#include "core/hook/hook_manager.h"
 
 class Speedhack {
 	double lastSpeed = 0.5;
@@ -15,8 +16,17 @@ class Speedhack {
 	float* frametimeLimit = nullptr;
 	float savedFrametimeLimit = 0;
 
+	bool isInitialized = false;
+
 public:
-	bool Initialize() {
+	bool Initialize(HookManager &hookManager) {
+		size_t hookCount = 0;
+		const auto* hooks = MS::GetHooks(hookCount);
+		for (size_t i = 0; i < hookCount; ++i) {
+			if (!hookManager.Hook(hooks[i].target, hooks[i].detour, hooks[i].original))
+				return false;
+		}
+
 		uintptr_t framelimitAddress = GameDataManager::FrametimeLimit.Get();
 		if (!framelimitAddress) return false;
 
@@ -24,10 +34,13 @@ public:
 		if (!frametimeLimit) return false;
 
 		uintptr_t fullscreenLimitAddress = GameDataManager::FullscreenLimit.Get();
-		if (!fullscreenLimitAddress) return false;
+		if (fullscreenLimitAddress) {
+			// Removing 60 FPS fullscreen limit: https://github.com/techiew/EldenRingMods/blob/master/UnlockTheFps/DllMain.cpp
+			ModUtils::ReplaceExpectedBytesAtAddress(fullscreenLimitAddress, "c7 ? ef ? 00 00 00", "c7 45 ef 00 00 00 00");
+		}
 
-		// Removing 60 FPS fullscreen limit: https://github.com/techiew/EldenRingMods/blob/master/UnlockTheFps/DllMain.cpp
-		return ModUtils::ReplaceExpectedBytesAtAddress(fullscreenLimitAddress, "c7 ? ef ? 00 00 00", "c7 45 ef 00 00 00 00");
+		isInitialized = true;
+		return true;
 	}
 
 	float GetFrametimeLimit() const {
@@ -64,6 +77,8 @@ public:
 	bool IsEnabled() const { return isEnabled; }
 
 	void Enable() {
+		if (!isInitialized) return;
+
 		isEnabled = true;
 		savedFrametimeLimit = GetFrametimeLimit();
 		SetTimeScale(lastSpeed);

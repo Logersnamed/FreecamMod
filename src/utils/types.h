@@ -1,5 +1,8 @@
 #pragma once
 #include <cmath>
+#include <array>
+
+#include "utils/debug.h"
 
 struct float2 {
     float x, y;
@@ -312,4 +315,44 @@ struct EulerAngles {
     float yaw = 0.0f;
     float pitch = 0.0f;
     float roll = 0.0f;
+};
+
+template<typename T, size_t N>
+struct FixedVec {
+    std::array<T, N> data{};
+    size_t count = 0;
+
+    FixedVec() = default;
+    FixedVec(std::initializer_list<T> list) {
+        for (const T& val : list)
+            push_back(val);
+    }
+
+    bool empty() const { return count == 0; }
+    size_t size() const { return count; }
+    static constexpr size_t capacity() { return N; }
+
+    auto begin() { return data.begin(); }
+    auto end() { return data.begin() + count; }
+    auto begin() const { return data.begin(); }
+    auto end() const { return data.begin() + count; }
+
+    void push_back(const T& val) {
+        if (count >= N) {
+            LOG_ERROR("FixedVec overflow");
+            return;
+        }
+        data[count++] = val;
+    }
+
+    bool try_push_back(const T& val) {
+        if (count >= N) return false;
+        data[count++] = val;
+        return true;
+    }
+
+    void clear() { count = 0; }
+
+    T& operator[](size_t i) { return data[i]; }
+    const T& operator[](size_t i) const { return data[i]; }
 };

@@ -258,7 +258,8 @@ namespace ModUtils
 		std::vector<std::string> aobTokens = TokenifyAobString(aob);
 		if (!IsAobValid(aobTokens))
 		{
-			ShowErrorPopup("AOB is invalid! (" + aob + ")");
+			//ShowErrorPopup("AOB is invalid! (" + aob + ")");
+			LOG_WARN("ModUtils: AOB is invalid! (%s)", aob.c_str());
 			return false;
 		};
 		return true;
@@ -437,7 +438,7 @@ namespace ModUtils
 
 			if (aob1Tokens[i] != aob2Tokens[i])
 			{
-				LOG_INFO("Byts do not match!");
+				LOG_WARN("Byts do not match!");
 				// ShowErrorPopup("Bytes do not match!");
 				return false;
 			}
@@ -457,18 +458,16 @@ namespace ModUtils
 		MemCopy((uintptr_t)&existingBytesBuffer[0], address, existingBytesBuffer.size());
 		std::string existingBytes = RawAobToStringAob(existingBytesBuffer);
 
-		Log("Bytes at address: ", existingBytes);
-		Log("Expected bytes: ", expectedBytes);
-		Log("New bytes: ", newBytes);
+		LOG_INFO("Replacing \"%s\" with \"%s\" at address %p", existingBytes.c_str(), newBytes.c_str(), address);
 
 		if (CheckIfAobsMatch(existingBytes, expectedBytes))
 		{
-			Log("Bytes match");
 			std::vector<unsigned char> rawNewBytes = StringAobToRawAob(newBytes);
 			MemCopy(address, (uintptr_t)&rawNewBytes[0], rawNewBytes.size());
-			Log("Patch applied");
 			return true;
 		}
+
+		LOG_INFO("Patch at address %p wasn't applied ", address);
 
 		return false;
 	}

@@ -3,7 +3,7 @@
 #include <windowsx.h>
 #include <Xinput.h>
 #include <cstdint>
-#include <vector>
+#include <array>
 #include <algorithm>
 
 #include "utils/types.h"
@@ -29,6 +29,9 @@ class Input {
     };
 
 public:
+    static constexpr int NUM_KEYS_COUNT = 10;
+    using ReleasedNumkeys = FixedVec<uint8_t, NUM_KEYS_COUNT>;
+
     Input();
 
     bool HookWndProc(HWND hWnd);
@@ -49,8 +52,6 @@ public:
     static inline getRawInputData_t origGetRawInputData{};
     static UINT WINAPI hkGetRawInputData(HRAWINPUT hRawInput, UINT uiCommand, LPVOID pData, PUINT pcbSize, UINT cbSizeHeader);
 
-    std::vector<uint8_t> GetReleasedNumkeysInOrder();
-
 private:
     static inline Input* instance = nullptr;
     static inline LONG_PTR origWndProc = 0;
@@ -61,7 +62,6 @@ private:
     float scrollDelta = 0.0f;
     int2 mouseDelta = 0;
 
-    static constexpr int NUM_KEYS_COUNT = 10;
     struct NumRowKey {
         bool wasRecentlyReleased = false;
         int pressId = 0;
@@ -84,7 +84,8 @@ public:
     bool IsGamepadPressed(WORD button) const { return (state.Gamepad.wButtons & button) != 0; }
     bool IsGamepadJustPressed(WORD button) const { return (state.Gamepad.wButtons & button) != 0 && (prevState.Gamepad.wButtons & button) == 0; }
     bool IsGamepadJustReleased(WORD button) const { return (state.Gamepad.wButtons & button) == 0 && (prevState.Gamepad.wButtons & button) != 0; }
-	float2 GetThumbLeft() const { return thumbLeft; }
+    ReleasedNumkeys GetReleasedNumkeys();
+    float2 GetThumbLeft() const { return thumbLeft; }
 	float2 GetThumbRight() const { return thumbRight; }
 	float GetLeftTrigger() const { return leftTrigger; }
 	float GetRightTrigger() const { return rightTrigger; }
