@@ -1,6 +1,7 @@
 #include "freecam.h"
 
 #include <algorithm>
+#include <functional>
 #include <cstdint>
 #include <vector>
 
@@ -20,8 +21,8 @@ Freecam::Freecam(HMODULE hModule) : hModule(hModule) {
 }
 
 bool Freecam::Initialize() {
-    if (!config.Initialize(hModule)) return false;
-    config.Reload(actionMgr, freeCamera);
+    if (!config.Initialize(hModule, actionMgr)) return false;
+    config.Reload();
 
     ModUtils::AttemptToGetWindowHandle();
     if (!ModUtils::muWindow) return false;
@@ -45,6 +46,8 @@ bool Freecam::Initialize() {
 
     freeCamera.Initialize();
 
+    config.AddReloadCallback([this]() { freeCamera.OnConfigReload(); });
+
     return true;
 }
 
@@ -62,13 +65,13 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
     const float scrollDelta = input.GetScrollDelta();
 
     if (IsJustPressed(Toggle)) {
-        config.Reload(actionMgr, freeCamera);
+        config.Reload();
         freeCamera.Toggle(gameRend);
     }
 
     // TeleportToCamera
     if (IsJustPressed(TeleportToCamera)) {
-        config.Reload(actionMgr, freeCamera);
+        config.Reload();
         freeCamera.Toggle(gameRend);
 
         if (!freeCamera.IsEnabled()) {
@@ -110,7 +113,7 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
     freeCamera.SetIsSprinting(IsPressed(Sprint) || input.IsGamepadPressed(XINPUT_GAMEPAD_X));
     if (IsJustPressed(ToggleFreeze)) freeCamera.ToggleFreeze();
     if (IsJustPressed(ResetSettings) || input.IsGamepadJustPressed(XINPUT_GAMEPAD_Y)) freeCamera.ResetCameraState(gameRend);
-    if (IsJustPressed(ReloadConfig)) config.Reload(actionMgr, freeCamera);
+    if (IsJustPressed(ReloadConfig)) config.Reload();
 
     if (input.IsGamepadJustPressed(XINPUT_GAMEPAD_DPAD_UP)) {
         hookManager.GetDaytimeUpdateCave().ToggleCycleWeatherTime();
@@ -163,7 +166,7 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
     
 void Freecam::Update(GameData::GameRend* gameRend) {
     if (input.IsWindowJustGetFocused()) {
-        config.Reload(actionMgr, freeCamera);
+        config.Reload();
     }
 
     float deltaTime = std::clamp(Time::DeltaTime() / speedhack.GetTimeScale(), 0.0f, 0.4f);

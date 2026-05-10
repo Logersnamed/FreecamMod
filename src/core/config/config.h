@@ -3,10 +3,13 @@
 #include <string>
 #include <type_traits>
 #include <filesystem>
+#include <optional>
+#include <functional>
 #include <array>
 
 #include "mini/ini.h"
 
+#include "core/config/con_var.h"
 #include "core/input/action_system.h"
 #include "core/free_camera.h"
 #include "utils/debug.h"
@@ -20,13 +23,20 @@ public:
         Action defaultAction;
     };
 
-    bool Initialize(HMODULE hModule);
-    void Reload(ActionManager& actionMgr, FreeCamera& freeCamera);
+    bool Initialize(HMODULE hModule, ActionManager& actionMgr);
+    void Reload();
 
     std::filesystem::path GetConfigDirPath() const { return modDirectoryPath; }
 
+    void AddReloadCallback(std::function<void()> callback) {
+        onReloadCallbacks.push_back(std::move(callback));
+    }
+
 private:
-    mINI::INIFile file = mINI::INIFile("");
+    ActionManager* actionMgr = nullptr;
+    std::vector<std::function<void()>> onReloadCallbacks;
+
+    std::optional<mINI::INIFile> file{};
     mINI::INIStructure ini;
 
     std::filesystem::path dllPath;
@@ -45,7 +55,7 @@ private:
         Keybind{"cycle_weather_time", Action{ CycleWeatherTime, { VK_F4 }}},
         Keybind{"exit_mod", Action{ ExitMod, { VK_DELETE }}},
         Keybind{"start/end_recording", Action{ StartEndRecording, { VK_F8 }}},
-        Keybind{"strat/end_playing_recording", Action{ StartEndPlayingRecording, { VK_F9}}},
+        Keybind{"start/end_playing_recording", Action{ StartEndPlayingRecording, { VK_F9}}},
         Keybind{"step_frames", Action{ StepFrames, { VK_F2}}},
         Keybind{"move_forward", Action{ MoveForward, { 'W' }}},
         Keybind{"move_backward", Action{ MoveBackward, { 'S' }}},
@@ -62,15 +72,13 @@ private:
         Keybind{"scroll_camera_speed_modifier", Action{ ScrollCameraSpeedModifier, {}, { VK_CONTROL, 'V' }}},
         Keybind{"scroll_speedhack_modifier", Action{ ScrollSpeedhackModifier, { 'V' }}},
         Keybind{"toggle_speedhack", Action{ ToggleSpeedhack, { VK_F7 }}},
-        Keybind{"reset_speedhack_speed", Action{ ResetSpeedhackSpeed, { VK_CONTROL, 'V', 'R' }}},
+        Keybind{"reset_speedhack_speed", Action{ ResetSpeedhackSpeed, { VK_CONTROL, 'V' }}},
     };
 
     bool findDllPath(HMODULE hModule);
 
-    template<typename T>
-    T ReadValue(const std::string& section, const std::string& name, T defaultValue);
-
     Action ReadKeybind(const Keybind& keybind);
+    void UpdateConVar(IConVar* conVar);
 
     int ParseKey(std::string key);
     std::string KeyToString(int key);

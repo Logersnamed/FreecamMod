@@ -6,31 +6,6 @@ void Logger::InitFile(std::filesystem::path modDirectoryPath) {
     logFile.open(logPath, std::ios::out | std::ios::trunc);
 }
 
-void Logger::Init(const char* title) {
-    if (isInitialized || !enabled) return;
-
-    AllocConsole();
-
-    HANDLE hConsole = GetStdHandle(STD_INPUT_HANDLE);
-    DWORD mode = 0;
-    GetConsoleMode(hConsole, &mode);
-    mode &= ~ENABLE_QUICK_EDIT_MODE;
-    mode |= ENABLE_EXTENDED_FLAGS;
-    SetConsoleMode(hConsole, mode);
-
-    FILE* f;
-    freopen_s(&f, "CONOUT$", "w", stdout);
-    freopen_s(&f, "CONOUT$", "w", stderr);
-    SetConsoleTitleA(title);
-
-    isInitialized = true;
-}
-
-void Logger::Enable(bool enable) {
-    enabled = enable;
-    Logger::Init();
-}
-
 void Logger::Print(const char* level, const char* fmt, va_list args) {
     char buffer[2048];
     vsnprintf(buffer, sizeof(buffer), fmt, args);
@@ -39,8 +14,6 @@ void Logger::Print(const char* level, const char* fmt, va_list args) {
         logFile << "[" << level << "] " << buffer << std::endl;
         logFile.flush();
     }
-
-    printf("Freecam > [%s] %s\n", level, buffer);
 }
 
 void Logger::Log(const char* level, const char* fmt, ...) {
@@ -52,12 +25,6 @@ void Logger::Log(const char* level, const char* fmt, ...) {
 
 void Logger::Shutdown() {
     LOG_INFO("Shutting down Logger...");
-    if (!isInitialized)
-        return;
 
-    if (logFile.is_open())
-        logFile.close();
-
-    FreeConsole();
-    isInitialized = false;
+    if (logFile.is_open()) logFile.close();
 }

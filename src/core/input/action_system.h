@@ -62,7 +62,7 @@ public:
 	const char* GetName() const { return ActionTypeName[static_cast<int8_t>(type)]; }
 
 	bool IsPressed(const Input& input) const {
-		if (keysRequired.empty()) return false;
+		if (keysRequired.empty() && keysRestricted.empty()) return false;
 		for (int key : keysRequired) {
 			if (!input.IsPressed(key)) return false;
 		}
@@ -73,7 +73,7 @@ public:
 	}
 
 	bool IsJustPressed(const Input& input) const {
-		if (keysRequired.empty()) return false;
+		if (keysRequired.empty() && keysRestricted.empty()) return false;
 		bool anyJustPressed = false;
 		for (int key : keysRequired) {
 			if (!input.IsPressed(key)) return false;

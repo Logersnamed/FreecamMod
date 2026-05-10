@@ -3,6 +3,7 @@
 #include <vector>
 #include <cstdint>
 
+#include "core/config/con_var.h"
 #include "core/game_data/game_data.h"
 #include "core/input/input.h"
 #include "utils/types.h"
@@ -26,11 +27,10 @@ class CameraStateManager {
 	Input::ReleasedNumkeys slotOrder;
 	size_t interval = 0;
 	float time = 0;
-	float iTime = 3.0f;
+
+	ConVar<float> interpolationTime{ "camera_state_manager", "interpolation_time", 3.0f };
 
 public:
-	void SetInterpolationTime(float newTime) { iTime = newTime; }
-
 	void SaveState(GameData::Camera* camera, int slot, const EulerAngles& yawPitchRoll) {
 		if (slot < 0 || slot >= MAX_SLOTS) return;
 		LOG_INFO("Saved slot %d", slot);
@@ -59,7 +59,7 @@ public:
 		time = 0;
 	}
 
-	void Update(GameData::Camera* camera, EulerAngles& yawPitchRoll, float dt) {
+	void Update(GameData::Camera* camera, EulerAngles* yawPitchRoll, float dt) {
 		if (!isInterpolating) return;
 		if (slotOrder.empty()) {
 			isInterpolating = false;
@@ -70,7 +70,7 @@ public:
 			const State& endState = stateSlots[slotOrder[interval]];
 			Lerp(camera, endState, endState, 1.0f);
 
-			yawPitchRoll = endState.yawPitchRoll;
+			if (yawPitchRoll) *yawPitchRoll = endState.yawPitchRoll;
 
 			isInterpolating = false;
 			LOG_INFO("Interpolation finished");
@@ -79,7 +79,7 @@ public:
 			const State& startState = stateSlots[slotOrder[interval]];
 			const State& endState = stateSlots[slotOrder[interval + 1]];
 
-			const float t = Math::clamp(time / iTime);
+			const float t = Math::clamp(time / interpolationTime);
 			const float smootht = Math::smoothstep(t);
 			Lerp(camera, startState, endState, smootht);
 

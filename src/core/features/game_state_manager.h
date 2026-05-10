@@ -1,6 +1,7 @@
 #pragma once
 #include <cstddef>
 
+#include "core/config/con_var.h"
 #include "core/game_data/game_data.h"
 #include "core/settings_backup.h"
 
@@ -9,7 +10,7 @@ class GameStateManager {
 	bool areEntitiesFrozen = false;
 	bool isPlayerFrozen = false;
 
-	bool isZeroSpeedFreeze = false;
+	ConVar<bool> isZeroSpeedFreeze{ "hidden", "freeze_by_setting_zero_speed", false };
 
 public:
 	void FreezeGame(bool enabled);
@@ -20,8 +21,6 @@ public:
 	bool IsGameFrozen() const { return isGameFrozen; }
 	bool AreEntitesFrozen() const { return areEntitiesFrozen; }
 	bool IsPlayerFrozen() const { return isPlayerFrozen; }
-
-	void SetZeroSpeedFreeze(bool enabled) { isZeroSpeedFreeze = enabled; }
 
 private:
 	struct Option {

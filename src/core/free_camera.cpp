@@ -34,11 +34,8 @@ void FreeCamera::OnConfigReload() {
     
     GameData::FieldArea* fieldArea = GameDataManager::FieldArea.Get();
     if (fieldArea && fieldArea->gameRend) {
-        fieldArea->gameRend->EnableFreecam(flagged(disablePlayerControls));
+        fieldArea->gameRend->EnableFreecam(disablePlayerControls);
     }
-
-    gameStateManager.SetZeroSpeedFreeze(flagged(zeroSpeedFreeze));
-    cameraStateManager.SetInterpolationTime(settings.interpolationTime);
 }
 
 void FreeCamera::Update(GameData::GameRend* gameRend, float deltaTime) {
@@ -67,7 +64,7 @@ void FreeCamera::Update(GameData::GameRend* gameRend, float deltaTime) {
 
     frameStepper.Update();
 
-    cameraStateManager.Update(freeCamera, rotation, deltaTime);
+    cameraStateManager.Update(freeCamera, &rotation, deltaTime);
 }
 
 void FreeCamera::Toggle(GameData::GameRend* rend) {
@@ -79,7 +76,7 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
     GameData::Camera* playerCamera = rend->csPersCam1;
     if (!freeCamera || !playerCamera) return;
 
-    if (flagged(resetCameraState) || isFirstEnable) {
+    if (resetCameraState || isFirstEnable) {
         ResetCameraState(freeCamera, playerCamera);
         isFirstEnable = false;
     }
@@ -96,9 +93,8 @@ void FreeCamera::EnableCamera(GameData::GameRend* rend) {
     ApplyGameOptions(true);
     ApplyFreezeState(true);
 
-    rend->EnableFreecam(flagged(disablePlayerControls));
+    rend->EnableFreecam(disablePlayerControls);
     isEnabled = true;
-    LOG_INFO("Free camera enabled");
 }
 
 void FreeCamera::DisableCamera(GameData::GameRend* rend) {
@@ -112,7 +108,6 @@ void FreeCamera::DisableCamera(GameData::GameRend* rend) {
     ApplyFreezeState(false);
 
     isEnabled = false;
-    LOG_INFO("Free camera disabled");
 }
 
 void FreeCamera::DisableCamera() {
@@ -133,7 +128,7 @@ void FreeCamera::ResetCameraState(GameData::GameRend* gameRend) {
 }
 
 void FreeCamera::UpdatePosition(GameData::Camera* camera, float dt) {
-    const float cameraSpeed = speed * (isSprinting ? settings.speedMult : 1.0f) * dt;
+    const float cameraSpeed = speed * (isSprinting ? speedMult : 1.0f) * dt;
 
     const float3& right = camera->right();
     const float3& forward = camera->forward();
@@ -147,21 +142,19 @@ void FreeCamera::UpdatePosition(GameData::Camera* camera, float dt) {
 void FreeCamera::UpdateRotation(GameData::Camera* freeCamera, float dt) {
     RotationCache& c = rotationCache;
 
-    float tiltSpeed = flagged(smoothCameraRotation) ? settings.smoothTiltSpeed : settings.tiltSpeed;
-    rotation.roll += rollVelocity * tiltSpeed * dt;
+    float _tiltSpeed = smoothCameraRotation ? smoothTiltSpeed : tiltSpeed;
+    rotation.roll += rollVelocity * _tiltSpeed * dt;
     c.roll.CacheSinCos(rotation.roll);
 
-    const float sensitivity = flagged(smoothCameraRotation) ? settings.smoothSensitivity * 10.0f * dt : settings.sensitivity;
-    const float sens = sensitivity * ComputeZoomFactor(freeCamera->fov) * 0.001f;
+    const float _sensitivity = smoothCameraRotation ? smoothSensitivity * 10.0f * dt : sensitivity;
+    const float sens = _sensitivity * ComputeZoomFactor(freeCamera->fov) * 0.001f;
 	const float2 devicesDelta = (float2)mouseDelta + gamepadDelta * 60.0f;
     yawPitchVelocity += devicesDelta.rotated(-c.roll.sin, c.roll.cos);
 
     // todo: make pitch limit depend on roll
     rotation.yaw += yawPitchVelocity.x * sens;
     rotation.pitch += yawPitchVelocity.y * sens;
-    if (settings.pitchLimit) rotation.pitch = std::clamp(
-        rotation.pitch, -settings.pitchLimit, settings.pitchLimit
-    );
+    if (pitchLimit) rotation.pitch = std::clamp<float>(rotation.pitch, -pitchLimit, pitchLimit);
 
     c.yaw.CacheSinCos(rotation.yaw);
     c.pitch.CacheSinCos(rotation.pitch);
@@ -177,7 +170,7 @@ void FreeCamera::UpdateRotation(GameData::Camera* freeCamera, float dt) {
     freeCamera->matrix.c1 = float4(rolledUp, 0.0f);
     freeCamera->matrix.c2 = float4(forward, 0.0f);
 
-    if (!flagged(smoothCameraRotation)) {
+    if (!smoothCameraRotation) {
         yawPitchVelocity = float2();
         rollVelocity = 0;
         return;
@@ -193,12 +186,12 @@ void FreeCamera::UpdateRotation(GameData::Camera* freeCamera, float dt) {
 
 void FreeCamera::UpdateFov(GameData::Camera* camera, float dt) {
     float maxZoomStep = 0.05f;
-    float zoom = zoomVelocity * settings.zoomSpeed * ComputeZoomFactor(camera->fov) * dt;
+    float zoom = zoomVelocity * zoomSpeed * ComputeZoomFactor(camera->fov) * dt;
     AddFov(camera, std::clamp(zoom, -maxZoomStep, maxZoomStep));
 }
 
 void FreeCamera::UpdateVelocity(float dt) {
-    if (!flagged(smoothCameraMovement)) {
+    if (!smoothCameraMovement) {
         velocity = float3(0);
         return;
     }
@@ -217,16 +210,16 @@ void FreeCamera::UpdateZoomVelocity(float dt) {
 void FreeCamera::ApplyFreezeState(bool enabled) {
     isFrozen = enabled;
 
-    bool isFreezeGame = flagged(freezeGame);
+    bool isFreezeGame = freezeGame;
     gameStateManager.FreezeGame(enabled && isFreezeGame);
-    gameStateManager.FreezeEntities(enabled && flagged(freezeEntities) && !isFreezeGame);
-    gameStateManager.FreezePlayer(enabled && flagged(freezePlayer) && !isFreezeGame);
+    gameStateManager.FreezeEntities(enabled && freezeEntities && !isFreezeGame);
+    gameStateManager.FreezePlayer(enabled && freezePlayer && !isFreezeGame);
 }
 
 void FreeCamera::ApplyGameOptions(bool enabled) {
-    gameStateManager.DisableOption(OptionType::HUD, enabled && flagged(hideHud));
-    gameStateManager.DisableOption(OptionType::AA, enabled && flagged(disableAA));
-    gameStateManager.DisableOption(OptionType::MotionBlur, enabled && flagged(disableMotionBlur));
+    gameStateManager.DisableOption(OptionType::HUD, enabled && hideHud);
+    gameStateManager.DisableOption(OptionType::AA, enabled && disableAntiAliasing);
+    gameStateManager.DisableOption(OptionType::MotionBlur, enabled && disableMotionBlur);
 }
 
 void FreeCamera::RestorePendingOptions() {
@@ -238,7 +231,7 @@ void FreeCamera::RestorePendingOptions() {
 void FreeCamera::ResetCameraState(GameData::Camera* freeCamera, GameData::Camera* playerCamera) {
     CopyPositionAndFov(freeCamera, playerCamera);
     CopyRotation(freeCamera, playerCamera);
-    speed = settings.defaultSpeed;
+    speed = defaultSpeed;
     rotation = freeCamera->GetEuler();
 }
 

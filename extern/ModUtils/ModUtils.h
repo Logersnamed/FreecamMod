@@ -458,7 +458,7 @@ namespace ModUtils
 		MemCopy((uintptr_t)&existingBytesBuffer[0], address, existingBytesBuffer.size());
 		std::string existingBytes = RawAobToStringAob(existingBytesBuffer);
 
-		LOG_INFO("Replacing \"%s\" with \"%s\" at address %p", existingBytes.c_str(), newBytes.c_str(), address);
+		// LOG_INFO("Replacing \"%s\" with \"%s\" at address %p", existingBytes.c_str(), newBytes.c_str(), address);
 
 		if (CheckIfAobsMatch(existingBytes, expectedBytes))
 		{

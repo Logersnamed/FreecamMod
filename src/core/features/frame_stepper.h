@@ -1,6 +1,8 @@
 #pragma once
 #include "core/features/game_state_manager.h"
 
+#include "core/config/con_var.h"
+
 class FrameStepper {
     GameStateManager& gameStateManager;
 
@@ -10,10 +12,12 @@ class FrameStepper {
     bool wasEntitiesFrozen = false;
     bool wasPlayerFrozen = false;
 
+    ConVar<int> step{ "frame_stepper", "step", 1 };
+
 public:
     FrameStepper(GameStateManager& gameStateMgr) : gameStateManager(gameStateMgr) {}
 
-    void StepFrames(int step) {
+    void StepFrames() {
         if (step <= 0) return;
 
         if (framesToStep == 0) {

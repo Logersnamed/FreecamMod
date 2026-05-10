@@ -1,11 +1,11 @@
 #pragma once
 #include <windows.h>
 
+#include "core/config/config.h"
 #include "core/features/speedhack.h"
 #include "core/game_data/game_data.h"
 #include "core/input/action_system.h"
 #include "core/input/input.h"
-#include "core/config.h"
 #include "core/free_camera.h"
 #include "core/hook/hook_manager.h"
 

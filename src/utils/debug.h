@@ -23,14 +23,11 @@ class Logger {
 	static inline const std::string logFileName = "log.txt";
 
 public:
-    static void Init(const char* title = "Debug Console");
     static void Shutdown();
 
     static void InitFile(std::filesystem::path folderPath);
 
     static void Log(const char* level, const char* fmt, ...);
-
-    static void Enable(bool enable);
 
     static inline const char* Filename(const char* path) {
         const char* p1 = strrchr(path, '\\');
@@ -42,8 +39,6 @@ public:
 private:
     static void Print(const char* level, const char* fmt, va_list args);
 
-    static inline bool isInitialized = false;
-    static inline bool enabled = false;
     static inline std::ofstream logFile;
 };
 

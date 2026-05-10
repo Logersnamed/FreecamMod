@@ -1,11 +1,12 @@
-#include "core/config.h"
+#include "config.h"
 
 #include <cctype>
 #include <stdio.h>
+#include <string_view>
 
 #include "utils/math.h"
 
-bool Config::Initialize(HMODULE hModule) {
+bool Config::Initialize(HMODULE hModule, ActionManager& actionMgr) {
     if (!findDllPath(hModule)) return false;
 
     modDirectoryPath = dllPath / modDirectoryName;
@@ -19,98 +20,60 @@ bool Config::Initialize(HMODULE hModule) {
     LOG_INFO("Config path: %s", configFilePath.string().c_str());
 
     file = mINI::INIFile(configFilePath);
+    if (!file) {
+        LOG_ERROR("Failed to initialize INI file");
+        return false;
+	}
+
+    this->actionMgr = &actionMgr;
+    if (!this->actionMgr) {
+        LOG_ERROR("ActionManager pointer is null");
+        return false;
+	}
 
     return true;
 }
 
-void Config::Reload(ActionManager &actionMgr, FreeCamera &freeCamera) {
+void Config::Reload() {
     std::filesystem::create_directories(modDirectoryPath);
 
     ini.clear();
-    bool fileExists = file.read(ini);
+    bool fileExists = file->read(ini);
 
-    FreeCamera::Settings settings{};
-    using enum FreecamFlag;
-
-#define READ(sec, key, var) var = ReadValue(sec, key, var)
-#define READ_BITFLAG(sec, key, var) settings.flags.set(var, ReadValue(sec, key, settings.flags.get(var)))
-#define READ_EULER_ANGLE(sec, key, var) var = Math::toRadians(ReadValue(sec, key, Math::radToDegrees(var)))
-
-    READ_BITFLAG("freecam", "freeze_game", freezeGame);
-    READ_BITFLAG("freecam", "freeze_entities", freezeEntities);
-    READ_BITFLAG("freecam", "freeze_player", freezePlayer);
-    READ_BITFLAG("freecam", "disable_player_controls", disablePlayerControls);
-    READ_BITFLAG("freecam", "reset_camera_state", resetCameraState);
-
-    READ_BITFLAG("game_options", "hide_hud", hideHud);
-    READ_BITFLAG("game_options", "disable_anti_aliasing", disableAA);
-    READ_BITFLAG("game_options", "disable_motion_blur", disableMotionBlur);
-
-    READ("camera_settings", "sensitivity", settings.sensitivity);
-    READ("camera_settings", "default_speed", settings.defaultSpeed);
-    READ("camera_settings", "tilt_speed", settings.tiltSpeed);
-    READ("camera_settings", "speed_multiplier", settings.speedMult);
-    READ("camera_settings", "zoom_speed", settings.zoomSpeed);
-
-    READ_EULER_ANGLE("camera_settings", "min_fov_degrees", settings.minFov);
-    READ_EULER_ANGLE("camera_settings", "max_fov_degrees", settings.maxFov);
-    READ_EULER_ANGLE("camera_settings", "pitch_limit_degrees", settings.pitchLimit);
-
-    READ_BITFLAG("smooth_camera_settings", "smooth_camera_movement", smoothCameraMovement);
-    READ_BITFLAG("smooth_camera_settings", "smooth_camera_rotation", smoothCameraRotation);
-    READ("smooth_camera_settings", "sensitivity", settings.smoothSensitivity);
-    READ("smooth_camera_settings", "tilt_speed", settings.smoothTiltSpeed);
-
-    READ("frame_stepper", "step", settings.step);
-
-    READ("camera_state_manager", "interpolation_time", settings.interpolationTime);
-
-    Logger::Enable(ReadValue("hidden", "debug_console", 0));
-    READ_BITFLAG("hidden", "freeze_by_setting_zero_speed", zeroSpeedFreeze);
-
-    freeCamera.SetSettings(settings);
+    for (auto* conVar : IConVar::allConVars) {
+        UpdateConVar(conVar);
+	}
 
     for (const Keybind& keybind : keybinds) {
-        actionMgr.BindAction(ReadKeybind(keybind));
+        actionMgr->BindAction(ReadKeybind(keybind));
     }
 
     if (fileExists) {
-        if (!file.write(ini, true)) LOG_WARN("Failed to write to config file");
+        if (!file->write(ini, true)) LOG_WARN("Failed to write to config file");
     }
     else {
-        if (!file.generate(ini, true)) LOG_WARN("Failed to generate config file");
+        if (!file->generate(ini, true)) LOG_WARN("Failed to generate config file");
     }
 
-    freeCamera.OnConfigReload();
+    for (auto& callback : onReloadCallbacks) callback();
 }
 
-template<typename T>
-T Config::ReadValue(const std::string& section, const std::string& name, T defaultValue) {
+void Config::UpdateConVar(IConVar* conVar) {
+    const char* section = conVar->GetSection();
+    const char* name = conVar->GetName();
+
     if (ini.has(section)) {
         auto& collection = ini[section];
 
         if (collection.has(name)) {
-			auto& value = collection[name];
-
-            try {
-                if constexpr (std::is_same_v<T, int>) {
-                    return std::stoi(value);
-                }
-                else if constexpr (std::is_same_v<T, float>) {
-                    return std::stof(value);
-                }
-                else if constexpr (std::is_same_v<T, bool>) {
-                    return value == "1" || value == "true";
-                }
-            }
-            catch (...) {
-                return defaultValue;
-            }
+            conVar->SetValueFromString(collection[name]);
+            return;
         }
     }
 
-    if (section != "hidden") ini[section][name] = std::to_string(defaultValue);
-    return defaultValue;
+	conVar->SetValueFromString(conVar->GetDefaultValueString());
+
+    if (std::string_view(section) != "hidden") ini[section][name] = conVar->GetDefaultValueString().c_str();
 }
 
 Action Config::ReadKeybind(const Keybind& keybind) {
