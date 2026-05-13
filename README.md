@@ -14,7 +14,8 @@ Works with Seamless Co-op, ER Reforged. Tested on EldenModLoader, modengine2, me
 - Adjustable FOV
 - Automatic HUD disabling
 - Disable / enable player controls
-- Configurable keybinds and settings via config file
+- Gamepad support
+- Configurable keybinds and settings via config file (Keyboard only)
 
 ## Controls
 You can find and change all keybinds in `config.ini`.  
