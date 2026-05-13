@@ -27,9 +27,6 @@ public:
 				return false;
 		}
 
-		// Speedhack only "eldenring.exe" module
-		MS::IncludeModule(GetModuleHandleW(NULL));
-
 		uintptr_t framelimitAddress = GameDataManager::FrametimeLimit.Get();
 		if (!framelimitAddress) return false;
 
@@ -81,6 +78,13 @@ public:
 
 	void Enable() {
 		if (!isInitialized) return;
+
+		static bool modulesRegistered = false;
+		if (!modulesRegistered) {
+			// Speedhack only "eldenring.exe" module
+			MS::IncludeModule(GetModuleHandleW(NULL));
+			modulesRegistered = true;
+		}
 
 		isEnabled = true;
 		savedFrametimeLimit = GetFrametimeLimit();
