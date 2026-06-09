@@ -22,11 +22,12 @@ class GameDataManager {
 			if (!address) {
 				if (required) {
 					LOG_ERROR("Failed to find %s", name);
+					return false;
 				}
 				else {
 					LOG_WARN("Failed to find %s. Some features may not work", name);
+					return true;
 				}
-				return false;
 			}
 			LOG_INFO("Found %s: %p", name, address);
 			return true;
