@@ -5,7 +5,7 @@
 #include "MinHook.h"
 #include "ModUtils.h"
 
-#include "core/hook/code_cave.h"
+#include "hook/code_cave.h"
 #include "utils/debug.h"
 
 class HookManager {

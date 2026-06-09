@@ -6,8 +6,8 @@
 #include "MinSpeedhack.h"
 #include "ModUtils.h"
 
+#include "hook/hook_manager.h"
 #include "core/game_data_manager.h"
-#include "core/hook/hook_manager.h"
 
 class Speedhack {
 	double lastSpeed = 0.5;
