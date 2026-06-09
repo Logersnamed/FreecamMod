@@ -1,4 +1,4 @@
-#include "core/hook/hook_manager.h"
+#include "hook/hook_manager.h"
 
 bool HookManager::Initialize() {
     LOG_INFO("Initializing MinHook...");

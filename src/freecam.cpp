@@ -10,7 +10,7 @@
 #include "core/features/path_recorder.h"
 #include "core/game_data_manager.h"
 #include "core/settings_backup.h"
-#include "core/hook/code_cave.h"
+#include "hook/code_cave.h"
 #include "utils/time.h"
 #include "utils/memory.h"
 #include "utils/types.h"
