@@ -60,19 +60,28 @@ void Freecam::Run() {
     }
 }
 
+void Freecam::ToggleFreecam(GameData::GameRend* gameRend) {
+    config.Reload();
+    freeCamera.Toggle(gameRend);
+
+    if (!freeCamera.IsEnabled()) {
+        if (isFreecamOnlySpeedhack) {
+            speedhack.Disable();
+        }
+    }
+}
+
 void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
     using enum ActionType;
     const float scrollDelta = input.GetScrollDelta();
 
     if (IsJustPressed(Toggle)) {
-        config.Reload();
-        freeCamera.Toggle(gameRend);
+        ToggleFreecam(gameRend);
     }
 
     // TeleportToCamera
     if (IsJustPressed(TeleportToCamera)) {
-        config.Reload();
-        freeCamera.Toggle(gameRend);
+        ToggleFreecam(gameRend);
 
         if (!freeCamera.IsEnabled()) {
             if (GameData::ChrIns* player = GameDataManager::GetPlayer()) {
@@ -83,9 +92,22 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
         }
     }
 
-    if (IsJustPressed(CycleWeatherTime)) {
-        hookManager.GetDaytimeUpdateCave().ToggleCycleWeatherTime();
+    // Cycle weather time
+    if (!isFreecamOnlyCycleWeatherTime || (isFreecamOnlyCycleWeatherTime && freeCamera.IsEnabled())) {
+        if (IsJustPressed(CycleWeatherTime)) {
+            hookManager.GetDaytimeUpdateCave().ToggleCycleWeatherTime();
+        }
     }
+
+    // Speedhack
+    if (!isFreecamOnlySpeedhack || (isFreecamOnlySpeedhack && freeCamera.IsEnabled())) {
+        if (IsJustPressed(ToggleSpeedhack)) speedhack.IsEnabled() ? speedhack.Disable() : speedhack.Enable();
+        if (IsPressed(ScrollSpeedhackModifier) && speedhack.IsEnabled()) speedhack.AddTimeScale(scrollDelta * 0.05f);
+        if (IsJustPressed(ResetSpeedhackSpeed)) speedhack.SetTimeScale(1.0);
+    }
+
+    // Free camera only
+    if (!freeCamera.IsEnabled()) return;
 
     // FrameStepper
     if (IsPressed(StepFrames) || input.IsGamepadPressed(XINPUT_GAMEPAD_DPAD_DOWN)) {
@@ -98,14 +120,6 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
     else {
         frameStepperTimePressed = 0.0f;
     }
-
-    // Speedhack
-    if (IsJustPressed(ToggleSpeedhack)) speedhack.IsEnabled() ? speedhack.Disable() : speedhack.Enable();
-    if (IsPressed(ScrollSpeedhackModifier) && speedhack.IsEnabled()) speedhack.AddTimeScale(scrollDelta * 0.05f);
-    if (IsJustPressed(ResetSpeedhackSpeed)) speedhack.SetTimeScale(1.0);
-
-    // Free camera only
-    if (!freeCamera.IsEnabled()) return;
 
     freeCamera.SetMouseDelta(input.GetMouseDelta());
     freeCamera.SetGamepadDelta(input.GetThumbRight());

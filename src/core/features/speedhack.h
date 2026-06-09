@@ -78,6 +78,7 @@ public:
 
 	void Enable() {
 		if (!isInitialized) return;
+		if (isEnabled) return;
 
 		static bool modulesRegistered = false;
 		if (!modulesRegistered) {
@@ -92,6 +93,8 @@ public:
 	}
 
 	void Disable() {
+		if (!isEnabled) return;
+
 		isEnabled = false;
 		lastSpeed = MS::GetSpeed();
 		SetTimeScale(1.0);

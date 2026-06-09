@@ -6,6 +6,7 @@
 #include <array>
 #include <algorithm>
 
+#include "core/config/con_var.h"
 #include "utils/types.h"
 
 #pragma comment(lib, "Xinput9_1_0.lib")
@@ -28,6 +29,9 @@ class Input {
         }
     };
 
+    ConVar<bool> disableController{ "input", "disable_controller", false };
+    ConVar<bool> disableKeyboard{ "input", "disable_keyboard", false };
+
 public:
     static constexpr int NUM_KEYS_COUNT = 10;
     using ReleasedNumkeys = FixedVec<uint8_t, NUM_KEYS_COUNT>;
@@ -39,9 +43,9 @@ public:
 
     void Reset();
 
-    bool IsPressed(int vk) const { return keyStates[vk].down; }
-    bool IsJustPressed(int vk) const { return keyStates[vk].pressed; }
-    bool IsReleased(int vk) const { return keyStates[vk].released; }
+    bool IsPressed(int vk) const { return keyStates[vk].down && !disableKeyboard; }
+    bool IsJustPressed(int vk) const { return keyStates[vk].pressed && !disableKeyboard; }
+    bool IsReleased(int vk) const { return keyStates[vk].released && !disableKeyboard; }
 
     float GetScrollDelta() const { return scrollDelta; }
     int2 GetMouseDelta() const { return mouseDelta; }
@@ -81,14 +85,14 @@ private:
 	float rightTrigger{};
 
 public:
-    bool IsGamepadPressed(WORD button) const { return (state.Gamepad.wButtons & button) != 0; }
-    bool IsGamepadJustPressed(WORD button) const { return (state.Gamepad.wButtons & button) != 0 && (prevState.Gamepad.wButtons & button) == 0; }
-    bool IsGamepadJustReleased(WORD button) const { return (state.Gamepad.wButtons & button) == 0 && (prevState.Gamepad.wButtons & button) != 0; }
+    bool IsGamepadPressed(WORD button) const { return (state.Gamepad.wButtons & button) != 0 && !disableController; }
+    bool IsGamepadJustPressed(WORD button) const { return (state.Gamepad.wButtons & button) != 0 && (prevState.Gamepad.wButtons & button) == 0 && !disableController; }
+    bool IsGamepadJustReleased(WORD button) const { return (state.Gamepad.wButtons & button) == 0 && (prevState.Gamepad.wButtons & button) != 0 && !disableController; }
     ReleasedNumkeys GetReleasedNumkeys();
-    float2 GetThumbLeft() const { return thumbLeft; }
-	float2 GetThumbRight() const { return thumbRight; }
-	float GetLeftTrigger() const { return leftTrigger; }
-	float GetRightTrigger() const { return rightTrigger; }
+    float2 GetThumbLeft() const { return disableController ? float2() : thumbLeft; }
+	float2 GetThumbRight() const { return disableController ? float2() : thumbRight; }
+	float GetLeftTrigger() const { return disableController ? 0 : leftTrigger; }
+	float GetRightTrigger() const { return disableController ? 0 : rightTrigger; }
     void UpdateGamepad();
 
 private:
