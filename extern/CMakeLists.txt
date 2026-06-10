@@ -3,6 +3,7 @@ add_subdirectory(MinHook)
 add_subdirectory(mINI)
 add_subdirectory(ModUtils)
 add_subdirectory(MinSpeedhack)
+add_subdirectory(imgui)
 
 # Link
 add_library(extern_all INTERFACE)
@@ -13,6 +14,7 @@ target_link_libraries(extern_all
         mINI
         ModUtils
         minspeedhack
+        imgui
 )
 
 add_library(extern::all ALIAS extern_all)
