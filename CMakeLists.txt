@@ -18,7 +18,12 @@ add_library(${PROJECT_NAME} SHARED
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE extern::all)
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    extern::all
+    d3d12
+    dxgi
+    d3dcompiler
+)
 
 set(GAME_DIR "" CACHE PATH "Path to game folder")
 if(GAME_DIR)
