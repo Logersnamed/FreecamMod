@@ -1,32 +1,42 @@
 #include "gui/overlay.h"
+#include "utils/debug.h"
+
+#include <wrl.h>
+
+using Microsoft::WRL::ComPtr;
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 namespace Overlay {
     struct FrameContext {
-        ID3D12CommandAllocator* command_allocator{};
-        ID3D12Resource* render_target{};
+        ComPtr<ID3D12CommandAllocator> command_allocator{};
+        ComPtr<ID3D12Resource> render_target{};
         D3D12_CPU_DESCRIPTOR_HANDLE  render_target_descriptor{};
         UINT64 fence_value = 0;
     };
 
     render_callback_t g_render_callback{};
+    imgui_init_callback_t g_imgui_init_callback{};
     bool g_is_initialized = false;
 
     HWND g_hwnd{};
-    UINT g_buffers_count{};
+    UINT g_buffer_count{};
     DXGI_FORMAT g_rtv_format{};
 
-    FrameContext* g_frame_contexts{};       // delete this
-    ID3D12GraphicsCommandList* g_command_list{};
-    ID3D12DescriptorHeap* g_rtv_heap{};
-    ID3D12DescriptorHeap* g_srv_heap{};
-    ID3D12Fence* g_fence{};
+    FrameContext* g_frame_contexts{};
+
+    ComPtr<ID3D12GraphicsCommandList> g_command_list{};
+    ComPtr<ID3D12DescriptorHeap> g_rtv_heap{};
+    ComPtr<ID3D12DescriptorHeap> g_srv_heap{};
+    ComPtr<ID3D12Fence> g_fence{};
     HANDLE g_fence_event{};
     UINT64 g_fence_last_signaled = 0;
-    UINT g_frame_index = 0;
+
+    UINT g_attempts_to_init = 0;
+    UINT max_attempts_to_init = 10;
 
     bool IsInitialized() { return g_is_initialized; }
-    void SetRenderCallback(render_callback_t callback) { g_render_callback = callback; }
+    void SetRenderCallback(render_callback_t callback) { g_render_callback = std::move(callback); }
+    void SetImGuiInitCallback(imgui_init_callback_t callback) { g_imgui_init_callback = std::move(callback); }
 
     bool ImGuiWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         if (!g_is_initialized) return false;
@@ -59,92 +69,113 @@ namespace Overlay {
         return false;
     }
 
-    void WaitForPendingOperations() {
-        DX12Hook::g_command_queue->Signal(g_fence, ++g_fence_last_signaled);
+    void WaitForGPU() {
+        DX12Hook::g_command_queue->Signal(g_fence.Get(), ++g_fence_last_signaled);
         g_fence->SetEventOnCompletion(g_fence_last_signaled, g_fence_event);
         ::WaitForSingleObject(g_fence_event, INFINITE);
     }
 
-    FrameContext* WaitForNextFrameContext() {
-        FrameContext* frame_context = &g_frame_contexts[g_frame_index % g_buffers_count];
-        if (g_fence->GetCompletedValue() < frame_context->fence_value) {
-            g_fence->SetEventOnCompletion(frame_context->fence_value, g_fence_event);
-            ::WaitForSingleObject(g_fence_event, INFINITE);
-        }
-        return frame_context;
-    }
-
-    void CreateRenderTarget() {
-        for (UINT i = 0; i < g_buffers_count; ++i) {
-            ID3D12Resource* back_buffer{};
+    void CreateRenderTargets() {
+        LOG_INFO("Creating render targets...");
+        for (UINT i = 0; i < g_buffer_count; ++i) {
+            ComPtr<ID3D12Resource> back_buffer{};
             DX12Hook::g_swap_chain->GetBuffer(i, IID_PPV_ARGS(&back_buffer));
-            DX12Hook::g_device->CreateRenderTargetView(back_buffer, nullptr, g_frame_contexts[i].render_target_descriptor);
+            DX12Hook::g_device->CreateRenderTargetView(back_buffer.Get(), nullptr, g_frame_contexts[i].render_target_descriptor);
             g_frame_contexts[i].render_target = back_buffer;
         }
     }
 
-    void ReleaseRenderTarget() {
-        for (UINT i = 0; i < g_buffers_count; ++i) {
-            if (g_frame_contexts[i].render_target) {
-                g_frame_contexts[i].render_target->Release();
-                g_frame_contexts[i].render_target = nullptr;
-            }
+    void ReleaseRenderTargets() {
+        LOG_INFO("Releasing render targets...");
+        for (UINT i = 0; i < g_buffer_count; ++i) {
+            g_frame_contexts[i].render_target.Reset();
             g_frame_contexts[i].fence_value = 0;
         }
     }
 
-    bool InitializeImGui() {
+    void Cleanup() {
+        LOG_INFO("Cleaning up overlay...");
+        if (g_frame_contexts) {
+            for (UINT i = 0; i < g_buffer_count; ++i) {
+                g_frame_contexts[i].command_allocator.Reset();
+            }
+
+            delete[] g_frame_contexts;
+            g_frame_contexts = nullptr;
+        }
+
+        g_command_list.Reset();
+        g_rtv_heap.Reset();
+        g_srv_heap.Reset();
+        g_fence.Reset();
+        if (g_fence_event) { CloseHandle(g_fence_event); g_fence_event = nullptr; }
+    }
+
+    void ShutdownImGui() {
+        ImGui_ImplDX12_Shutdown();
+        ImGui_ImplWin32_Shutdown();
+    }
+
+    void InitializeImGuiBackend(HWND hwnd) {
+        ImGui_ImplWin32_Init(hwnd);
+        ImGui_ImplDX12_Init(
+            DX12Hook::g_device.Get(),
+            g_buffer_count,
+            g_rtv_format,
+            g_srv_heap.Get(),
+            g_srv_heap->GetCPUDescriptorHandleForHeapStart(),
+            g_srv_heap->GetGPUDescriptorHandleForHeapStart()
+        );
+        ImGui_ImplDX12_CreateDeviceObjects();
+    }
+
+    void InitializeImGui() {
+        LOG_INFO("Initializing ImGui...");
         ImGui_ImplWin32_EnableDpiAwareness();
-        float main_scale = ImGui_ImplWin32_GetDpiScaleForMonitor(::MonitorFromPoint(POINT{ 0, 0 }, MONITOR_DEFAULTTOPRIMARY));
 
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
 
         ImGuiIO& io = ImGui::GetIO();
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard | ImGuiConfigFlags_NavEnableGamepad;
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
         ImGui::StyleColorsDark();
 
-        ImGuiStyle& style = ImGui::GetStyle();
-        style.ScaleAllSizes(main_scale);       
-        style.FontScaleDpi = main_scale;
+        if (g_imgui_init_callback)
+            g_imgui_init_callback();
 
-        ImGui_ImplWin32_Init(g_hwnd);
-        ImGui_ImplDX12_Init(
-            DX12Hook::g_device.Get(),
-            g_buffers_count,
-            g_rtv_format,
-            g_srv_heap,
-            g_srv_heap->GetCPUDescriptorHandleForHeapStart(),
-            g_srv_heap->GetGPUDescriptorHandleForHeapStart()
-        );
         io.Fonts->Build();
-        ImGui_ImplDX12_CreateDeviceObjects();
-
-        return true;
+        InitializeImGuiBackend(g_hwnd);
     }
 
-    void Initialize() {
+    bool Initialize() {
+        LOG_INFO("Initializing overlay... Attempt: %d", g_attempts_to_init);
+
         DXGI_SWAP_CHAIN_DESC1 swap_chain_desc1{};
-        if (FAILED(DX12Hook::g_swap_chain->GetDesc1(&swap_chain_desc1))) return;
-        g_buffers_count = swap_chain_desc1.BufferCount;
+        if (FAILED(DX12Hook::g_swap_chain->GetDesc1(&swap_chain_desc1))) {
+            LOG_ERROR("Failed to get swapchain description");
+            return false;
+        }
+        g_buffer_count = swap_chain_desc1.BufferCount;
         g_rtv_format = swap_chain_desc1.Format;
         DX12Hook::g_swap_chain->GetHwnd(&g_hwnd);
 
-        g_frame_contexts = new FrameContext[g_buffers_count]{};
+        g_frame_contexts = new FrameContext[g_buffer_count]{};
 
         {
             D3D12_DESCRIPTOR_HEAP_DESC desc{};
             desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-            desc.NumDescriptors = g_buffers_count;
+            desc.NumDescriptors = g_buffer_count;
             desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
             desc.NodeMask = 1;
-            if (FAILED(DX12Hook::g_device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&g_rtv_heap)))) 
-                return;
+            if (FAILED(DX12Hook::g_device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&g_rtv_heap)))) {
+                LOG_ERROR("Failed to create RTV descriptor heap");
+                return false;
+            }
 
             SIZE_T increment = DX12Hook::g_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
             D3D12_CPU_DESCRIPTOR_HANDLE handle = g_rtv_heap->GetCPUDescriptorHandleForHeapStart();
-            for (UINT i = 0; i < g_buffers_count; i++) {
+            for (UINT i = 0; i < g_buffer_count; i++) {
                 g_frame_contexts[i].render_target_descriptor = handle;
                 handle.ptr += increment;
             }
@@ -156,32 +187,33 @@ namespace Overlay {
             desc.NumDescriptors = 64;
             desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
             desc.NodeMask = 1;
-            if (FAILED(DX12Hook::g_device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&g_srv_heap)))) 
-                return;
+            if (FAILED(DX12Hook::g_device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&g_srv_heap))))
+                return false;
         }
 
-        for (UINT i = 0; i < g_buffers_count; ++i) {
-            if (FAILED(DX12Hook::g_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&g_frame_contexts[i].command_allocator)))) 
-                return;
+        for (UINT i = 0; i < g_buffer_count; ++i) {
+            if (FAILED(DX12Hook::g_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&g_frame_contexts[i].command_allocator))))
+                return false;
         }
 
-        if (FAILED(DX12Hook::g_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, g_frame_contexts[0].command_allocator, nullptr, IID_PPV_ARGS(&g_command_list)))) 
-            return;
+        if (FAILED(DX12Hook::g_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, g_frame_contexts[0].command_allocator.Get(), nullptr, IID_PPV_ARGS(&g_command_list))))
+            return false;
 
         if (FAILED(g_command_list->Close())) 
-            return;
+            return false;
 
-        if (FAILED(DX12Hook::g_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&g_fence)))) 
-            return;
+        if (FAILED(DX12Hook::g_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&g_fence))))
+            return false;
 
         g_fence_event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-        if (!g_fence_event) return;
+        if (!g_fence_event) return false;
 
-        CreateRenderTarget();
+        CreateRenderTargets();
         InitializeImGui();
 
         g_is_initialized = true;
-        return;
+        LOG_INFO("Overlay initialized successfully");
+        return true;
     }
 
     void Render() {
@@ -193,64 +225,75 @@ namespace Overlay {
 
         ImGui::Render();
 
-        FrameContext* frame_context = WaitForNextFrameContext();
         UINT back_buffer_idx = DX12Hook::g_swap_chain->GetCurrentBackBufferIndex();
+        FrameContext* frame_context = &g_frame_contexts[back_buffer_idx];
+        if (g_fence->GetCompletedValue() < frame_context->fence_value) {
+            g_fence->SetEventOnCompletion(frame_context->fence_value, g_fence_event);
+            ::WaitForSingleObject(g_fence_event, INFINITE);
+        }
+
         frame_context->command_allocator->Reset();
 
         D3D12_RESOURCE_BARRIER barrier = {};
         barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
         barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-        barrier.Transition.pResource = g_frame_contexts[back_buffer_idx].render_target;
+        barrier.Transition.pResource = g_frame_contexts[back_buffer_idx].render_target.Get();
         barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
         barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
         barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 
-        g_command_list->Reset(frame_context->command_allocator, nullptr);
+        ID3D12DescriptorHeap* heaps[] = { g_srv_heap.Get() };
+        g_command_list->Reset(frame_context->command_allocator.Get(), nullptr);
         g_command_list->ResourceBarrier(1, &barrier);
         g_command_list->OMSetRenderTargets(1, &g_frame_contexts[back_buffer_idx].render_target_descriptor, FALSE, nullptr);
-        g_command_list->SetDescriptorHeaps(1, &g_srv_heap);
-        ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), g_command_list);
+        g_command_list->SetDescriptorHeaps(1, heaps);
+        ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), g_command_list.Get());
 
         barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
         barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
         g_command_list->ResourceBarrier(1, &barrier);
         g_command_list->Close();
 
-        DX12Hook::g_command_queue->ExecuteCommandLists(1, (ID3D12CommandList* const*)&g_command_list);
-        DX12Hook::g_command_queue->Signal(g_fence, ++g_fence_last_signaled);
+        ID3D12CommandList* lists[] = { g_command_list.Get() };
+        DX12Hook::g_command_queue->ExecuteCommandLists(1, lists);
+        DX12Hook::g_command_queue->Signal(g_fence.Get(), ++g_fence_last_signaled);
         frame_context->fence_value = g_fence_last_signaled;
-        g_frame_index++;
     }
 
     void OnPresent(IDXGISwapChain* swapChain, UINT syncInterval, UINT flags) {
         if (!DX12Hook::g_swap_chain || !DX12Hook::g_device || !DX12Hook::g_command_queue) return;
 
-        if (!g_is_initialized) {
-            Initialize();
-        }
+        if (!DX12Hook::g_is_resizing) {
+            if (!g_is_initialized && g_attempts_to_init < max_attempts_to_init) {
+                if (!Initialize()) {
+                    Cleanup();
+                    ++g_attempts_to_init;
+                }
+            }
 
-        if (g_is_initialized) {
-            Render();
+            if (g_is_initialized) {
+                Render();
+            }
         }
     }
 
     void BeforeResizeBuffers(IDXGISwapChain* swapChain, UINT bufferCount, UINT width, UINT height, DXGI_FORMAT newFormat, UINT swapChainFlags) {
+        LOG_INFO("Resizing buffers... (%ux%u fmt=%u)", width, height, newFormat);
+
         if (!DX12Hook::g_swap_chain || !DX12Hook::g_device || !DX12Hook::g_command_queue) return;
 
         if (g_is_initialized) {
-            g_is_initialized = false;
-            WaitForPendingOperations();
-            ImGui_ImplDX12_Shutdown();
-            ImGui_ImplWin32_Shutdown();
-            ReleaseRenderTarget();
+            WaitForGPU();
+            ShutdownImGui();
+            ReleaseRenderTargets();
         }
     }
 
     void AfterResizeBuffers(IDXGISwapChain* swapChain, UINT bufferCount, UINT width, UINT height, DXGI_FORMAT newFormat, UINT swapChainFlags) {
         if (!DX12Hook::g_swap_chain || !DX12Hook::g_device || !DX12Hook::g_command_queue) return;
 
-        if (!g_is_initialized) {
-            g_buffers_count = bufferCount;
+        if (g_is_initialized) {
+            g_buffer_count = bufferCount;
             g_rtv_format = newFormat;
 
             if (DX12Hook::g_swap_chain)
@@ -259,21 +302,13 @@ namespace Overlay {
             if (FAILED(swapChain->QueryInterface(IID_PPV_ARGS(&DX12Hook::g_swap_chain))))
                 return;
 
-            CreateRenderTarget();
+            CreateRenderTargets();
 
             DX12Hook::g_swap_chain->GetHwnd(&g_hwnd);
-            ImGui_ImplWin32_Init(g_hwnd);
-            ImGui_ImplDX12_Init(
-                DX12Hook::g_device.Get(),
-                g_buffers_count,
-                g_rtv_format,
-                g_srv_heap,
-                g_srv_heap->GetCPUDescriptorHandleForHeapStart(),
-                g_srv_heap->GetGPUDescriptorHandleForHeapStart()
-            );
-            ImGui_ImplDX12_CreateDeviceObjects();
-            g_is_initialized = true;
+            InitializeImGuiBackend(g_hwnd);
         }
+
+        LOG_INFO("Buffer resizing completed");
     }
 
     void OnExecuteCommandLists(ID3D12CommandQueue* commandQueue, UINT numCommandLists, ID3D12CommandList* const* ppCommandLists) {}
@@ -286,6 +321,8 @@ namespace Overlay {
     }
 
     void UninitializeOverlay() {
+        LOG_INFO("Uninitializing overlay...");
+
         DX12Hook::g_presentCallback = nullptr;
         DX12Hook::g_beforeResizeBuffersCallback = nullptr;
         DX12Hook::g_afterResizeBuffersCallback = nullptr;
@@ -293,30 +330,13 @@ namespace Overlay {
 
         if (g_is_initialized) {
             g_is_initialized = false;
-            WaitForPendingOperations();
-            ImGui_ImplDX12_Shutdown();
-            ImGui_ImplWin32_Shutdown();
+            WaitForGPU();
+            ShutdownImGui();
             ImGui::DestroyContext();
 
-            ReleaseRenderTarget();
+            ReleaseRenderTargets();
         }
 
-        if (g_frame_contexts) {
-            for (UINT i = 0; i < g_buffers_count; ++i) {
-                if (g_frame_contexts[i].command_allocator) {
-                    g_frame_contexts[i].command_allocator->Release();
-                    g_frame_contexts[i].command_allocator = nullptr;
-                }
-            }
-
-            delete[] g_frame_contexts;
-            g_frame_contexts = nullptr;
-        }
-
-        if (g_command_list) { g_command_list->Release(); g_command_list = nullptr; }
-        if (g_rtv_heap) { g_rtv_heap->Release(); g_rtv_heap = nullptr; }
-        if (g_srv_heap) { g_srv_heap->Release(); g_srv_heap = nullptr; }
-        if (g_fence) { g_fence->Release(); g_fence = nullptr; }
-        if (g_fence_event) { CloseHandle(g_fence_event); g_fence_event = nullptr; }
+        Cleanup();
     }
 }
