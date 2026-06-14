@@ -31,6 +31,13 @@ class CameraStateManager {
 	ConVar<float> interpolationTime{ "camera_state_manager", "interpolation_time", 3.0f };
 
 public:
+	bool IsInterpolating() const { return isInterpolating; }
+	Input::ReleasedNumkeys GetSlotOrder() const { return slotOrder; }
+	size_t GetInterval() const { return interval; }
+	float GetTime() const { return time; }
+	float GetInterpolationTime() const { return interpolationTime; }
+	void SetInterpolationTimeFromUI(float value) { interpolationTime.SetValueFromUI(value); }
+
 	void SaveState(GameData::Camera* camera, int slot, const EulerAngles& yawPitchRoll) {
 		if (slot < 0 || slot >= MAX_SLOTS) return;
 		LOG_INFO("Saved slot %d", slot);

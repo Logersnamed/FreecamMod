@@ -18,6 +18,7 @@ class HookManager {
     std::vector<Hook> hooks;
     bool isInitialized = false;
 
+    // todo: move it outside hookmanager
     DaytimeUpdateCave daytimeUpdateCave;
 
 public:

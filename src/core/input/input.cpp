@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+#include "gui/overlay.h"
 #include "utils/debug.h"
 #include "utils/types.h"
 
@@ -12,24 +13,39 @@ Input::Input() {
 LRESULT __stdcall Input::hkWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     instance->UpdateKeyboard(hWnd, uMsg, wParam, lParam);
 
+    if (Overlay::ImGuiWndProc(hWnd, uMsg, wParam, lParam)) return 0;
+
     return CallWindowProcW((WNDPROC)Input::origWndProc, hWnd, uMsg, wParam, lParam);
 }
 
 UINT WINAPI Input::hkGetRawInputData(HRAWINPUT hRawInput, UINT uiCommand, LPVOID pData, PUINT pcbSize, UINT cbSizeHeader) {
-    UINT orig = origGetRawInputData(hRawInput, uiCommand, pData, pcbSize, cbSizeHeader);
+    UINT result = origGetRawInputData(hRawInput, uiCommand, pData, pcbSize, cbSizeHeader);
 
-    if (instance->isShouldGetInput) {
-        if (orig != (UINT)-1 && uiCommand == RID_INPUT && pData) {
-            RAWINPUT* raw = (RAWINPUT*)pData;
+    if (result == (UINT)-1 || uiCommand != RID_INPUT || !pData)
+        return result;
 
-            if (raw->header.dwType == RIM_TYPEMOUSE) {
-                instance->mouseDelta.x += raw->data.mouse.lLastX;
-                instance->mouseDelta.y += raw->data.mouse.lLastY;
-            }
+    RAWINPUT* raw = (RAWINPUT*)pData;
+    ImGuiIO io{};
+    if (Overlay::IsInitialized()) io = ImGui::GetIO();
+
+    if (raw->header.dwType == RIM_TYPEMOUSE) {
+        if (instance->isShouldGetInput) {
+            instance->mouseDelta.x += raw->data.mouse.lLastX;
+            instance->mouseDelta.y += raw->data.mouse.lLastY;
+        }
+
+        if (Overlay::IsInitialized() && io.WantCaptureMouse) {
+            raw->data.mouse.usButtonFlags = 0;
+            raw->data.mouse.lLastX = 0;
+            raw->data.mouse.lLastY = 0;
         }
     }
-    
-    return orig;
+
+    if (Overlay::IsInitialized() && raw->header.dwType == RIM_TYPEKEYBOARD && io.WantCaptureKeyboard) {
+        raw->data.keyboard.VKey = 0xFF;
+    }
+
+    return result;
 }
 
 bool Input::HookWndProc(HWND hWnd) {

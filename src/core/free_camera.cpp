@@ -39,6 +39,8 @@ void FreeCamera::OnConfigReload() {
 }
 
 void FreeCamera::Update(GameData::GameRend* gameRend, float deltaTime) {
+    m_gameRend = gameRend;
+
     RestorePendingOptions();
     if (!gameRend->IsFreecamEnabled()) {
         if (isEnabled) {

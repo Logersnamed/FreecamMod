@@ -5,6 +5,7 @@
 #include <ctime>
 #include <string>
 #include <fstream>
+#include <vector>
 #include <filesystem>
 #include <intrin.h>
 
@@ -36,10 +37,13 @@ public:
         return p ? p + 1 : path;
     }
 
+    static inline std::vector<std::string> GetLogLines() { return logLines; }
+
 private:
     static void Print(const char* level, const char* fmt, va_list args);
 
     static inline std::ofstream logFile;
+    static inline std::vector<std::string> logLines;
 };
 
 struct ScopeProfiler {

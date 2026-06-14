@@ -4,6 +4,7 @@
 #include "MinHook.h"
 #include "ModUtils.h"
 
+#include "core/config/con_var.h"
 #include "utils/memory.h"
 #include "utils/debug.h"
 
@@ -27,10 +28,16 @@ class DaytimeUpdateCave : public CodeCave {
     bool* isCycleWeatherTime = nullptr;
     int* cycleSpeed = nullptr;
 
+    ConVar<bool> isFreecamOnly{ "features_work_only_in_freecam", "cycle_weather_time", true };
+
 public:
+    bool IsFreecamOnly() const { return isFreecamOnly; }
+    int* GetCycleSpeedPtr() const { return cycleSpeed; }
+
     bool IsCycleWeatherTime() { return isCycleWeatherTime ? *isCycleWeatherTime : false; }
     void SetCycleWeatherTime(bool enabled) { if (isCycleWeatherTime) *isCycleWeatherTime = enabled; }
     void ToggleCycleWeatherTime() { if (isCycleWeatherTime) *isCycleWeatherTime = !(*isCycleWeatherTime); }
+    void DisableCycleWeatherTime() { if (isCycleWeatherTime) *isCycleWeatherTime = false; }
 
     void SaveOriginalBytes(uintptr_t hkAddress) override;
     uintptr_t GetDestinationAddress() override;

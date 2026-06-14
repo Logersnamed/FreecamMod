@@ -7,9 +7,12 @@
 
 #include "utils/debug.h"
 
+#include "imgui.h"
+
 class IConVar {
 public:
     static inline std::vector<IConVar*> allConVars;
+    static inline bool anyChangeByUi = false;
 
     virtual ~IConVar() = default;
 
@@ -17,6 +20,12 @@ public:
     virtual const char* GetSection() const = 0;
     virtual void SetValueFromString(const std::string& value) = 0;
     virtual std::string GetDefaultValueString() const = 0;
+    virtual std::string GetValueString() const = 0;
+
+    virtual bool WasChangedByUI() const = 0;
+    virtual bool ConsumeWasChangedByUI() = 0;
+
+    virtual void Render() = 0;
 };
 
 template<typename T>
@@ -29,6 +38,8 @@ class ConVar : public IConVar {
 
     std::optional<T> minValue{};
     std::optional<T> maxValue{};
+
+    bool wasChangedByUI = false;
 
 public:
     ConVar(
@@ -60,6 +71,11 @@ public:
         value = newValue;
     }
 
+    void SetValueFromUI(T newValue) {
+        SetValue(newValue);
+        wasChangedByUI = true;
+    }
+
     void SetValueFromString(const std::string& str) override {
 		T parsedValue{};
 
@@ -82,6 +98,66 @@ public:
         }
         else {
             return std::to_string(defaultValue);
+        }
+    }
+
+    std::string GetValueString() const override {
+        if constexpr (std::is_same_v<T, bool>) {
+            return value ? "true" : "false";
+        }
+        else {
+            return std::to_string(value);
+        }
+    }
+
+    bool WasChangedByUI() const override {
+        return wasChangedByUI;
+    }
+
+    bool ConsumeWasChangedByUI() override {
+        bool was = wasChangedByUI;
+        wasChangedByUI = false;
+        return was;
+    }
+
+    void Render() override {
+        if constexpr (std::is_same_v<T, bool>) {
+            bool v = value;
+            if (ImGui::Checkbox(name, &v)) {
+                SetValueFromUI(v);
+            }
+        }
+        else if constexpr (std::is_same_v<T, int>) {
+            int v = value;
+            if (minValue && maxValue) {
+                if (ImGui::SliderInt(name, &v, *minValue, *maxValue)) {
+                    SetValueFromUI(v);
+                }
+            }
+            else if (minValue) {
+                if (ImGui::InputInt(name, &v)) {
+                    if (v < *minValue) v = *minValue;
+                    SetValueFromUI(v);
+                }
+            }
+            else {
+                if (ImGui::InputInt(name, &v)) {
+                    SetValueFromUI(v);
+                }
+            }
+        }
+        else if constexpr (std::is_same_v<T, float>) {
+            float v = value;
+            if (minValue && maxValue) {
+                if (ImGui::SliderFloat(name, &v, *minValue, *maxValue)) {
+                    SetValueFromUI(v);
+                }
+            }
+            else {
+                if (ImGui::InputFloat(name, &v)) {
+                    SetValueFromUI(v);
+                }
+            }
         }
     }
 };

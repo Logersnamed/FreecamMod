@@ -8,6 +8,7 @@
 
 #include "hook/hook_manager.h"
 #include "core/game_data_manager.h"
+#include "core/config/con_var.h"
 
 class Speedhack {
 	double lastSpeed = 0.5;
@@ -17,6 +18,8 @@ class Speedhack {
 	float savedFrametimeLimit = 0;
 
 	bool isInitialized = false;
+
+	ConVar<bool> isFreecamOnly{ "features_work_only_in_freecam", "speehack", true };
 
 public:
 	bool Initialize(HookManager &hookManager) {
@@ -42,6 +45,8 @@ public:
 		isInitialized = true;
 		return true;
 	}
+
+	bool IsFreecamOnly() const { return isFreecamOnly; }
 
 	float GetFrametimeLimit() const {
 		if (frametimeLimit) return *frametimeLimit;

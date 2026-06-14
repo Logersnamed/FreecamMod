@@ -69,6 +69,14 @@ public:
     bool IsEnabled() const { return isEnabled; }
     EulerAngles& GetEuler() { return rotation; }
 
+
+    constexpr float GetMinFov() const { return MIN_FOV; }
+    constexpr float GetMaxFov() const { return MAX_FOV; }
+    float GetSpeed() const { return speed; }
+    void SetSpeed(float newSpeed) { speed = std::max<float>(newSpeed, 0.0f); }
+
+    GameData::GameRend* GetGameRend() const { return m_gameRend; }
+    FrameStepper& GetFrameStepper() { return frameStepper; }
     PathRecorder& GetPathRecorder() { return pathRecorder; }
     CameraStateManager& GetCameraStateManager() { return cameraStateManager; }
     void StepFrames() { frameStepper.StepFrames(); }
@@ -83,6 +91,8 @@ private:
     FrameStepper frameStepper{ gameStateManager };
     PathRecorder pathRecorder{};
     CameraStateManager cameraStateManager{};
+
+    GameData::GameRend* m_gameRend{};
 
     float speed = 10.0f;
     float3 velocity = float3(0);
@@ -113,7 +123,6 @@ private:
     void CopyRotation(GameData::Camera* toCamera, GameData::Camera* fromCamera);
     float ComputeZoomFactor(float fov);
 
-    void SetSpeed(float newSpeed) { speed = std::max<float>(newSpeed, 0.0f); }
     void SetFov(GameData::Camera* cam, float newFov) { cam->fov = std::clamp<float>(newFov, minFov, maxFov); }
 
     struct RotationCache {
