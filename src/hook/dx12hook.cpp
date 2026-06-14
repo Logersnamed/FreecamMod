@@ -1,18 +1,22 @@
 #include "dx12hook.h"
 
+#include "utils/debug.h"
+
 namespace DX12Hook {
-    inline void* g_executeCommandLists{};
-    inline void* g_present{};
-    inline void* g_resizeBuffers{};
+    void* g_executeCommandLists{};
+    void* g_present{};
+    void* g_resizeBuffers{};
     
     using present_t = HRESULT(__stdcall*)(IDXGISwapChain*, UINT, UINT);
     using resize_buffers_t = HRESULT(__stdcall*)(IDXGISwapChain*, UINT, UINT, UINT, DXGI_FORMAT, UINT);
     using execute_command_lists_t = void(__stdcall*)(ID3D12CommandQueue*, UINT, ID3D12CommandList* const*);
+
+    present_t g_origPresent{};
+    resize_buffers_t  g_origResizeBuffers{};
+    execute_command_lists_t g_origExecuteCommandLists{};
     
-    inline present_t               g_origPresent{};
-    inline resize_buffers_t        g_origResizeBuffers{};
-    inline execute_command_lists_t g_origExecuteCommandLists{};
-    
+    bool g_after_first_present = false;
+
     class DummyHWND {
         HWND hwnd{};
     public:
@@ -25,7 +29,8 @@ namespace DX12Hook {
     
     inline bool IsFailed(HRESULT result, LPCWSTR error_msg) {
         if (FAILED(result)) {
-            MessageBoxW(NULL, error_msg, L"DX12Hook error", MB_OK);
+            //MessageBoxW(NULL, error_msg, L"DX12Hook error", MB_OK);
+            LOG_ERROR("DX12Hook error: %ls", error_msg);
             return true;
         }
         return false;
@@ -38,6 +43,7 @@ namespace DX12Hook {
     }
     
     inline HRESULT __stdcall hkPresent(IDXGISwapChain* swapChain, UINT syncInterval, UINT flags) {
+        g_after_first_present = true;
         if (!g_device) swapChain->GetDevice(IID_PPV_ARGS(&g_device));
         if (!g_swap_chain) swapChain->QueryInterface(IID_PPV_ARGS(&g_swap_chain));
         if (g_presentCallback) g_presentCallback(swapChain, syncInterval, flags);
@@ -45,6 +51,8 @@ namespace DX12Hook {
     }
     
     inline HRESULT __stdcall hkResizeBuffers(IDXGISwapChain* swapChain, UINT bufferCount, UINT width, UINT height, DXGI_FORMAT newFormat, UINT swapChainFlags) {
+        g_is_resizing = true;
+
         if (g_beforeResizeBuffersCallback)
             g_beforeResizeBuffersCallback(swapChain, bufferCount, width, height, newFormat, swapChainFlags);
     
@@ -53,11 +61,17 @@ namespace DX12Hook {
         if (g_afterResizeBuffersCallback)
             g_afterResizeBuffersCallback(swapChain, bufferCount, width, height, newFormat, swapChainFlags);
     
+        g_is_resizing = false;
+
         return hr;
     }
     
     inline void __stdcall hkExecuteCommandLists(ID3D12CommandQueue* commandQueue, UINT numCommandLists, ID3D12CommandList* const* ppCommandLists) {
-        if (!g_command_queue) g_command_queue = commandQueue;
+        if (!g_command_queue && g_after_first_present) {
+            g_command_queue = commandQueue;
+        }
+        g_after_first_present = false;
+
         if (g_executeCommandListsCallback) g_executeCommandListsCallback(commandQueue, numCommandLists, ppCommandLists);
         g_origExecuteCommandLists(commandQueue, numCommandLists, ppCommandLists);
     }
@@ -106,6 +120,7 @@ namespace DX12Hook {
     }
 
     bool Initialize() {
+        LOG_INFO("Initializing DX12Hook...");
         ComPtr<ID3D12Device> device = CreateDummyDevice();
         if (!device) return false;
 
@@ -130,11 +145,15 @@ namespace DX12Hook {
     }
 
     void Uninitialize() {
+        LOG_INFO("Uninitializing DX12Hook...");
         MH_DisableHook(g_present);
         MH_DisableHook(g_resizeBuffers);
         MH_DisableHook(g_executeCommandLists);
         MH_RemoveHook(g_present);
         MH_RemoveHook(g_resizeBuffers);
         MH_RemoveHook(g_executeCommandLists);
+        g_command_queue = nullptr;
+        g_swap_chain.Reset();
+        g_device.Reset();
     }
 }

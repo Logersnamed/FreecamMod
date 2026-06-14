@@ -13,9 +13,11 @@
 using Microsoft::WRL::ComPtr;
 
 namespace DX12Hook {
+    inline ID3D12CommandQueue* g_command_queue{};  // must be raw pointer
     inline ComPtr<ID3D12Device> g_device{};
     inline ComPtr<IDXGISwapChain3> g_swap_chain{};
-    inline ComPtr<ID3D12CommandQueue> g_command_queue{};
+
+    inline bool g_is_resizing = false;
 
     using present_callback_t = std::function<void(IDXGISwapChain*, UINT, UINT)>;
     using resize_buffers_callback_t = std::function<void(IDXGISwapChain*, UINT, UINT, UINT, DXGI_FORMAT, UINT)>;
