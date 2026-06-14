@@ -10,7 +10,9 @@
 #include "core/features/path_recorder.h"
 #include "core/game_data_manager.h"
 #include "core/settings_backup.h"
+#include "gui/overlay.h"
 #include "hook/code_cave.h"
+#include "hook/dx12hook.h"
 #include "utils/time.h"
 #include "utils/memory.h"
 #include "utils/types.h"
@@ -37,16 +39,23 @@ bool Freecam::Initialize() {
         return false;
 
     speedhack.Initialize(hookManager);
+    if (!gui.RegisterHooks(hookManager)) return false;
 
     if (!hookManager.EnableAll()) return false;
 
     if (!hookManager.GetDaytimeUpdateCave().Hook(GameDataManager::DaytimeUpdateFunc.address)) return false;
+
+    DX12Hook::Initialize();
+    Overlay::SetImGuiInitCallback([this]() { gui.Initialize(); });
+    Overlay::SetRenderCallback([this]() { gui.Render(); });
+    Overlay::InitializeOverlay();
 
     SettingsBackup::SetFolderPath(config.GetConfigDirPath());
 
     freeCamera.Initialize();
 
     config.AddReloadCallback([this]() { freeCamera.OnConfigReload(); });
+    config.AddReloadCallback([this]() { this->OnConfigReload(); });
 
     return true;
 }
@@ -60,15 +69,22 @@ void Freecam::Run() {
     }
 }
 
-void Freecam::ToggleFreecam(GameData::GameRend* gameRend) {
-    config.Reload();
-    freeCamera.Toggle(gameRend);
-
+void Freecam::OnConfigReload() {
     if (!freeCamera.IsEnabled()) {
-        if (isFreecamOnlySpeedhack) {
+        if (speedhack.IsFreecamOnly()) {
             speedhack.Disable();
         }
+
+        auto& daytimeUpdateCave = hookManager.GetDaytimeUpdateCave();
+        if (daytimeUpdateCave.IsFreecamOnly()) {
+            daytimeUpdateCave.DisableCycleWeatherTime();
+        }
     }
+}
+
+void Freecam::ToggleFreecam(GameData::GameRend* gameRend) {
+    freeCamera.Toggle(gameRend);
+    config.Reload();
 }
 
 void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
@@ -93,14 +109,17 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
     }
 
     // Cycle weather time
-    if (!isFreecamOnlyCycleWeatherTime || (isFreecamOnlyCycleWeatherTime && freeCamera.IsEnabled())) {
-        if (IsJustPressed(CycleWeatherTime)) {
-            hookManager.GetDaytimeUpdateCave().ToggleCycleWeatherTime();
+    if (IsJustPressed(CycleWeatherTime)) {
+        auto& daytimeUpdateCave = hookManager.GetDaytimeUpdateCave();
+        bool isFreecamOnly = daytimeUpdateCave.IsFreecamOnly();
+        if (!isFreecamOnly || (isFreecamOnly && freeCamera.IsEnabled())) {
+            daytimeUpdateCave.ToggleCycleWeatherTime();
         }
     }
 
     // Speedhack
-    if (!isFreecamOnlySpeedhack || (isFreecamOnlySpeedhack && freeCamera.IsEnabled())) {
+    bool isSpeedhackFreecamOnly = speedhack.IsFreecamOnly();
+    if (!isSpeedhackFreecamOnly || (isSpeedhackFreecamOnly && freeCamera.IsEnabled())) {
         if (IsJustPressed(ToggleSpeedhack)) speedhack.IsEnabled() ? speedhack.Disable() : speedhack.Enable();
         if (IsPressed(ScrollSpeedhackModifier) && speedhack.IsEnabled()) speedhack.AddTimeScale(scrollDelta * 0.05f);
         if (IsJustPressed(ResetSpeedhackSpeed)) speedhack.SetTimeScale(1.0);
@@ -200,8 +219,11 @@ void Freecam::Dispose() {
     LOG_INFO("Disposing Freecam...");
     isRunning = false;
 
+    Overlay::UninitializeOverlay();
+    DX12Hook::Uninitialize();
+
     freeCamera.DisableCamera();
-	speedhack.SetTimeScale(1.0f);
+	speedhack.SetTimeScale(1.0);
     hookManager.Shutdown();
     input.UnhookWndProc(ModUtils::muWindow);
     Logger::Shutdown();

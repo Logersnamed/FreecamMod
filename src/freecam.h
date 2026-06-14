@@ -8,6 +8,7 @@
 #include "core/input/action_system.h"
 #include "core/input/input.h"
 #include "core/free_camera.h"
+#include "gui/gui.h"
 
 
 #include "core/config/con_var.h"
@@ -22,6 +23,8 @@ public:
     void Run();
     void Dispose();
 
+    void OnConfigReload();
+
 private:
     HMODULE hModule{};
     FreeCamera freeCamera{};
@@ -30,6 +33,8 @@ private:
     ActionManager actionMgr{};
     HookManager hookManager{};
     Speedhack speedhack{};
+
+    GUI gui{ freeCamera, speedhack, hookManager, config};
 
     bool isRunning = true;
 
@@ -46,7 +51,4 @@ private:
     using updateCameraMatrix_t = void(__fastcall*)(void*, void*, void*, void*);
     static inline updateCameraMatrix_t origUpdateCameraMatrix{};
     static void __fastcall hkUpdateCameraMatrix(GameData::GameRend* gameRend, void* rdx, void* r8, void* r9);
-
-    ConVar<bool> isFreecamOnlyCycleWeatherTime{ "features_work_only_in_freecam", "cycle_weather_time", true };
-    ConVar<bool> isFreecamOnlySpeedhack{ "features_work_only_in_freecam", "speehack", true };
 };

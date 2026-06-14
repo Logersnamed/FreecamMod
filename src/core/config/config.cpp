@@ -62,6 +62,11 @@ void Config::UpdateConVar(IConVar* conVar) {
     const char* section = conVar->GetSection();
     const char* name = conVar->GetName();
 
+    if (conVar->ConsumeWasChangedByUI()) {
+        ini[section][name] = conVar->GetValueString().c_str();
+        return;
+    }
+
     if (ini.has(section)) {
         auto& collection = ini[section];
 

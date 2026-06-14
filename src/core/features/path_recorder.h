@@ -117,6 +117,9 @@ public:
     bool IsRecording() const { return isRecording; }
     bool IsPlaying() const { return isPlaying; }
 
+    int GetFramesRecorded() const { return framesRecorded; }
+    int GetFramesPlayed() const { return framesPlayed; }
+
     void RecordFrame(const GameData::Camera* camera) {
         positions.Record(framesRecorded, camera->matrix.position());
         rotations.Record(framesRecorded, Quaternion::fromRotationMatrix(camera->matrix.rotation()));

@@ -10,8 +10,11 @@ void Logger::Print(const char* level, const char* fmt, va_list args) {
     char buffer[2048];
     vsnprintf(buffer, sizeof(buffer), fmt, args);
 
+    std::string line = std::format("[{}] {}", level, buffer);
+    logLines.push_back(line);
+
     if (logFile.is_open()) {
-        logFile << "[" << level << "] " << buffer << std::endl;
+        logFile << line << '\n';
         logFile.flush();
     }
 }

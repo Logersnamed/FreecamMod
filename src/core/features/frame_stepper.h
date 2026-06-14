@@ -12,7 +12,7 @@ class FrameStepper {
     bool wasEntitiesFrozen = false;
     bool wasPlayerFrozen = false;
 
-    ConVar<int> step{ "frame_stepper", "step", 1 };
+    ConVar<int> step{ "frame_stepper", "step", 1, 1 };
 
 public:
     FrameStepper(GameStateManager& gameStateMgr) : gameStateManager(gameStateMgr) {}
@@ -52,4 +52,8 @@ public:
     void Reset() {
         framesToStep = 0;
     }
+
+    int GetStep() const { return step; }
+    int GetFramesToStep() const { return framesToStep; }
+    void SetStepFromUI(int value) { step.SetValueFromUI(value); }
 };
