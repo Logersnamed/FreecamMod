@@ -701,6 +701,12 @@ void GUI::SubscribeEvents() {
 }
 
 void GUI::Initialize() {
+    is_visible = showMenuOnStartup;
+
+    static std::string iniPath = (config.GetConfigDirPath() / "imgui.ini").string();
+    ImGui::GetIO().IniFilename = iniPath.c_str();
+    LOG_INFO("Path to imgui.ini: %s", iniPath.c_str());
+
     SubscribeEvents();
     InitializeStyle();
     HandleCursorVisibility();

@@ -95,6 +95,7 @@ class GUI {
     void InitializeStyle();
     void SubscribeEvents();
 
+    ConVar<bool> showMenuOnStartup{ "gui", "show_menu_on_startup", true };
     ConVar<bool> enableNotifications{ "gui", "enable_notifications", true };
     ConVar<bool> notifyFreecam{ "gui", "notify_freecam", false };
     ConVar<bool> notifySpeedhack{ "gui", "notify_speedhack", true };
