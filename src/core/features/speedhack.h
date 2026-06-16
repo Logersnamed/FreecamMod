@@ -9,6 +9,7 @@
 #include "hook/hook_manager.h"
 #include "core/game_data_manager.h"
 #include "core/config/con_var.h"
+#include "core/events.h"
 
 class Speedhack {
 	double lastSpeed = 0.5;
@@ -95,6 +96,8 @@ public:
 		isEnabled = true;
 		savedFrametimeLimit = GetFrametimeLimit();
 		SetTimeScale(lastSpeed);
+
+		EventBus::Emit(Event::ToggleSpeedhack{ .isEnabled = true });
 	}
 
 	void Disable() {
@@ -104,5 +107,7 @@ public:
 		lastSpeed = MS::GetSpeed();
 		SetTimeScale(1.0);
 		SetFrametimeLimit(savedFrametimeLimit);
+
+		EventBus::Emit(Event::ToggleSpeedhack{ .isEnabled = false });
 	}
 };

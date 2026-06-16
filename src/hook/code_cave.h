@@ -5,6 +5,7 @@
 #include "ModUtils.h"
 
 #include "core/config/con_var.h"
+#include "core/events.h"
 #include "utils/memory.h"
 #include "utils/debug.h"
 
@@ -34,9 +35,15 @@ public:
     bool IsFreecamOnly() const { return isFreecamOnly; }
     int* GetCycleSpeedPtr() const { return cycleSpeed; }
 
+    void ToggleCycleWeatherTime() { 
+        if (isCycleWeatherTime) {
+            *isCycleWeatherTime = !(*isCycleWeatherTime);
+            EventBus::Emit(Event::ToggleCycleWeatherTime{ .isEnabled = *isCycleWeatherTime });
+        }
+    }
+
     bool IsCycleWeatherTime() { return isCycleWeatherTime ? *isCycleWeatherTime : false; }
     void SetCycleWeatherTime(bool enabled) { if (isCycleWeatherTime) *isCycleWeatherTime = enabled; }
-    void ToggleCycleWeatherTime() { if (isCycleWeatherTime) *isCycleWeatherTime = !(*isCycleWeatherTime); }
     void DisableCycleWeatherTime() { if (isCycleWeatherTime) *isCycleWeatherTime = false; }
 
     void SaveOriginalBytes(uintptr_t hkAddress) override;

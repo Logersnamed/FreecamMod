@@ -3,6 +3,8 @@
 
 #include "core/config/con_var.h"
 
+#include "core/events.h"
+
 class FrameStepper {
     GameStateManager& gameStateManager;
 
@@ -31,6 +33,8 @@ public:
         }
 
         framesToStep += step + (framesToStep == 0);
+
+        EventBus::Emit(Event::FrameStepped{ .framesStepped = step });
     }
 
     void Update() {

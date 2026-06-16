@@ -9,6 +9,7 @@
 #include "core/game_data/game_data.h"
 #include "core/game_data_manager.h"
 #include "core/settings_backup.h"
+#include "core/events.h"
 #include "utils/types.h"
 #include "utils/debug.h"
 #include "utils/math.h"
@@ -71,6 +72,7 @@ void FreeCamera::Update(GameData::GameRend* gameRend, float deltaTime) {
 
 void FreeCamera::Toggle(GameData::GameRend* rend) {
     rend->IsFreecamEnabled() ? DisableCamera(rend) : EnableCamera(rend);
+    EventBus::Emit(Event::ToggleFreecam{ .isEnabled = isEnabled });
 }
 
 void FreeCamera::EnableCamera(GameData::GameRend* rend) {

@@ -1,82 +1,147 @@
 #include "gui/gui.h"
+#include "core/events.h"
+#include <format>
+
+namespace Layout {
+    constexpr float ITEM_WIDTH = -150.0f;
+    constexpr float BUTTON_WIDTH = 150.0f;
+    constexpr float SMALL_BUTTON_WIDTH = 110.0f;
+
+    inline void RightAlignNext(float buttonWidth) {
+        ImGui::SameLine(ImGui::GetContentRegionAvail().x - buttonWidth);
+    }
+}
+
+class NotificationPopUp {
+    static inline float timeLeft = 0.0f;
+    static inline float duration = 0.0f;
+
+    static inline float fadeTime = 0.0f;
+
+    static inline std::string header{};
+    static inline std::string message{};
+
+    static inline const float PADDING = 20.0f;
+public:
+    static void Notify(std::string head, std::string msg, float time = 1.5f, float fade = 0.3f) {
+        header = std::move(head);
+        message = std::move(msg);
+
+        duration = time + fade;
+        timeLeft = time + fade;
+        fadeTime = fade;
+    }
+
+    static void Render() {
+        if (timeLeft <= 0) return;
+
+        timeLeft -= ImGui::GetIO().DeltaTime;
+
+        float alpha = 1.0f;
+        if (timeLeft < fadeTime) {
+            alpha = std::clamp(timeLeft / fadeTime, 0.0f, 1.0f);
+        }
+
+        ImGuiIO& io = ImGui::GetIO();
+        ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
+
+        const ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImVec2 work_pos = viewport->WorkPos;
+        ImGui::SetNextWindowPos(ImVec2(work_pos.x + PADDING, work_pos.y + PADDING), ImGuiCond_Always);
+        ImGui::SetNextWindowViewport(viewport->ID);
+        window_flags |= ImGuiWindowFlags_NoMove;
+
+        bool p_open = true;
+        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, alpha);
+        if (ImGui::Begin(header.c_str(), &p_open, window_flags)) {
+            ImGui::Text(message.c_str());
+        }
+        ImGui::End();
+        ImGui::PopStyleVar();
+    }
+};
 
 void GUI::InfoTab::Render() {
     if (ImGui::BeginTabItem("Info")) {
         GameData::GameRend* gameRend = freeCamera.GetGameRend();
 
         if (!gameRend) {
+            ImGui::Spacing();
             ImGui::TextDisabled("World isn't loaded.");
             ImGui::EndTabItem();
             return;
         }
 
-        if (gameRend) {
-            bool isFreecamEnabled = freeCamera.IsEnabled();
-            GameData::Camera* activeCamera = isFreecamEnabled ? gameRend->csDebugCam : gameRend->csPersCam1;
+        const bool isFreecamEnabled = freeCamera.IsEnabled();
+        GameData::Camera* activeCamera = isFreecamEnabled ? gameRend->csDebugCam : gameRend->csPersCam1;
 
-            if (activeCamera) {
-                {
-                    float centerOffset = (ImGui::GetFrameHeight() - ImGui::GetFontSize()) * 0.5f;
-                    ImGui::SetCursorPosY(ImGui::GetCursorPosY() + centerOffset);
-
-                    ImGui::PushStyleColor(ImGuiCol_Text, isFreecamEnabled
-                        ? ImVec4(0.4f, 0.9f, 0.4f, 1.0f)
-                        : ImVec4(0.9f, 0.4f, 0.4f, 1.0f));
-                    ImGui::Text(isFreecamEnabled ? "Freecam active" : "Freecam inactive");
-                    ImGui::PopStyleColor();
-
-                    ImGui::SameLine();
-                    ImGui::SetCursorPosX(ImGui::GetContentRegionAvail().x - 140.0f + ImGui::GetCursorPosX());
-                    if (ImGui::Button("Toggle Freecam", ImVec2(140.0f, 0.0f)))
-                        if (gameRend) freeCamera.Toggle(gameRend);
-                }
-
-                ImGui::Separator();
-
-                ImGui::SeparatorText("Camera");
-                ImGui::BeginDisabled(!isFreecamEnabled);
-
-                auto pos = activeCamera->matrix.c3.xyz();
-                if (ImGui::DragFloat3("Position", &pos.x, 0.1f, 0.0f, 0.0f, "%.2f")) {
-                    activeCamera->matrix.c3.x = pos.x;
-                    activeCamera->matrix.c3.y = pos.y;
-                    activeCamera->matrix.c3.z = pos.z;
-                }
-                ImGui::SliderFloat("FOV", &activeCamera->fov, freeCamera.GetMinFov(), freeCamera.GetMaxFov(), "%.2f rad");
-                ImGui::DragFloat("Render Distance", &activeCamera->renderDistance, 10.0f, 0.0f, 0.0f, "%.0f m");
-
-                float speed = freeCamera.GetSpeed();
-                if (ImGui::DragFloat("Speed", &speed, 0.1f, 0.0f, 0.0f, "%.2f"))
-                    freeCamera.SetSpeed(speed);
-
-                ImGui::EndDisabled();
-
-                ImGui::Spacing();
-                ImGui::SeparatorText("Rotation (read-only)");
-                constexpr float radToDeg = 57.29577951308232f;
-                const auto rot = activeCamera->GetEuler();
-                float pitch = rot.pitch * radToDeg;
-                float yaw = rot.yaw * radToDeg;
-                float roll = rot.roll * radToDeg;
-
-                ImGui::BeginDisabled();
-                ImGui::InputFloat("Pitch", &pitch, 0.0f, 0.0f, "%.2f°");
-                ImGui::InputFloat("Yaw", &yaw, 0.0f, 0.0f, "%.2f°");
-                ImGui::InputFloat("Roll", &roll, 0.0f, 0.0f, "%.2f°");
-                ImGui::EndDisabled();
-            }
+        if (!activeCamera) {
+            ImGui::Spacing();
+            ImGui::TextDisabled("No active camera.");
+            ImGui::EndTabItem();
+            return;
         }
 
+        {
+            float centerOffset = (ImGui::GetFrameHeight() - ImGui::GetFontSize()) * 0.5f;
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + centerOffset);
+
+            ImGui::PushStyleColor(ImGuiCol_Text, isFreecamEnabled
+                ? ImVec4(0.4f, 0.9f, 0.4f, 1.0f)
+                : ImVec4(0.9f, 0.4f, 0.4f, 1.0f));
+            ImGui::Text(isFreecamEnabled ? "Freecam active" : "Freecam inactive");
+            ImGui::PopStyleColor();
+
+            Layout::RightAlignNext(Layout::BUTTON_WIDTH);
+            if (ImGui::Button("Toggle Freecam", ImVec2(Layout::BUTTON_WIDTH, 0.0f)))
+                if (gameRend) freeCamera.Toggle(gameRend);
+        }
+
+        ImGui::SeparatorText("Camera");
+        ImGui::PushItemWidth(Layout::ITEM_WIDTH);
+        ImGui::BeginDisabled(!isFreecamEnabled);
+
+        auto pos = activeCamera->matrix.c3.xyz();
+        if (ImGui::DragFloat3("Position", &pos.x, 0.1f, 0.0f, 0.0f, "%.2f")) {
+            activeCamera->matrix.c3.x = pos.x;
+            activeCamera->matrix.c3.y = pos.y;
+            activeCamera->matrix.c3.z = pos.z;
+        }
+        ImGui::SliderFloat("FOV", &activeCamera->fov, freeCamera.GetMinFov(), freeCamera.GetMaxFov(), "%.2f rad");
+        ImGui::DragFloat("Render Distance", &activeCamera->renderDistance, 10.0f, 0.0f, 0.0f, "%.0f m");
+
+        float speed = freeCamera.GetSpeed();
+        if (ImGui::DragFloat("Speed", &speed, 0.1f, 0.0f, 0.0f, "%.2f"))
+            freeCamera.SetSpeed(speed);
+
+        ImGui::EndDisabled();
+
+        ImGui::Spacing();
+        ImGui::SeparatorText("Rotation (read-only)");
+        constexpr float radToDeg = 57.29577951308232f;
+        const auto rot = activeCamera->GetEuler();
+        float pitch = rot.pitch * radToDeg;
+        float yaw = rot.yaw * radToDeg;
+        float roll = rot.roll * radToDeg;
+
+        ImGui::BeginDisabled();
+        ImGui::InputFloat("Pitch", &pitch, 0.0f, 0.0f, "%.2f°");
+        ImGui::InputFloat("Yaw", &yaw, 0.0f, 0.0f, "%.2f°");
+        ImGui::InputFloat("Roll", &roll, 0.0f, 0.0f, "%.2f°");
+        ImGui::EndDisabled();
+
+        ImGui::PopItemWidth();
         ImGui::EndTabItem();
     }
 }
 
 void GUI::FeaturesTab::RenderSpeedhack() {
     if (ImGui::CollapsingHeader("FIX: Speedhack")) {
+        ImGui::PushItemWidth(Layout::ITEM_WIDTH);
         bool isFreecamOnly = speedhack.IsFreecamOnly();
         bool isAvailable = !isFreecamOnly || (isFreecamOnly && freeCamera.IsEnabled());
         ImGui::BeginDisabled(!isAvailable);
-        if (ImGui::Button(speedhack.IsEnabled() ? "Disable" : "Enable")) {
+        if (ImGui::Button(speedhack.IsEnabled() ? "Disable" : "Enable", ImVec2(Layout::SMALL_BUTTON_WIDTH, 0.0f))) {
             speedhack.IsEnabled() ? speedhack.Disable() : speedhack.Enable();
         }
         if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
@@ -94,12 +159,14 @@ void GUI::FeaturesTab::RenderSpeedhack() {
             speedhack.SetTimeScale(timeScale);
         }
 
+        ImGui::PopItemWidth();
         ImGui::Spacing();
     }
 }
 
 void GUI::FeaturesTab::RenderFrameStepper() {
     if (ImGui::CollapsingHeader("Frame stepper")) {
+        ImGui::PushItemWidth(Layout::ITEM_WIDTH);
         int framesToStep = frameStepper.GetFramesToStep();
         int step = frameStepper.GetStep();
 
@@ -110,7 +177,7 @@ void GUI::FeaturesTab::RenderFrameStepper() {
         const int MIN_FRAMES_TO_STOP_STEPPING = 15;
         ImGui::BeginDisabled(!freeCamera.IsEnabled());
         bool canStopStepping = framesToStep && step >= MIN_FRAMES_TO_STOP_STEPPING;
-        if (ImGui::Button(canStopStepping ? "Stop stepping" : "Step frames")) {
+        if (ImGui::Button(canStopStepping ? "Stop stepping" : "Step frames", ImVec2(Layout::SMALL_BUTTON_WIDTH, 0.0f))) {
             canStopStepping ? frameStepper.Reset() : frameStepper.StepFrames();
         }
         ImGui::EndDisabled();
@@ -119,18 +186,21 @@ void GUI::FeaturesTab::RenderFrameStepper() {
             frameStepper.SetStepFromUI(step);
             IConVar::anyChangeByUi = true;
         }
+        ImGui::PopItemWidth();
         ImGui::Spacing();
     }
 }
 
 void GUI::FeaturesTab::RenderCycleWeatherTime() {
     if (ImGui::CollapsingHeader("Cycle Weather Time")) {
+        ImGui::PushItemWidth(Layout::ITEM_WIDTH);
         auto& cave = hookManager.GetDaytimeUpdateCave();
         bool isFreecamOnly = cave.IsFreecamOnly();
         bool isAvailable = !isFreecamOnly || (isFreecamOnly && freeCamera.IsEnabled());
         ImGui::BeginDisabled(!isAvailable);
-        if (ImGui::Button(cave.IsCycleWeatherTime() ? "Stop Cycling" : "Cycle")) {
+        if (ImGui::Button(cave.IsCycleWeatherTime() ? "Stop Cycling" : "Cycle", ImVec2(Layout::SMALL_BUTTON_WIDTH, 0.0f))) {
             cave.ToggleCycleWeatherTime();
+            NotificationPopUp::Notify("Info", cave.IsCycleWeatherTime() ? "Started cycling" : "Stoped cycling");
         }
         if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
             if (!isAvailable) {
@@ -146,6 +216,7 @@ void GUI::FeaturesTab::RenderCycleWeatherTime() {
         if (cycleSpeed) {
             ImGui::DragInt("Cycle speed", cycleSpeed, 1000);
         }
+        ImGui::PopItemWidth();
         ImGui::Spacing();
     }
 
@@ -153,6 +224,7 @@ void GUI::FeaturesTab::RenderCycleWeatherTime() {
 
 void GUI::FeaturesTab::RenderCameraStateManager() {
     if (ImGui::CollapsingHeader("Camera State Manager")) {
+        ImGui::PushItemWidth(Layout::ITEM_WIDTH);
         ImGui::BeginDisabled(!freeCamera.IsEnabled());
         {
             if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
@@ -183,6 +255,7 @@ void GUI::FeaturesTab::RenderCameraStateManager() {
             ImGui::DragInt("Interval", &interval);
             ImGui::EndDisabled();
 
+            ImGui::PopItemWidth();
             ImGui::Spacing();
         }
         ImGui::EndDisabled();
@@ -191,6 +264,7 @@ void GUI::FeaturesTab::RenderCameraStateManager() {
 
 void GUI::FeaturesTab::RenderPathRecorder() {
     if (ImGui::CollapsingHeader("Path recorder")) {
+        ImGui::PushItemWidth(Layout::ITEM_WIDTH);
         ImGui::BeginDisabled(!freeCamera.IsEnabled());
         {
             if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
@@ -206,7 +280,7 @@ void GUI::FeaturesTab::RenderPathRecorder() {
 
             //ImGui::SameLine();
 
-            if (ImGui::Button(pathRecorder.IsRecording() ? "Stop Recording" : "Start Recording")) {
+            if (ImGui::Button(pathRecorder.IsRecording() ? "Stop Recording" : "Start Recording", ImVec2(Layout::BUTTON_WIDTH, 0.0f))) {
                 pathRecorder.IsRecording() ? pathRecorder.EndRecord() : pathRecorder.StartRecord();
             }
 
@@ -218,11 +292,12 @@ void GUI::FeaturesTab::RenderPathRecorder() {
             //ImGui::SameLine();
 
             ImGui::BeginDisabled(framesRecorded < 1);
-            if (ImGui::Button(pathRecorder.IsPlaying() ? "Stop Playing Recording" : "Start Playing Recording")) {
+            if (ImGui::Button(pathRecorder.IsPlaying() ? "Stop Playing" : "Start Playing", ImVec2(Layout::BUTTON_WIDTH, 0.0f))) {
                 pathRecorder.IsPlaying() ? pathRecorder.EndPlay() : pathRecorder.StartPlay();
             }
             ImGui::EndDisabled();
 
+            ImGui::PopItemWidth();
             ImGui::Spacing();
         }
         ImGui::EndDisabled();
@@ -258,14 +333,16 @@ void GUI::ConfigTab::Render() {
             ImGui::PushID(section.c_str());
 
             if (ImGui::CollapsingHeader(section.c_str())) {
+                ImGui::PushItemWidth(Layout::ITEM_WIDTH);
                 for (auto* conVar : conVars) {
                     ImGui::PushID(conVar->GetName());
-
+                    
                     conVar->Render();
                     if (conVar->WasChangedByUI()) IConVar::anyChangeByUi = true;
 
                     ImGui::PopID();
                 }
+                ImGui::PopItemWidth();
             }
 
             ImGui::PopID();
@@ -275,8 +352,6 @@ void GUI::ConfigTab::Render() {
     }
 }
 
-
-
 void GUI::KeyBindsTab::Render() {
     if (ImGui::BeginTabItem("Keybinds")) {
 
@@ -284,10 +359,9 @@ void GUI::KeyBindsTab::Render() {
     }
 }
 
-
 void GUI::LogTab::Render() {
     if (ImGui::BeginTabItem("Log")) {
-        ImGui::BeginChild("Log");
+        ImGui::BeginChild("##log_scroll", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
 
         const auto& lines = Logger::GetLogLines();
 
@@ -323,7 +397,7 @@ bool GUI::RegisterHooks(HookManager& hookManager) {
     );
 }
 
-void GUI::Initialize() {
+void GUI::InitializeStyle() {
     ImGuiStyle& style = ImGui::GetStyle();
 
     // Layout
@@ -452,7 +526,56 @@ void GUI::Initialize() {
     float dpiScale = ImGui_ImplWin32_GetDpiScaleForMonitor(::MonitorFromPoint(POINT{ 0, 0 }, MONITOR_DEFAULTTOPRIMARY));
     style.ScaleAllSizes(dpiScale);
     style.FontScaleDpi = dpiScale;
+}
 
+void GUI::SubscribeEvents() {
+    EventBus::Subscribe<Event::ToggleFreecam>([this](const Event::ToggleFreecam& event) {
+        if (enableNotifications && notifyFreecam)
+            NotificationPopUp::Notify("Info", event.isEnabled ? "Free camera enabled" : "Free camera disabled");
+        });
+    EventBus::Subscribe<Event::ToggleSpeedhack>([this](const Event::ToggleSpeedhack& event) {
+        if (enableNotifications && notifySpeedhack)
+            NotificationPopUp::Notify("Info", event.isEnabled ? "Speedhack enabled" : "Speedhack disabled");
+        });
+    EventBus::Subscribe<Event::FrameStepped>([this](const Event::FrameStepped& event) {
+        if (enableNotifications && notifyFrameStepped)
+            NotificationPopUp::Notify("Info", std::format("{} frames stepped", event.framesStepped));
+        });
+    EventBus::Subscribe<Event::ToggleCycleWeatherTime>([this](const Event::ToggleCycleWeatherTime& event) {
+        if (enableNotifications && notifyCycleWeatherTime)
+            NotificationPopUp::Notify("Info", event.isEnabled ? "Started cycling weather time" : "Finished cycling weather time");
+        });
+    EventBus::Subscribe<Event::Record>([this](const Event::Record& event) {
+        if (enableNotifications && notifyRecord)
+            NotificationPopUp::Notify("Info", event.isEnabled ? "Started recording" : "Finished recording");
+        });
+    EventBus::Subscribe<Event::PlayRecord>([this](const Event::PlayRecord& event) {
+        if (enableNotifications && notifyPlayRecord)
+            NotificationPopUp::Notify("Info", event.isEnabled ? "Started playing recording" : "Finished playing recording");
+        });
+    EventBus::Subscribe<Event::SaveState>([this](const Event::SaveState& event) {
+        if (enableNotifications && notifySaveState)
+            NotificationPopUp::Notify("Info", std::format("Saved state [{}], position = ({:.2f}, {:.2f}, {:.2f})", event.slot, event.pos.x, event.pos.y, event.pos.z));
+        });
+    EventBus::Subscribe<Event::Interpolate>([this](const Event::Interpolate& event) {
+        if (!enableNotifications || !notifyInterpolate) return;
+        std::string slotsStr = "[";
+        for (size_t i = 0; i < event.slots.size(); ++i) {
+            if (i) slotsStr += ", ";
+            slotsStr += std::to_string(event.slots[i]);
+        }
+        slotsStr += "]";
+        NotificationPopUp::Notify("Info", event.isEnabled ? std::format("Interpolation started between states = {}", slotsStr) : "Interpolation ended");
+        });
+    EventBus::Subscribe<Event::StateQueued>([this](const Event::StateQueued& event) {
+        if (enableNotifications && notifyStateQueued)
+            NotificationPopUp::Notify("Info", std::format("State [{}] queued", event.slot));
+        });
+}
+
+void GUI::Initialize() {
+    SubscribeEvents();
+    InitializeStyle();
     HandleCursorVisibility();
 }
 
@@ -485,12 +608,54 @@ void GUI::Render() {
         HandleCursorVisibility();
     }
 
+    bool show_notifications = true;
+    if (show_notifications) {
+        NotificationPopUp::Render();
+    }
+
+
     if (!is_visible)
         return;
 
+    bool isSequencerMode = true;
+    if (isSequencerMode) {
+        ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(viewport->WorkPos);
+        ImGui::SetNextWindowSize(viewport->WorkSize);
+        ImGui::SetNextWindowViewport(viewport->ID);
+
+        ImGuiWindowFlags host_flags =
+            ImGuiWindowFlags_NoTitleBar |
+            ImGuiWindowFlags_NoCollapse |
+            ImGuiWindowFlags_NoResize |
+            ImGuiWindowFlags_NoMove |
+            ImGuiWindowFlags_NoBringToFrontOnFocus |
+            ImGuiWindowFlags_NoNavFocus |
+            ImGuiWindowFlags_NoBackground;
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+
+        ImGui::Begin("##GameDockspace", nullptr, host_flags);
+        ImGui::PopStyleVar(3);
+
+        ImGuiID dockspace_id = ImGui::GetID("GameDockspace");
+        ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f),
+            ImGuiDockNodeFlags_PassthruCentralNode
+        );
+
+        ImGui::End();
+    }
+
+    //ImGui::ShowDemoWindow();
+
+
+    ImGui::SetNextWindowSize(ImVec2(420, 360), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSizeConstraints(ImVec2(340, 280), ImVec2(700, 900));
     ImGui::Begin("Freecam v2.0.0-beta", &is_visible);
 
-    if (ImGui::BeginTabBar("##tab_bar")) {
+    if (ImGui::BeginTabBar("##tabs")) {
         infoTab.Render();
         featuresTab.Render();
         configTab.Render();

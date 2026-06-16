@@ -87,6 +87,19 @@ class GUI {
     static BOOL WINAPI hkSetCursorPos(int X, int Y);
     void HandleCursorVisibility();
     void OnDpiUpdate(); // todo
+    void InitializeStyle();
+    void SubscribeEvents();
+
+    ConVar<bool> enableNotifications{ "gui", "enable_notifications", true };
+    ConVar<bool> notifyFreecam{ "gui", "notify_freecam", false };
+    ConVar<bool> notifySpeedhack{ "gui", "notify_speedhack", true };
+    ConVar<bool> notifyFrameStepped{ "gui", "notify_frame_stepped", true };
+    ConVar<bool> notifyCycleWeatherTime{ "gui", "notify_cycle_weather_time", true };
+    ConVar<bool> notifyRecord{ "gui", "notify_record", true };
+    ConVar<bool> notifyPlayRecord{ "gui", "notify_play_record", true };
+    ConVar<bool> notifySaveState{ "gui", "notify_save_state", true };
+    ConVar<bool> notifyInterpolate{ "gui", "notify_interpolate", true };
+    ConVar<bool> notifyStateQueued{ "gui", "notify_state_queued", false };
 
 public:
     GUI(FreeCamera& freeCamera, Speedhack& speedhack, HookManager& hookManager, Config& config) :

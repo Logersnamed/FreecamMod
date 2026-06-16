@@ -6,6 +6,7 @@
 #include "core/config/con_var.h"
 #include "core/game_data/game_data.h"
 #include "core/input/input.h"
+#include "core/events.h"
 #include "utils/types.h"
 #include "utils/math.h"
 #include "utils/debug.h"
@@ -49,6 +50,8 @@ public:
 			yawPitchRoll,
 			true
 		};
+	
+		EventBus::Emit(Event::SaveState{ slot, camera->matrix.position(), });
 	}
 
 	void StartLerpBetweenSlots(GameData::Camera* camera, Input::ReleasedNumkeys& positionSlots) {
@@ -64,6 +67,8 @@ public:
 		isInterpolating = true;
 		interval = 0;
 		time = 0;
+
+		EventBus::Emit(Event::Interpolate{ .isEnabled = true, .slots = slotOrder });
 	}
 
 	void Update(GameData::Camera* camera, EulerAngles* yawPitchRoll, float dt) {
@@ -81,6 +86,7 @@ public:
 
 			isInterpolating = false;
 			LOG_INFO("Interpolation finished");
+			EventBus::Emit(Event::Interpolate{ .isEnabled = false });
 		}
 		else {
 			const State& startState = stateSlots[slotOrder[interval]];
