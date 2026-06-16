@@ -36,7 +36,10 @@ public:
     static constexpr int NUM_KEYS_COUNT = 10;
     using ReleasedNumkeys = FixedVec<uint8_t, NUM_KEYS_COUNT>;
 
-    Input();
+    Input() { instance = this; }
+    ~Input() { instance = nullptr; }
+
+    static Input* GetInstance() { return instance; }
 
     bool HookWndProc(HWND hWnd);
     void UnhookWndProc(HWND hWnd);

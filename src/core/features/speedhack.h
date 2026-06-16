@@ -12,7 +12,7 @@
 #include "core/events.h"
 
 class Speedhack {
-	double lastSpeed = 0.5;
+	double targetSpeed = 0.5;
 	bool isEnabled = false;
 
 	float* frametimeLimit = nullptr;
@@ -21,6 +21,13 @@ class Speedhack {
 	bool isInitialized = false;
 
 	ConVar<bool> isFreecamOnly{ "features_work_only_in_freecam", "speehack", true };
+
+	void ApplySpeed(double scale) {
+		if (scale <= 1.0) {
+			SetFrametimeLimit(savedFrametimeLimit * scale);
+		}
+		MS::SetSpeed(scale);
+	}
 
 public:
 	bool Initialize(HookManager &hookManager) {
@@ -58,33 +65,37 @@ public:
 		if (frametimeLimit) *frametimeLimit = value;
 	}
 
-	float GetTimeScale() const { 
-		return MS::GetSpeed(); 
+	float GetSpeedhackSpeed() const {
+		return targetSpeed;
 	}
 
-	void SetTimeScale(double scale) {
+	float GetGameSpeed() const {
+		return MS::GetSpeed();
+	}
+
+	void SetSpeed(double scale) {
 		scale = std::clamp(scale, 0.00005, 2.0);
-		if (scale <= 1.0) {
-			SetFrametimeLimit(savedFrametimeLimit * scale);
+		targetSpeed = scale;
+
+		if (isEnabled) {
+			ApplySpeed(targetSpeed);
 		}
-		MS::SetSpeed(scale);
 	}
 
-	void AddTimeScale(double delta) {
+	void AddSpeed(double delta) {
 		float decay = 1.0f;
 		for (float i = 0.1f; i >= 0.0001f; i *= 0.1f) {
 			if (MS::GetSpeed() > i) break;
 			decay *= 0.1f;
 		}
 
-		SetTimeScale(MS::GetSpeed() + delta * decay);
+		SetSpeed(MS::GetSpeed() + delta * decay);
 	}
 
 	bool IsEnabled() const { return isEnabled; }
 
 	void Enable() {
-		if (!isInitialized) return;
-		if (isEnabled) return;
+		if (!isInitialized || isEnabled) return;
 
 		static bool modulesRegistered = false;
 		if (!modulesRegistered) {
@@ -95,7 +106,7 @@ public:
 
 		isEnabled = true;
 		savedFrametimeLimit = GetFrametimeLimit();
-		SetTimeScale(lastSpeed);
+		ApplySpeed(targetSpeed);
 
 		EventBus::Emit(Event::ToggleSpeedhack{ .isEnabled = true });
 	}
@@ -104,8 +115,7 @@ public:
 		if (!isEnabled) return;
 
 		isEnabled = false;
-		lastSpeed = MS::GetSpeed();
-		SetTimeScale(1.0);
+		ApplySpeed(1.0);
 		SetFrametimeLimit(savedFrametimeLimit);
 
 		EventBus::Emit(Event::ToggleSpeedhack{ .isEnabled = false });

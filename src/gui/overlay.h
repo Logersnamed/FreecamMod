@@ -25,6 +25,4 @@ namespace Overlay {
 
 	void SetRenderCallback(render_callback_t callback);
 	void SetImGuiInitCallback(imgui_init_callback_t callback);
-
-	bool ImGuiWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 }

@@ -32,6 +32,23 @@ public:
         onReloadCallbacks.push_back(std::move(callback));
     }
 
+    std::array<Keybind, static_cast<size_t>(ActionType::Count)>& GetKeybinds() {
+        return keybinds;
+    }
+
+    bool GetKeybindString(const Keybind& keybind, std::string* string) {
+        static const char* keybindSection = "keybinds";
+        const char* keybindName = keybind.name;
+
+        if (!ini.has(keybindSection)) return false;
+        auto& collection = ini[keybindSection];
+
+        if (!collection.has(keybindName)) return false;
+        *string = collection[keybindName];
+    
+        return true;
+    }
+
 private:
     ActionManager* actionMgr = nullptr;
     std::vector<std::function<void()>> onReloadCallbacks;
@@ -48,6 +65,7 @@ private:
 
     std::array<Keybind, static_cast<size_t>(ActionType::Count)> keybinds = {
         Keybind{"toggle", Action{ Toggle, { VK_F1 }}},
+        Keybind{"toggle_menu", Action{ ToggleMenu, { VK_END }}},
         Keybind{"reload_config", Action{ ReloadConfig, { VK_F5 }}},
         Keybind{"reset_settings", Action{ ResetSettings, { 'R' }, { VK_CONTROL }}},
         Keybind{"toggle_freeze", Action{ ToggleFreeze, { 'P' }}},

@@ -1,4 +1,5 @@
 #include "gui/overlay.h"
+#include "core/input/input.h"
 #include "utils/debug.h"
 
 #include <wrl.h>
@@ -37,37 +38,6 @@ namespace Overlay {
     bool IsInitialized() { return g_is_initialized; }
     void SetRenderCallback(render_callback_t callback) { g_render_callback = std::move(callback); }
     void SetImGuiInitCallback(imgui_init_callback_t callback) { g_imgui_init_callback = std::move(callback); }
-
-    bool ImGuiWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-        if (!g_is_initialized) return false;
-
-        ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam);
-
-        const auto& io = ImGui::GetIO();
-
-        if (io.WantCaptureMouse) {
-            switch (msg) {
-            case WM_INPUT:
-            case WM_LBUTTONDOWN: case WM_LBUTTONUP:
-            case WM_RBUTTONDOWN: case WM_RBUTTONUP:
-            case WM_MBUTTONDOWN: case WM_MBUTTONUP:
-            case WM_MOUSEWHEEL:
-            case WM_MOUSEMOVE:
-                return true;
-            }
-        }
-
-        if (io.WantCaptureKeyboard) {
-            switch (msg) {
-            case WM_INPUT:
-            case WM_KEYDOWN: case WM_KEYUP:
-            case WM_SYSKEYDOWN: case WM_SYSKEYUP:
-            case WM_CHAR:
-                return true;
-            }
-        }
-        return false;
-    }
 
     void WaitForGPU() {
         DX12Hook::g_command_queue->Signal(g_fence.Get(), ++g_fence_last_signaled);
@@ -261,6 +231,7 @@ namespace Overlay {
         frame_context->fence_value = g_fence_last_signaled;
     }
 
+
     void OnPresent(IDXGISwapChain* swapChain, UINT syncInterval, UINT flags) {
         if (!DX12Hook::g_swap_chain || !DX12Hook::g_device || !DX12Hook::g_command_queue) return;
 
@@ -274,6 +245,9 @@ namespace Overlay {
 
             if (g_is_initialized) {
                 Render();
+
+                Input* instance = Input::GetInstance();
+                if (instance) instance->Reset();
             }
         }
     }

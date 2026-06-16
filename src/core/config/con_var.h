@@ -25,6 +25,8 @@ public:
     virtual bool WasChangedByUI() const = 0;
     virtual bool ConsumeWasChangedByUI() = 0;
 
+    virtual bool IsValueDefault() const = 0;
+    virtual void ResetFromUI() = 0;
     virtual void Render() = 0;
 };
 
@@ -118,6 +120,14 @@ public:
         bool was = wasChangedByUI;
         wasChangedByUI = false;
         return was;
+    }
+
+    bool IsValueDefault() const override { 
+        return value == defaultValue; 
+    }
+
+    void ResetFromUI() override {
+        SetValueFromUI(defaultValue);
     }
 
     void Render() override {

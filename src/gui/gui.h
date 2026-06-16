@@ -60,7 +60,10 @@ class GUI {
     };
 
     class KeyBindsTab {
+        Config& config;
     public:
+        KeyBindsTab(Config& config) : config(config) {}
+
         void Render();
     };
 
@@ -72,10 +75,12 @@ class GUI {
     InfoTab infoTab;
     FeaturesTab featuresTab;
     ConfigTab configTab;
-    KeyBindsTab keyBindsTab{};
+    KeyBindsTab keyBindsTab;
     LogTab logTab{};
 
     Config& config;
+    Input& input;
+    ActionManager& actionMgr;
 
     bool is_visible = true;
 
@@ -102,11 +107,12 @@ class GUI {
     ConVar<bool> notifyStateQueued{ "gui", "notify_state_queued", false };
 
 public:
-    GUI(FreeCamera& freeCamera, Speedhack& speedhack, HookManager& hookManager, Config& config) :
-        config(config),
+    GUI(FreeCamera& freeCamera, Speedhack& speedhack, HookManager& hookManager, Config& config, Input& input, ActionManager& actionMgr) :
+        config(config), input(input), actionMgr(actionMgr),
         infoTab(freeCamera),
         featuresTab(hookManager, freeCamera, speedhack),
-        configTab(config) { instance = this; }
+        configTab(config),
+        keyBindsTab(config) { instance = this; }
 
     ImGuiStyle baseStyle{};
 

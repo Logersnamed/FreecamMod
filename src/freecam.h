@@ -34,7 +34,7 @@ private:
     HookManager hookManager{};
     Speedhack speedhack{};
 
-    GUI gui{ freeCamera, speedhack, hookManager, config};
+    GUI gui{ freeCamera, speedhack, hookManager, config, input, actionMgr };
 
     bool isRunning = true;
 

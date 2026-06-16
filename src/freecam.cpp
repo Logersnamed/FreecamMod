@@ -121,8 +121,8 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
     bool isSpeedhackFreecamOnly = speedhack.IsFreecamOnly();
     if (!isSpeedhackFreecamOnly || (isSpeedhackFreecamOnly && freeCamera.IsEnabled())) {
         if (IsJustPressed(ToggleSpeedhack)) speedhack.IsEnabled() ? speedhack.Disable() : speedhack.Enable();
-        if (IsPressed(ScrollSpeedhackModifier) && speedhack.IsEnabled()) speedhack.AddTimeScale(scrollDelta * 0.05f);
-        if (IsJustPressed(ResetSpeedhackSpeed)) speedhack.SetTimeScale(1.0);
+        if (IsPressed(ScrollSpeedhackModifier) && speedhack.IsEnabled()) speedhack.AddSpeed(scrollDelta * 0.05f);
+        if (IsJustPressed(ResetSpeedhackSpeed)) speedhack.SetSpeed(1.0);
     }
 
     // Free camera only
@@ -206,7 +206,6 @@ void Freecam::Update(GameData::GameRend* gameRend) {
     input.UpdateGamepad();
     ProcessInput(gameRend, deltaTime);
     freeCamera.Update(gameRend, deltaTime);
-    input.Reset();
 }
 
 void __fastcall Freecam::hkUpdateCameraMatrix(GameData::GameRend* gameRend, void* rdx, void* r8, void* r9) {
@@ -223,7 +222,7 @@ void Freecam::Dispose() {
     DX12Hook::Uninitialize();
 
     freeCamera.DisableCamera();
-	speedhack.SetTimeScale(1.0);
+	speedhack.SetSpeed(1.0);
     hookManager.Shutdown();
     input.UnhookWndProc(ModUtils::muWindow);
     Logger::Shutdown();

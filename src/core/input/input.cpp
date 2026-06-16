@@ -7,14 +7,15 @@
 #include "utils/types.h"
 #include "core/events.h"
 
-Input::Input() {
-    instance = this;
-}
+#include "imgui_impl_win32.h"
+
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 LRESULT __stdcall Input::hkWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    instance->UpdateKeyboard(hWnd, uMsg, wParam, lParam);
+    if (Overlay::IsInitialized())
+        ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam);
 
-    if (Overlay::ImGuiWndProc(hWnd, uMsg, wParam, lParam)) return 0;
+    instance->UpdateKeyboard(hWnd, uMsg, wParam, lParam);
 
     return CallWindowProcW((WNDPROC)Input::origWndProc, hWnd, uMsg, wParam, lParam);
 }
@@ -26,24 +27,18 @@ UINT WINAPI Input::hkGetRawInputData(HRAWINPUT hRawInput, UINT uiCommand, LPVOID
         return result;
 
     RAWINPUT* raw = (RAWINPUT*)pData;
-    ImGuiIO io{};
-    if (Overlay::IsInitialized()) io = ImGui::GetIO();
 
     if (raw->header.dwType == RIM_TYPEMOUSE) {
-        if (instance->isShouldGetInput) {
-            instance->mouseDelta.x += raw->data.mouse.lLastX;
-            instance->mouseDelta.y += raw->data.mouse.lLastY;
-        }
-
-        if (Overlay::IsInitialized() && io.WantCaptureMouse) {
+        // Disabling only mouse input for game and freecam when imgui window is hovered
+        if (Overlay::IsInitialized() && ImGui::GetIO().WantCaptureMouse) {
             raw->data.mouse.usButtonFlags = 0;
             raw->data.mouse.lLastX = 0;
             raw->data.mouse.lLastY = 0;
         }
-    }
-
-    if (Overlay::IsInitialized() && raw->header.dwType == RIM_TYPEKEYBOARD && io.WantCaptureKeyboard) {
-        raw->data.keyboard.VKey = 0xFF;
+        else if (instance->isShouldGetInput) {
+            instance->mouseDelta.x += raw->data.mouse.lLastX;
+            instance->mouseDelta.y += raw->data.mouse.lLastY;
+        }
     }
 
     return result;

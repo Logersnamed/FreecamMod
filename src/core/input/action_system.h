@@ -9,6 +9,7 @@
 
 #define ACTION_TYPES \
     X(Toggle) \
+    X(ToggleMenu) \
     X(ReloadConfig) \
     X(ResetSettings) \
     X(ToggleFreeze) \

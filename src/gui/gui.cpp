@@ -12,6 +12,37 @@ namespace Layout {
     }
 }
 
+
+namespace ImGui {
+    // aproach 1 (for some reason removes padding of child's child elements)
+    /*
+    static inline void BeginScrollableArea(const char* str_id) {
+        // tried to remove weird padding from child
+        float padding = ImGui::GetStyle().WindowPadding.x * 0.5f;
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() - padding);
+
+        ImGui::BeginChild(str_id, ImVec2(ImGui::GetContentRegionAvail().x + padding, 0), 0, ImGuiWindowFlags_NoBackground);
+    }
+
+    static inline void EndScrollableArea() {
+        ImGui::EndChild();
+    }
+    */
+
+    // aproach 2 
+    static inline void BeginScrollableArea(const char* str_id) {
+        ImGui::SetCursorPosX(0);
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(ImGui::GetStyle().WindowPadding.x, 0));
+        ImGui::BeginChild(str_id, ImVec2(ImGui::GetWindowWidth(), 0), ImGuiChildFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_NoBackground);
+        ImGui::PopStyleVar();
+    }
+
+    static inline void EndScrollableArea() {
+        ImGui::EndChild();
+    }
+}
+
 class NotificationPopUp {
     static inline float timeLeft = 0.0f;
     static inline float duration = 0.0f;
@@ -63,11 +94,13 @@ public:
 
 void GUI::InfoTab::Render() {
     if (ImGui::BeginTabItem("Info")) {
+        ImGui::BeginScrollableArea("##info_content");
         GameData::GameRend* gameRend = freeCamera.GetGameRend();
 
         if (!gameRend) {
             ImGui::Spacing();
             ImGui::TextDisabled("World isn't loaded.");
+            ImGui::EndScrollableArea();
             ImGui::EndTabItem();
             return;
         }
@@ -78,6 +111,7 @@ void GUI::InfoTab::Render() {
         if (!activeCamera) {
             ImGui::Spacing();
             ImGui::TextDisabled("No active camera.");
+            ImGui::EndScrollableArea();
             ImGui::EndTabItem();
             return;
         }
@@ -113,7 +147,6 @@ void GUI::InfoTab::Render() {
         float speed = freeCamera.GetSpeed();
         if (ImGui::DragFloat("Speed", &speed, 0.1f, 0.0f, 0.0f, "%.2f"))
             freeCamera.SetSpeed(speed);
-
         ImGui::EndDisabled();
 
         ImGui::Spacing();
@@ -131,12 +164,13 @@ void GUI::InfoTab::Render() {
         ImGui::EndDisabled();
 
         ImGui::PopItemWidth();
+        ImGui::EndScrollableArea();
         ImGui::EndTabItem();
     }
 }
 
 void GUI::FeaturesTab::RenderSpeedhack() {
-    if (ImGui::CollapsingHeader("FIX: Speedhack")) {
+    if (ImGui::CollapsingHeader("Speedhack")) {
         ImGui::PushItemWidth(Layout::ITEM_WIDTH);
         bool isFreecamOnly = speedhack.IsFreecamOnly();
         bool isAvailable = !isFreecamOnly || (isFreecamOnly && freeCamera.IsEnabled());
@@ -154,10 +188,15 @@ void GUI::FeaturesTab::RenderSpeedhack() {
         }
         ImGui::EndDisabled();
 
-        float timeScale = speedhack.GetTimeScale();
-        if (ImGui::DragFloat("Time Scale", &timeScale, 0.001)) {
-            speedhack.SetTimeScale(timeScale);
+        float timeScale = speedhack.GetSpeedhackSpeed();
+        if (ImGui::DragFloat("Speedhack speed", &timeScale, 0.001)) {
+            speedhack.SetSpeed(timeScale);
         }
+
+        float gameSpeed = speedhack.GetGameSpeed();
+        ImGui::BeginDisabled();
+        ImGui::DragFloat("Current game speed", &gameSpeed);
+        ImGui::EndDisabled();
 
         ImGui::PopItemWidth();
         ImGui::Spacing();
@@ -306,12 +345,15 @@ void GUI::FeaturesTab::RenderPathRecorder() {
 
 void GUI::FeaturesTab::Render() {
     if (ImGui::BeginTabItem("Features")) {
+        ImGui::BeginScrollableArea("##features_content");
+
         RenderSpeedhack();
-        RenderFrameStepper();
         RenderCycleWeatherTime();
+        RenderFrameStepper();
         RenderCameraStateManager();
         RenderPathRecorder();
 
+        ImGui::EndScrollableArea();
         ImGui::EndTabItem();
     }
 }
@@ -327,6 +369,8 @@ void GUI::ConfigTab::SortConVars() {
 
 void GUI::ConfigTab::Render() {
     if (ImGui::BeginTabItem("Config")) {
+        ImGui::BeginScrollableArea("##config_content");
+
         SortConVars();
 
         for (auto& [section, conVars] : sortedConVars) {
@@ -337,6 +381,34 @@ void GUI::ConfigTab::Render() {
                 for (auto* conVar : conVars) {
                     ImGui::PushID(conVar->GetName());
                     
+                    bool isDefault = conVar->IsValueDefault();
+
+                    // temp solution
+                    if (std::string(conVar->GetName()) == "min_fov") {
+                        auto* floatVar = dynamic_cast<ConVar<float>*>(conVar);
+                        if (floatVar && *floatVar < 0.001f) {
+                            isDefault = true;
+                        }
+                    }
+
+                    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, !isDefault);
+                    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+                    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+                    ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+                    if (ImGui::Button("*", ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight()))) {
+                        conVar->ResetFromUI();
+                    }
+                    ImGui::PopStyleColor();
+                    ImGui::PopStyleColor();
+                    ImGui::PopStyleColor();
+                    ImGui::PopStyleVar();
+
+                    if (!isDefault && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
+                        ImGui::SetTooltip("Reset to default");
+                    }
+
+                    ImGui::SameLine();
+
                     conVar->Render();
                     if (conVar->WasChangedByUI()) IConVar::anyChangeByUi = true;
 
@@ -348,13 +420,68 @@ void GUI::ConfigTab::Render() {
             ImGui::PopID();
         }
 
+        ImGui::EndScrollableArea();
         ImGui::EndTabItem();
     }
 }
 
 void GUI::KeyBindsTab::Render() {
     if (ImGui::BeginTabItem("Keybinds")) {
+        ImGui::BeginScrollableArea("##keybinds_content");
+        ImGui::PushItemWidth(Layout::ITEM_WIDTH);
 
+        auto& keybinds = config.GetKeybinds();
+
+        static const char* capturingKeybind = nullptr;
+
+        for (auto& keybind : keybinds) {
+            std::string name = keybind.name;
+            std::string keybindStr{};
+            // fix: every frame getting string from file
+            if (!config.GetKeybindString(keybind, &keybindStr)) continue;
+
+            ImGui::PushID(keybind.name);
+
+            ImGui::BeginDisabled();
+            {
+                bool isCapturing = (capturingKeybind == keybind.name);
+
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+
+                std::string capturedKeybindsStr = "";
+                if (isCapturing) {
+                    for (ImGuiKey key = ImGuiKey_NamedKey_BEGIN; key < ImGuiKey_NamedKey_END; key = (ImGuiKey)(key + 1)) {
+                        if (!ImGui::IsKeyDown(key)) continue;
+                        //if (funcs::IsLegacyNativeDupe(key) || !ImGui::IsKeyDown(key)) continue; 
+                        std::string keyName = ImGui::GetKeyName(key);
+                        capturedKeybindsStr += keyName + " ";
+                    }
+                }
+
+                std::string label = isCapturing ? capturedKeybindsStr : keybindStr;
+                if (ImGui::Button(label.c_str(), ImVec2(Layout::BUTTON_WIDTH, 0.0f))) {
+                    capturingKeybind = keybind.name;
+                    ImGui::SetNextFrameWantCaptureKeyboard(true);
+                }
+
+                ImGui::PopStyleColor();
+                ImGui::PopStyleColor();
+            }
+            ImGui::EndDisabled();
+            if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
+                ImGui::SetTooltip("Changing keybind from gui is currently not implemented");
+            }
+
+            ImGui::SameLine();
+
+            ImGui::TextUnformatted(name.c_str());
+
+            ImGui::PopID();
+        }
+
+        ImGui::PopItemWidth();
+        ImGui::EndScrollableArea();
         ImGui::EndTabItem();
     }
 }
@@ -530,35 +657,35 @@ void GUI::InitializeStyle() {
 
 void GUI::SubscribeEvents() {
     EventBus::Subscribe<Event::ToggleFreecam>([this](const Event::ToggleFreecam& event) {
-        if (enableNotifications && notifyFreecam)
+        if (notifyFreecam)
             NotificationPopUp::Notify("Info", event.isEnabled ? "Free camera enabled" : "Free camera disabled");
         });
     EventBus::Subscribe<Event::ToggleSpeedhack>([this](const Event::ToggleSpeedhack& event) {
-        if (enableNotifications && notifySpeedhack)
+        if (notifySpeedhack)
             NotificationPopUp::Notify("Info", event.isEnabled ? "Speedhack enabled" : "Speedhack disabled");
         });
     EventBus::Subscribe<Event::FrameStepped>([this](const Event::FrameStepped& event) {
-        if (enableNotifications && notifyFrameStepped)
+        if (notifyFrameStepped)
             NotificationPopUp::Notify("Info", std::format("{} frames stepped", event.framesStepped));
         });
     EventBus::Subscribe<Event::ToggleCycleWeatherTime>([this](const Event::ToggleCycleWeatherTime& event) {
-        if (enableNotifications && notifyCycleWeatherTime)
+        if (notifyCycleWeatherTime)
             NotificationPopUp::Notify("Info", event.isEnabled ? "Started cycling weather time" : "Finished cycling weather time");
         });
     EventBus::Subscribe<Event::Record>([this](const Event::Record& event) {
-        if (enableNotifications && notifyRecord)
+        if (notifyRecord)
             NotificationPopUp::Notify("Info", event.isEnabled ? "Started recording" : "Finished recording");
         });
     EventBus::Subscribe<Event::PlayRecord>([this](const Event::PlayRecord& event) {
-        if (enableNotifications && notifyPlayRecord)
+        if (notifyPlayRecord)
             NotificationPopUp::Notify("Info", event.isEnabled ? "Started playing recording" : "Finished playing recording");
         });
     EventBus::Subscribe<Event::SaveState>([this](const Event::SaveState& event) {
-        if (enableNotifications && notifySaveState)
+        if (notifySaveState)
             NotificationPopUp::Notify("Info", std::format("Saved state [{}], position = ({:.2f}, {:.2f}, {:.2f})", event.slot, event.pos.x, event.pos.y, event.pos.z));
         });
     EventBus::Subscribe<Event::Interpolate>([this](const Event::Interpolate& event) {
-        if (!enableNotifications || !notifyInterpolate) return;
+        if (!notifyInterpolate) return;
         std::string slotsStr = "[";
         for (size_t i = 0; i < event.slots.size(); ++i) {
             if (i) slotsStr += ", ";
@@ -568,7 +695,7 @@ void GUI::SubscribeEvents() {
         NotificationPopUp::Notify("Info", event.isEnabled ? std::format("Interpolation started between states = {}", slotsStr) : "Interpolation ended");
         });
     EventBus::Subscribe<Event::StateQueued>([this](const Event::StateQueued& event) {
-        if (enableNotifications && notifyStateQueued)
+        if (notifyStateQueued)
             NotificationPopUp::Notify("Info", std::format("State [{}] queued", event.slot));
         });
 }
@@ -603,16 +730,14 @@ void GUI::OnDpiUpdate() {
 void GUI::Render() {
     IConVar::anyChangeByUi = false;
 
-    if (GetAsyncKeyState(VK_END) & 1) {
+    if (actionMgr.IsJustPressed(ActionType::ToggleMenu, input)) {
         is_visible = !is_visible;
         HandleCursorVisibility();
     }
 
-    bool show_notifications = true;
-    if (show_notifications) {
+    if (enableNotifications) {
         NotificationPopUp::Render();
     }
-
 
     if (!is_visible)
         return;
@@ -648,12 +773,11 @@ void GUI::Render() {
         ImGui::End();
     }
 
-    //ImGui::ShowDemoWindow();
-
-
     ImGui::SetNextWindowSize(ImVec2(420, 360), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowSizeConstraints(ImVec2(340, 280), ImVec2(700, 900));
-    ImGui::Begin("Freecam v2.0.0-beta", &is_visible);
+    if (ImGui::Begin("Freecam v2.0.0-beta", &is_visible, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
+        HandleCursorVisibility();
+    }
 
     if (ImGui::BeginTabBar("##tabs")) {
         infoTab.Render();
