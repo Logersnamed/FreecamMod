@@ -2,6 +2,7 @@
 #include <vector>
 
 #include "core/game_data/game_data.h"
+#include "core/events.h"
 #include "utils/types.h"
 #include "utils/debug.h"
 
@@ -63,8 +64,14 @@ class PathRecorder {
     bool isPlaying = false;
 
 public:
-    void Record() { isRecording ? EndRecord() : StartRecord(); }
-    void PlayRecord() { isPlaying ? EndPlay() : StartPlay(); }
+    void Record() { 
+        isRecording ? EndRecord() : StartRecord(); 
+        EventBus::Emit(Event::Record{ .isEnabled = isRecording });
+    }
+
+    void PlayRecord() { 
+        isPlaying ? EndPlay() : StartPlay();
+    }
 
     void StartRecord() {
         if (isPlaying) return;
@@ -102,6 +109,7 @@ public:
 
         framesPlayed = 0;
         isPlaying = true;
+        EventBus::Emit(Event::PlayRecord{ .isEnabled = true });
     }
 
     void EndPlay() {
@@ -112,6 +120,7 @@ public:
         positions.Restart();
         rotations.Restart();
         fovs.Restart();
+        EventBus::Emit(Event::PlayRecord{ .isEnabled = false });
     }
 
     bool IsRecording() const { return isRecording; }

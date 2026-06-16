@@ -5,6 +5,7 @@
 #include "gui/overlay.h"
 #include "utils/debug.h"
 #include "utils/types.h"
+#include "core/events.h"
 
 Input::Input() {
     instance = this;
@@ -174,6 +175,7 @@ Input::ReleasedNumkeys Input::GetReleasedNumkeys() {
 
             if (IsJustPressed(keyCode)) {
                 numRowKeys[key].pressId = ++id;
+                EventBus::Emit(Event::StateQueued{ .slot = key });   // probably not the best place to do that
             }
         }
     }
