@@ -356,3 +356,8 @@ struct FixedVec {
     T& operator[](size_t i) { return data[i]; }
     const T& operator[](size_t i) const { return data[i]; }
 };
+
+struct Vertex {
+    float3 position;
+    float4 color;
+};

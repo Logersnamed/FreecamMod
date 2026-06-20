@@ -91,7 +91,7 @@ class GUI {
 
     static BOOL WINAPI hkSetCursorPos(int X, int Y);
     void HandleCursorVisibility();
-    void OnDpiUpdate(); // todo
+    void OnDpiChange(); // todo
     void InitializeStyle();
     void SubscribeEvents();
 

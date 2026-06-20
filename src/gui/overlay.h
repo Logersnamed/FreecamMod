@@ -14,6 +14,8 @@
 
 #include "hook/dx12hook.h"
 
+#include "gui/render_object.h"
+
 namespace Overlay {
 	using render_callback_t = std::function<void(void)>;
 	using imgui_init_callback_t = std::function<void(void)>;
@@ -25,4 +27,12 @@ namespace Overlay {
 
 	void SetRenderCallback(render_callback_t callback);
 	void SetImGuiInitCallback(imgui_init_callback_t callback);
+
+	inline D3D12_VIEWPORT g_viewport{};
+
+	inline int g_window_width = 1920;
+	inline int g_window_height = 1080;
+
+	inline Material cameraMaterial;
+	inline std::vector<RenderObject> cameras;
 }

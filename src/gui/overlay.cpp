@@ -2,7 +2,11 @@
 #include "core/input/input.h"
 #include "utils/debug.h"
 
+#include "core/game_data_manager.h"
+
 #include <wrl.h>
+
+#include "directxmath.h"
 
 using Microsoft::WRL::ComPtr;
 
@@ -119,6 +123,17 @@ namespace Overlay {
         InitializeImGuiBackend(g_hwnd);
     }
 
+    static inline bool InitViewport() {
+        g_viewport.TopLeftX = 0;
+        g_viewport.TopLeftY = 0;
+        g_viewport.Width = static_cast<float>(g_window_width);
+        g_viewport.Height = static_cast<float>(g_window_height);
+        g_viewport.MinDepth = 0.0f;
+        g_viewport.MaxDepth = 1.0f;
+        return true;
+    }
+
+
     bool Initialize() {
         LOG_INFO("Initializing overlay... Attempt: %d", g_attempts_to_init);
 
@@ -182,9 +197,32 @@ namespace Overlay {
         CreateRenderTargets();
         InitializeImGui();
 
+        InitViewport();
+
+        if (!CreateMaterial(DX12Hook::g_device.Get(), &cameraMaterial))
+            return false;
+
         g_is_initialized = true;
         LOG_INFO("Overlay initialized successfully");
         return true;
+    }
+
+    void Render(RenderObject& object, const DirectX::XMMATRIX& view_proj) {
+        DirectX::XMMATRIX model = DirectX::XMMatrixScaling(object.scale.x, object.scale.y, object.scale.z) *
+            DirectX::XMMatrixRotationRollPitchYaw(object.rotation.x, object.rotation.y, object.rotation.z) *
+            DirectX::XMMatrixTranslation(object.position.x, object.position.y, object.position.z);
+        DirectX::XMMATRIX mvp_transposed = DirectX::XMMatrixTranspose(model * view_proj);
+        object.UpdateConstantBuffer(mvp_transposed);
+
+        g_command_list->SetGraphicsRootSignature(object.material->root_signature.Get());
+        g_command_list->SetPipelineState(object.material->pso.Get());
+        g_command_list->SetGraphicsRootConstantBufferView(0, object.constant_buffer->GetGPUVirtualAddress());
+
+        g_command_list->IASetPrimitiveTopology(object.mesh->topology);
+        g_command_list->IASetVertexBuffers(0, 1, &object.mesh->vertex_buffer_view);
+        g_command_list->IASetIndexBuffer(&object.mesh->index_buffer_view);
+
+        g_command_list->DrawIndexedInstanced(object.mesh->index_count, 1, 0, 0, 0);
     }
 
     void Render() {
@@ -218,6 +256,75 @@ namespace Overlay {
         g_command_list->ResourceBarrier(1, &barrier);
         g_command_list->OMSetRenderTargets(1, &g_frame_contexts[back_buffer_idx].render_target_descriptor, FALSE, nullptr);
         g_command_list->SetDescriptorHeaps(1, heaps);
+
+        g_command_list->RSSetViewports(1, &g_viewport);
+
+        D3D12_RECT rect;
+        rect.left = 0;
+        rect.top = 0;
+        rect.right = g_window_width;
+        rect.bottom = g_window_height;
+        g_command_list->RSSetScissorRects(1, &rect);
+
+        {
+
+            auto* fieldArea = GameDataManager::FieldArea.Get();
+            if (fieldArea) {
+                auto* gameRend = fieldArea->gameRend;
+                if (gameRend) {
+                    auto* camera = gameRend->IsFreecamEnabled() ? gameRend->csDebugCam : gameRend->csPersCam1;
+                    if (camera) {
+                        using namespace DirectX;
+
+                        const float3 r = camera->right();
+                        const float3 u = camera->up();
+                        const float3 f = camera->forward();
+                        const float3 p = camera->matrix.position();
+                        XMMATRIX view = XMMATRIX(
+                            r.x, u.x, f.x, 0.0f,
+                            r.y, u.y, f.y, 0.0f,
+                            r.z, u.z, f.z, 0.0f,
+
+                            -float3::dot(r, p),
+                            -float3::dot(u, p),
+                            -float3::dot(f, p),
+                            1.0f
+                        );
+
+                        float aspect_ratio = (float)g_window_width / (float)g_window_height;
+
+                        if (GetAsyncKeyState('O') & 1) {
+                            float yaw = atan2f(f.x, f.z);
+                            float pitch = asinf(-f.y);
+                            float roll = 0.0f;
+
+                            RenderObject cameraObject;
+                            cameraObject.material = &cameraMaterial;
+                            cameraObject.mesh = new Mesh();
+                            CreateCameraMesh(DX12Hook::g_device.Get(), cameraObject.mesh, camera->fov);
+                            cameraObject.position = DirectX::XMFLOAT3(p.x, p.y, p.z);
+                            cameraObject.rotation = DirectX::XMFLOAT3(pitch, yaw, roll);
+                            cameraObject.scale = DirectX::XMFLOAT3(aspect_ratio, 1, 1);
+                            cameraObject.Init(DX12Hook::g_device.Get());
+                            cameras.push_back(cameraObject);
+                        }
+
+
+                        XMMATRIX projection = XMMatrixPerspectiveFovLH(camera->fov, aspect_ratio, 0.1f, 10000.0f);
+
+                        XMMATRIX vp = view * projection;
+
+                        //Render(cube, vp);
+                        for (auto& cam : cameras) {
+                            Render(cam, vp);
+                        }
+
+                    }
+                }
+            }
+
+        }
+
         ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), g_command_list.Get());
 
         barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;

@@ -13,6 +13,8 @@ namespace Event {
     struct SaveState { int slot{}; float3 pos{}; };
     struct Interpolate { bool isEnabled = false; FixedVec<uint8_t, 10> slots{}; };
     struct StateQueued { int slot; };
+
+    struct DPIChanged {};
 }
 
 class EventBus {

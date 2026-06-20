@@ -99,6 +99,9 @@ void Input::UpdateKeyboard(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             OnWindowFocus(uMsg == WM_ACTIVATEAPP, wParam);
             return;
 
+        case WM_DPICHANGED:
+            EventBus::Emit(Event::DPIChanged{});
+
         case WM_KEYDOWN:
         case WM_SYSKEYDOWN:
         case WM_KEYUP:

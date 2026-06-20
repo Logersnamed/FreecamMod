@@ -86,6 +86,29 @@ public:
         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, alpha);
         if (ImGui::Begin(header.c_str(), &p_open, window_flags)) {
             ImGui::Text(message.c_str());
+
+            // Notification progress bar
+/*            {
+                ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+                ImVec2 pos = ImGui::GetWindowPos();
+                ImVec2 size = ImGui::GetWindowSize();
+
+                float t = std::clamp((timeLeft - fadeTime) / (duration - fadeTime), 0.0f, 1.0f);
+
+                float barHeight = 3.0f;
+                float y = pos.y + size.y - barHeight;
+
+                float rounding = ImGui::GetStyle().WindowRounding;
+
+                drawList->AddRectFilled(
+                    ImVec2(pos.x, y),
+                    ImVec2(pos.x + size.x * t, y + barHeight),
+                    IM_COL32(83, 207, 81, 255),
+                    rounding,
+                    ImDrawFlags_RoundCornersBottom
+                );
+            }*/
         }
         ImGui::End();
         ImGui::PopStyleVar();
@@ -656,6 +679,8 @@ void GUI::InitializeStyle() {
 }
 
 void GUI::SubscribeEvents() {
+    EventBus::Subscribe<Event::DPIChanged>([this](const Event::DPIChanged& event) { OnDpiChange(); });
+
     EventBus::Subscribe<Event::ToggleFreecam>([this](const Event::ToggleFreecam& event) {
         if (notifyFreecam)
             NotificationPopUp::Notify("Info", event.isEnabled ? "Free camera enabled" : "Free camera disabled");
@@ -724,14 +749,18 @@ void GUI::HandleCursorVisibility() {
     }
 }
 
-void GUI::OnDpiUpdate() {
-    // float newScale = ImGui_ImplWin32_GetDpiScaleForMonitor(::MonitorFromPoint(POINT{ 0, 0 }, MONITOR_DEFAULTTOPRIMARY));
-    // ImGuiStyle& style = ImGui::GetStyle();
-    // style = baseStyle;
-    // dpiScale = newScale;
-    // style.ScaleAllSizes(dpiScale);
-    // style.FontScaleDpi = dpiScale;
+void GUI::OnDpiChange() {
+    float newScale = ImGui_ImplWin32_GetDpiScaleForMonitor(::MonitorFromPoint(POINT{ 0, 0 }, MONITOR_DEFAULTTOPRIMARY));
+
+    LOG_INFO("DPI changed. New scale = %d", newScale);
+
+    ImGuiStyle& style = ImGui::GetStyle();
+    style = baseStyle;
+    style.ScaleAllSizes(newScale);
+    style.FontScaleDpi = newScale;
 }
+
+#include "overlay.h"
 
 void GUI::Render() {
     IConVar::anyChangeByUi = false;
@@ -779,9 +808,12 @@ void GUI::Render() {
         ImGui::End();
     }
 
+    bool oldVisibility = is_visible;
     ImGui::SetNextWindowSize(ImVec2(420, 360), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowSizeConstraints(ImVec2(340, 280), ImVec2(700, 900));
-    if (ImGui::Begin("Freecam v2.0.0-beta", &is_visible, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
+    ImGui::Begin("Freecam v2.0.0-beta", &is_visible, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+
+    if (oldVisibility != is_visible) {
         HandleCursorVisibility();
     }
 
