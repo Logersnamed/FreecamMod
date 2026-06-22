@@ -63,6 +63,7 @@ public:
         ));
 
         constant_buffer->Map(0, nullptr, &constant_buffer_mapped);
+        return true;
     }
 
     void UpdateConstantBuffer(const DirectX::XMMATRIX& view_proj) {

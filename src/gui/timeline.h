@@ -2,91 +2,18 @@
 #include "imgui.h"
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx12.h"
+//#include <DirectXMath.h>
 
 #include <vector>
 #include <string>
 #include <random>
-#include <chrono>
 #include <algorithm>
 #include <cmath>
+#include <functional>
 
-#include "core/game_data_manager.h"
-
-#include <DirectXMath.h>
-
-enum class Format {
-    SECONDS,
-    SECONDS_MILLISECONDS,
-    MINUTES_SECONDS,
-    MINUTES_SECONDS_MILLISECONDS,
-};
-
-static inline std::string TimeToString(float seconds, Format format = Format::MINUTES_SECONDS) {
-    seconds = std::max<float>(0.0f, seconds);
-
-    const int totalSeconds = static_cast<int>(seconds);
-    const int minutes = totalSeconds / 60;
-    const int secs = totalSeconds % 60;
-    const int milliseconds = static_cast<int>((seconds - totalSeconds) * 1000.0f);
-
-    switch (format) {
-    case Format::SECONDS:
-        return std::format("{}", totalSeconds);
-
-    case Format::SECONDS_MILLISECONDS:
-        return std::format("{}.{:03}", totalSeconds, milliseconds);
-
-    case Format::MINUTES_SECONDS:
-        return std::format("{:02}:{:02}", minutes, secs);
-
-    case Format::MINUTES_SECONDS_MILLISECONDS:
-        return std::format("{:02}:{:02}.{:03}", minutes, secs, milliseconds);
-    }
-    return {};
-}
-
-static inline Quaternion EulerToQuaternion(const EulerAngles& e)
-{
-    using namespace DirectX;
-
-    XMVECTOR q = XMQuaternionRotationRollPitchYaw(
-        e.pitch, 
-        e.yaw,   
-        e.roll   
-    );
-
-    Quaternion result;
-    XMStoreFloat4(reinterpret_cast<XMFLOAT4*>(&result), q);
-    return result;
-}
-
-static inline EulerAngles QuaternionToEuler(const Quaternion& q)
-{
-    using namespace DirectX;
-
-    const float x = q.x;
-    const float y = q.y;
-    const float z = q.z;
-    const float w = q.w;
-
-    EulerAngles e;
-
-    float sinp = 2.0f * (w * x - y * z);
-    if (std::abs(sinp) >= 1.0f)
-        e.pitch = std::copysign(XM_PIDIV2, sinp);
-    else
-        e.pitch = std::asin(sinp);
-
-    float siny = 2.0f * (w * y + z * x);
-    float cosy = 1.0f - 2.0f * (x * x + y * y);
-    e.yaw = std::atan2(siny, cosy);
-
-    float sinr = 2.0f * (w * z + x * y);
-    float cosr = 1.0f - 2.0f * (z * z + x * x);
-    e.roll = std::atan2(sinr, cosr);
-
-    return e;
-}
+#include "gui/interpolation.h"
+#include "utils/types.h"
+#include "utils/time.h"
 
 static inline const int sidebar_width = 300;
 static inline const int track_height = 25;
@@ -100,31 +27,18 @@ static inline constexpr float PixelsToTime(int pixels) {
     return pixels * (1.0f / ONE_SEC_IN_PIXELS);
 }
 
-static float CubicHermite(float A, float B, float C, float D, float t)
-{
-    float a = -A / 2.0f + (3.0f * B) / 2.0f - (3.0f * C) / 2.0f + D / 2.0f;
-    float b = A - (5.0f * B) / 2.0f + 2.0f * C - D / 2.0f;
-    float c = -A / 2.0f + C / 2.0f;
-    float d = B;
-
-    return a * t * t * t + b * t * t + c * t + d;
-}
-
 template<typename T>
 struct Keyframe {
     T data;
     float time;
 };
 
-#include <functional>
-
 template<typename T>
 class Track {
     std::vector<Keyframe<T>> keyframes;
-    T data{};
-
-    std::function<T()> getBound;
-    std::function<void(const T&)> setBound;
+    
+public:
+    std::vector<Keyframe<T>>& GetKeyframes() { return keyframes; }
 
     void AddKeyframe(const Keyframe<T>& keyframe) {
         for (auto& k : keyframes) {
@@ -144,17 +58,12 @@ class Track {
         keyframes.push_back(keyframe);
     }
 
-    T lerp(const T& a, const T& b, float t) {
-        if constexpr (std::is_same_v<T, Quaternion>) {
-            return Quaternion::slerp(a, b, t);
-        }
-        else {
-            t = std::clamp(t, 0.0f, 1.0f);
-            return a + (b - a) * t;
-        }
+    Keyframe<T>& GetKeyframe(int i) {
+        i = std::clamp<int>(i, 0, keyframes.size() - 1);
+        return keyframes[i];
     }
 
-    T GetData(float time) {
+    T Evaluate(float time, T data) {
         if (keyframes.empty()) return data;
         if (keyframes.size() == 1) return keyframes[0].data;
         if (time <= keyframes[0].time) return keyframes[0].data;
@@ -166,57 +75,60 @@ class Track {
         }
         if (i == 0 || (size_t)i >= keyframes.size()) return keyframes.back().data;
 
-        const auto& a = keyframes[i - 1];
-        const auto& b = keyframes[i];
-        float t = (time - a.time) / (b.time - a.time);
+        const auto& prev = GetKeyframe(i - 2);
+        const auto& p0 = GetKeyframe(i - 1);
+        const auto& p1 = GetKeyframe(i);    
+        const auto& next = GetKeyframe(i + 1);
+        float t = (time - p0.time) / (p1.time - p0.time);
 
-
-        if constexpr (std::is_same_v<T, float>) {
-            int ai = std::clamp<int>(i - 2, 0, keyframes.size() - 1);
-            int bi = std::clamp<int>(i - 1, 0, keyframes.size() - 1);
-            int ci = std::clamp<int>(i, 0, keyframes.size() - 1);
-            int di = std::clamp<int>(i + 1, 0, keyframes.size() - 1);
-
-            return CubicHermite(keyframes[ai].data, keyframes[bi].data, keyframes[ci].data, keyframes[di].data, t);
-        }
-        else if constexpr (std::is_same_v<T, float3>) {
-            int ai = std::clamp<int>(i - 2, 0, keyframes.size() - 1);
-            int bi = std::clamp<int>(i - 1, 0, keyframes.size() - 1);
-            int ci = std::clamp<int>(i,     0, keyframes.size() - 1);
-            int di = std::clamp<int>(i + 1, 0, keyframes.size() - 1);
-
-            return float3(
-                CubicHermite(keyframes[ai].data.x, keyframes[bi].data.x, keyframes[ci].data.x, keyframes[di].data.x, t),
-                CubicHermite(keyframes[ai].data.y, keyframes[bi].data.y, keyframes[ci].data.y, keyframes[di].data.y, t),
-                CubicHermite(keyframes[ai].data.z, keyframes[bi].data.z, keyframes[ci].data.z, keyframes[di].data.z, t)
-            );
-        }
-        else if constexpr (std::is_same_v<T, Quaternion>) {
-            using namespace DirectX;
-            int q0i = std::clamp<int>(i - 2, 0, keyframes.size() - 1);
-            int q1i = std::clamp<int>(i - 1, 0, keyframes.size() - 1);
-            int q2i = std::clamp<int>(i, 0, keyframes.size() - 1);
-            int q3i = std::clamp<int>(i + 1, 0, keyframes.size() - 1);
-
-            XMVECTOR q0 = XMLoadFloat4(reinterpret_cast<const XMFLOAT4*>(&keyframes[q0i].data));
-            XMVECTOR q1 = XMLoadFloat4(reinterpret_cast<const XMFLOAT4*>(&keyframes[q1i].data));
-            XMVECTOR q2 = XMLoadFloat4(reinterpret_cast<const XMFLOAT4*>(&keyframes[q2i].data));
-            XMVECTOR q3 = XMLoadFloat4(reinterpret_cast<const XMFLOAT4*>(&keyframes[q3i].data));
-
-            XMVECTOR a, b, c;
-            XMQuaternionSquadSetup(&a, &b, &c, q0, q1, q2, q3);
-
-            XMVECTOR res = XMQuaternionSquad(q1, a, b, c, t);
-
-            Quaternion result;
-            XMStoreFloat4(reinterpret_cast<XMFLOAT4*>(&result), res);
-            return result;
-        }
-
-        return lerp(a.data, b.data, t);
+        return CatmullRomInterpolation<T>::Evaluate(prev.data, p0.data, p1.data, next.data, t);
     }
+};
+
+template<typename T>
+struct TrackEditor;
+
+template<>
+struct TrackEditor<float> {
+    static bool DrawValue(const std::string& name, float& value) {
+        return ImGui::InputFloat(name.c_str(), &value);
+    }
+};
+
+template<>
+struct TrackEditor<float3> {
+    static bool DrawValue(const std::string& name, float3& value) {
+        float v[3] = { value.x, value.y, value.z };
+
+        if (!ImGui::InputFloat3(name.c_str(), v))
+            return false;
+
+        value = { v[0], v[1], v[2] };
+        return true;
+    }
+};
+
+template<>
+struct TrackEditor<Quaternion> {
+    static bool DrawValue(const std::string& name, Quaternion& value) {
+        ImGui::Text(name.c_str());
+        return false;
+    }
+};
+
+template<typename T>
+class TrackWidget {
+    Track<T> track;
+    T data{};
+
+    std::string name{};
+
+    std::function<T()> getBound;
+    std::function<void(const T&)> setBound;
 
 public:
+    TrackWidget(std::string name) : name(name) {}
+
     void Bind(std::function<T()> getter, std::function<void(const T&)> setter) {
         getBound = std::move(getter);
         setBound = std::move(setter);
@@ -227,59 +139,42 @@ public:
         setBound = nullptr;
     }
 
-    void Render(float time, bool driveExternal) {
-        data = GetData(time);
-
-        ImGui::PushID(this);
-        ImGui::BeginChild("##track", ImVec2(sidebar_width, track_height));
-
-        if (ImGui::Button("+")) {
-            T captured = (getBound && !driveExternal) ? getBound() : data;
-            AddKeyframe(Keyframe<T>{captured, time});
-        }
-        ImGui::SameLine();
-
-        bool edited = false;
-
-        if constexpr (std::is_same_v<T, float>) {
-            float d = data;
-            if (ImGui::InputFloat("Data", &d)) {
-                data = d;
-                edited = true;
-            }
-        }
-        else if constexpr (std::is_same_v<T, float3>) {
-            float v[3] = { data.x, data.y, data.z };
-            if (ImGui::InputFloat3("Data", v)) {
-                data = T{ v[0], v[1], v[2] };
-                edited = true;
-            }
-        }
-        else if constexpr (std::is_same_v<T, Quaternion>) {
-
-        }
-        else {
-            static_assert(sizeof(T) == 0, "Track<T>::Render: no InputField implemented for this T");
-        }
-
-        if (edited && !keyframes.empty()) {
-            AddKeyframe(Keyframe<T>{data, time});
-        }
-
-        if (getBound && setBound) {
-            if (driveExternal) setBound(data);
-            else                data = getBound();
-        }
-
-        ImGui::EndChild();
-        ImGui::SameLine();
-
+    void DrawKeyframes(const std::vector<Keyframe<T>>& keyframes) {
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
         ImVec2 pos = ImGui::GetCursorScreenPos();
         const int radius = 5;
         for (auto& k : keyframes) {
             draw_list->AddCircle(ImVec2(pos.x + TimeToPixels(k.time), pos.y + (track_height - radius) * 0.5f), radius, IM_COL32(255, 255, 255, 255), 4, 2);
         }
+    }
+
+    void Render(float time, bool driveExternal) {
+        data = track.Evaluate(time, data);
+
+        ImGui::PushID(this);
+        ImGui::BeginChild("##track", ImVec2(sidebar_width, track_height));
+
+        if (ImGui::Button("+") || ImGui::IsKeyPressed(ImGuiKey_O)) {
+            T captured = (getBound && !driveExternal) ? getBound() : data;
+            track.AddKeyframe(Keyframe<T>{captured, time});
+        }
+
+        ImGui::SameLine();
+
+        if (TrackEditor<T>::DrawValue(name, data)) {
+            track.AddKeyframe(Keyframe<T>{data, time});
+            if (setBound) setBound(data);
+        }
+
+        if (getBound && setBound) {
+            if (driveExternal) setBound(data);
+            else               data = getBound();
+        }
+        ImGui::EndChild();
+
+        ImGui::SameLine();
+
+        DrawKeyframes(track.GetKeyframes());
 
         ImGui::PopID();
     }
@@ -294,14 +189,39 @@ class Timeline {
         time = std::max<float>(0.0f, value);
     }
 
-    Track<float> fovTrack;
-    Track<float3> posTrack;
-    Track<Quaternion> rotTrack;
+    TrackWidget<float> fovTrack{"Fov"};
+    TrackWidget<float3> posTrack {"Position"};
+    TrackWidget<Quaternion> rotTrack {"Rotation"};
 
     FreeCamera& freeCamera;
 
 public:
-    Timeline(FreeCamera& freeCamera) : freeCamera(freeCamera) {}
+    Timeline(FreeCamera& freeCamera) : freeCamera(freeCamera) {
+        fovTrack.Bind(
+            [&freeCamera]() { 
+                auto* cam = freeCamera.GetCamera();  
+                return cam ? cam->fov : 0.0f; 
+            },
+            [&freeCamera](const float& v) { 
+                auto* cam = freeCamera.GetCamera();
+                if (cam) cam->fov = v;
+            }
+        );
+        posTrack.Bind(
+            [&freeCamera]() { 
+                auto* cam = freeCamera.GetCamera(); 
+                return cam ? cam->matrix.position() : float3(); 
+            },
+            [&freeCamera](const float3& v) { 
+                auto* cam = freeCamera.GetCamera();
+                if (cam) cam->matrix.position() = v;
+            }
+        );
+        rotTrack.Bind(
+            [&freeCamera]() { return freeCamera.GetRotation().toQuaternion(); },
+            [&freeCamera](const Quaternion& v) { freeCamera.SetRotation(v.toEuler()); }
+        );
+    }
 
     void Update(float dt) {
         if (isPlaybackPlaying) {
@@ -311,32 +231,6 @@ public:
 
     void Render(float dt) {
         Update(dt);
-        GameData::Camera* cam = nullptr;
-        if (auto* g = freeCamera.GetGameRend()) {
-            cam = g->csDebugCam;
-        }
-
-        if (cam) {
-            fovTrack.Bind(
-                [cam]() { return cam->fov; },
-                [cam](const float& v) { cam->fov = v; }
-            );
-            posTrack.Bind(
-                [cam]() { return cam->matrix.position(); },
-                [cam](const float3& v) { cam->matrix.position() = v; }
-            );
-            rotTrack.Bind(
-                [this]() { return EulerToQuaternion(freeCamera.rotation); },
-                [this](const Quaternion& v) { freeCamera.rotation = QuaternionToEuler(v); }
-            );
-        }
-        else {
-            fovTrack.Unbind();
-            posTrack.Unbind();
-            rotTrack.Unbind();
-        }
-
-        
 
         ImGui::Begin("Timeline");
         ImGui::BeginChild("##buttons", ImVec2(sidebar_width, track_height));
@@ -371,7 +265,7 @@ public:
             ImVec2(pos.x + TimeToPixels(time), pos.y + tringle_radius),
             IM_COL32(255, 255, 255, 255)
         );
-        draw_list->AddText(ImVec2(pos.x + TimeToPixels(time) + 12, pos.y + 20), IM_COL32(255, 255, 255, 255), TimeToString(time, Format::MINUTES_SECONDS_MILLISECONDS).c_str());
+        draw_list->AddText(ImVec2(pos.x + TimeToPixels(time) + 12, pos.y + 20), IM_COL32(255, 255, 255, 255), TimeToString(time, TimeFormat::MINUTES_SECONDS_MILLISECONDS).c_str());
 
         bool is_dragging = false;
         bool s = was_clicked_in_timestamps_zone && ImGui::IsMouseDown(ImGuiMouseButton_Left);

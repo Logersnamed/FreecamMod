@@ -192,117 +192,17 @@ struct matrix4x4 {
     bool operator!=(const matrix4x4& other) const { return !(*this == other); }
 };
 
+struct EulerAngles;
+
 struct Quaternion : float4 {
     Quaternion() : float4(0, 0, 0, 1) {}
     Quaternion(float4 vec4) : float4(vec4) {}
     Quaternion(float x, float y, float z, float w) : float4(x, y, z, w) {}
 
-    matrix3x3 toRotationMatrix() const {
-        float xx = x * x;
-        float yy = y * y;
-        float zz = z * z;
-        float xy = x * y;
-        float xz = x * z;
-        float yz = y * z;
-        float wx = w * x;
-        float wy = w * y;
-        float wz = w * z;
-
-        return matrix3x3(
-            float3(
-                1.0f - 2.0f * (yy + zz),
-                2.0f * (xy - wz),
-                2.0f * (xz + wy)
-            ),
-            float3(
-                2.0f * (xy + wz),
-                1.0f - 2.0f * (xx + zz),
-                2.0f * (yz - wx)
-            ),
-            float3(
-                2.0f * (xz - wy),
-                2.0f * (yz + wx),
-                1.0f - 2.0f * (xx + yy)
-            )
-        );
-    }
-
-    static Quaternion fromRotationMatrix(const matrix3x3& m) {
-        Quaternion quaternion;
-        float trace = m.c0.x + m.c1.y + m.c2.z;
-
-        if (trace > 0.0f) {
-            float s = std::sqrt(trace + 1.0f) * 2.0f;
-            quaternion.w = 0.25f * s;
-            quaternion.x = (m.c2.y - m.c1.z) / s;
-            quaternion.y = (m.c0.z - m.c2.x) / s;
-            quaternion.z = (m.c1.x - m.c0.y) / s;
-        }
-        else {
-            if (m.c0.x > m.c1.y && m.c0.x > m.c2.z) {
-                float s = std::sqrt(1.0f + m.c0.x - m.c1.y - m.c2.z) * 2.0f;
-                quaternion.w = (m.c2.y - m.c1.z) / s;
-                quaternion.x = 0.25f * s;
-                quaternion.y = (m.c0.y + m.c1.x) / s;
-                quaternion.z = (m.c0.z + m.c2.x) / s;
-            }
-            else if (m.c1.y > m.c2.z) {
-                float s = std::sqrt(1.0f + m.c1.y - m.c0.x - m.c2.z) * 2.0f;
-                quaternion.w = (m.c0.z - m.c2.x) / s;
-                quaternion.x = (m.c0.y + m.c1.x) / s;
-                quaternion.y = 0.25f * s;
-                quaternion.z = (m.c1.z + m.c2.y) / s;
-            }
-            else {
-                float s = std::sqrt(1.0f + m.c2.z - m.c0.x - m.c1.y) * 2.0f;
-                quaternion.w = (m.c1.x - m.c0.y) / s;
-                quaternion.x = (m.c0.z + m.c2.x) / s;
-                quaternion.y = (m.c1.z + m.c2.y) / s;
-                quaternion.z = 0.25f * s;
-            }
-        }
-
-        return Quaternion(quaternion.normalized());
-    }
-
-    static Quaternion slerp(Quaternion a, Quaternion b, float t) {
-        float dot = a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
-
-        if (dot < 0.0f) {
-            b.x = -b.x;
-            b.y = -b.y;
-            b.z = -b.z;
-            b.w = -b.w;
-            dot = -dot;
-        }
-
-        const float DOT_THRESHOLD = 0.9995f;
-        if (dot > DOT_THRESHOLD) {
-            Quaternion result(
-                a.x + t * (b.x - a.x),
-                a.y + t * (b.y - a.y),
-                a.z + t * (b.z - a.z),
-                a.w + t * (b.w - a.w)
-            );
-            return Quaternion(result.normalized());
-        }
-
-        float theta0 = std::acos(dot);
-        float theta = theta0 * t;
-
-        float sin_theta = std::sin(theta);
-        float sin_theta0 = std::sin(theta0);
-
-        float s0 = std::cos(theta) - dot * sin_theta / sin_theta0;
-        float s1 = sin_theta / sin_theta0;
-
-        return Quaternion(
-            (a.x * s0) + (b.x * s1),
-            (a.y * s0) + (b.y * s1),
-            (a.z * s0) + (b.z * s1),
-            (a.w * s0) + (b.w * s1)
-        );
-    }
+    matrix3x3 toRotationMatrix() const;
+    EulerAngles toEuler() const;
+    static Quaternion fromRotationMatrix(const matrix3x3& m);
+    static Quaternion slerp(Quaternion a, Quaternion b, float t);
 
     bool operator==(const Quaternion& other) const { return x == other.x && y == other.y && z == other.z && w == other.w; }
     bool operator!=(const Quaternion& other) const { return !(*this == other); }
@@ -315,6 +215,8 @@ struct EulerAngles {
     float yaw = 0.0f;
     float pitch = 0.0f;
     float roll = 0.0f;
+
+    Quaternion toQuaternion() const;
 };
 
 template<typename T, size_t N>

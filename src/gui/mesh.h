@@ -106,6 +106,34 @@ bool CreateMesh(
     return true;
 }
 
+static inline bool CreateCameraFrustumMesh(ID3D12Device* device, Mesh* mesh)
+{
+    // Normalized frustum: fov=90deg equivalent (halfW=halfH=1, z=1)
+    // Actual scale applied per-instance in vertex shader
+    const float Z = 1.0f;
+
+    Vertex vertices[] =
+    {
+        {{ 0.0f,  0.0f, 0.0f}, {1,1,1,1}},  // apex
+        {{-1.0f, -1.0f,  Z  }, {0,1,0,1}},  // BL
+        {{ 1.0f, -1.0f,  Z  }, {0,1,0,1}},  // BR
+        {{ 1.0f,  1.0f,  Z  }, {0,1,0,1}},  // TR
+        {{-1.0f,  1.0f,  Z  }, {0,1,0,1}},  // TL
+    };
+
+    uint16_t indices[] =
+    {
+        0,1, 0,2, 0,3, 0,4,
+        1,2, 2,3, 3,4, 4,1
+    };
+
+    mesh->topology = D3D_PRIMITIVE_TOPOLOGY_LINELIST;
+    mesh->vertex_count = _countof(vertices);
+    mesh->index_count = _countof(indices);
+
+    return CreateMesh(device, mesh, vertices, indices);
+}
+
 static inline bool CreateCameraMesh(ID3D12Device* device, Mesh* mesh, float fov)
 {
     const float rayLength = 0.7f;

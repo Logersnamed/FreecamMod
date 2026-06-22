@@ -59,6 +59,7 @@ public:
     void SetMouseDelta(int2 delta) { mouseDelta = delta; }
     void SetGamepadDelta(float2 delta) { gamepadDelta = delta; }
     void SetIsSprinting(bool enabled) { isSprinting = enabled; }
+    void SetRotation(EulerAngles value) { rotation = value; }
 
     void AddSpeed(float deltaSpeed) { SetSpeed(speed + deltaSpeed * (0.05f * speed + 0.01f)); }
     void AddVelocity(const float3& deltaVel) { velocity += deltaVel; }
@@ -67,8 +68,7 @@ public:
     void AddFov(GameData::Camera* cam, float deltaFov) { SetFov(cam, cam->fov + deltaFov); }
 
     bool IsEnabled() const { return isEnabled; }
-    EulerAngles& GetEuler() { return rotation; }
-
+    const EulerAngles GetRotation() const { return rotation; }
 
     constexpr float GetMinFov() const { return MIN_FOV; }
     constexpr float GetMaxFov() const { return MAX_FOV; }
@@ -76,6 +76,7 @@ public:
     void SetSpeed(float newSpeed) { speed = std::max<float>(newSpeed, 0.0f); }
 
     GameData::GameRend* GetGameRend() const { return m_gameRend; }
+    GameData::Camera* GetCamera() const { return m_gameRend ? m_gameRend->csDebugCam : nullptr; }
     FrameStepper& GetFrameStepper() { return frameStepper; }
     PathRecorder& GetPathRecorder() { return pathRecorder; }
     CameraStateManager& GetCameraStateManager() { return cameraStateManager; }
@@ -103,9 +104,7 @@ private:
     int2 mouseDelta = 0;
     float2 gamepadDelta = 0;
 
-public:
     EulerAngles rotation{};
-private:
 
     static constexpr float MIN_FOV = 0.000126f;
     static constexpr float MAX_FOV = 3.13f;

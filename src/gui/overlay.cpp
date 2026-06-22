@@ -202,6 +202,11 @@ namespace Overlay {
         if (!CreateMaterial(DX12Hook::g_device.Get(), &cameraMaterial))
             return false;
 
+        cameraInstance.material = &cameraMaterial;
+        cameraInstance.mesh = new Mesh();
+        CreateCameraFrustumMesh(DX12Hook::g_device.Get(), cameraInstance.mesh);
+        cameraInstance.Init(DX12Hook::g_device.Get());
+
         g_is_initialized = true;
         LOG_INFO("Overlay initialized successfully");
         return true;
@@ -292,23 +297,6 @@ namespace Overlay {
                         );
 
                         float aspect_ratio = (float)g_window_width / (float)g_window_height;
-
-                        if (GetAsyncKeyState('O') & 1) {
-                            float yaw = atan2f(f.x, f.z);
-                            float pitch = asinf(-f.y);
-                            float roll = 0.0f;
-
-                            RenderObject cameraObject;
-                            cameraObject.material = &cameraMaterial;
-                            cameraObject.mesh = new Mesh();
-                            CreateCameraMesh(DX12Hook::g_device.Get(), cameraObject.mesh, camera->fov);
-                            cameraObject.position = DirectX::XMFLOAT3(p.x, p.y, p.z);
-                            cameraObject.rotation = DirectX::XMFLOAT3(pitch, yaw, roll);
-                            cameraObject.scale = DirectX::XMFLOAT3(aspect_ratio, 1, 1);
-                            cameraObject.Init(DX12Hook::g_device.Get());
-                            cameras.push_back(cameraObject);
-                        }
-
 
                         XMMATRIX projection = XMMatrixPerspectiveFovLH(camera->fov, aspect_ratio, 0.1f, 10000.0f);
 

@@ -180,7 +180,7 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
                 int keyCode = key + (int)'0';
 
                 if (input.IsJustPressed(keyCode)) {
-                    freeCamera.GetCameraStateManager().SaveState(activeCamera, key, freeCamera.GetEuler());
+                    freeCamera.GetCameraStateManager().SaveState(activeCamera, key, freeCamera.GetRotation());
                 }
             }
         }
