@@ -808,6 +808,9 @@ void GUI::Render() {
         ImGui::End();
     }
 
+    timeline.Render(ImGui::GetIO().DeltaTime);
+
+
     bool oldVisibility = is_visible;
     ImGui::SetNextWindowSize(ImVec2(420, 360), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowSizeConstraints(ImVec2(340, 280), ImVec2(700, 900));

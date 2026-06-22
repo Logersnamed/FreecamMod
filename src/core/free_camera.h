@@ -103,7 +103,9 @@ private:
     int2 mouseDelta = 0;
     float2 gamepadDelta = 0;
 
+public:
     EulerAngles rotation{};
+private:
 
     static constexpr float MIN_FOV = 0.000126f;
     static constexpr float MAX_FOV = 3.13f;

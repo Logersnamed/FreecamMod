@@ -11,6 +11,7 @@
 
 #include "core/game_data_manager.h"
 #include "hook/hook_manager.h"
+#include "gui/timeline.h"
 
 #include <MinHook.h>
 
@@ -82,6 +83,8 @@ class GUI {
     Input& input;
     ActionManager& actionMgr;
 
+    Timeline timeline;
+
     bool is_visible = true;
 
     static inline GUI* instance = nullptr;
@@ -109,7 +112,7 @@ class GUI {
 
 public:
     GUI(FreeCamera& freeCamera, Speedhack& speedhack, HookManager& hookManager, Config& config, Input& input, ActionManager& actionMgr) :
-        config(config), input(input), actionMgr(actionMgr),
+        config(config), input(input), actionMgr(actionMgr), timeline(freeCamera),
         infoTab(freeCamera),
         featuresTab(hookManager, freeCamera, speedhack),
         configTab(config),
