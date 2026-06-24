@@ -206,6 +206,7 @@ void Freecam::Update(GameData::GameRend* gameRend) {
     input.UpdateGamepad();
     ProcessInput(gameRend, deltaTime);
     freeCamera.Update(gameRend, deltaTime);
+    if (!Overlay::IsInitialized()) input.Reset();
 }
 
 void __fastcall Freecam::hkUpdateCameraMatrix(GameData::GameRend* gameRend, void* rdx, void* r8, void* r9) {

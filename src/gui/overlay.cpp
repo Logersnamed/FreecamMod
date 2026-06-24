@@ -129,7 +129,10 @@ namespace Overlay {
         }
         g_buffer_count = swap_chain_desc1.BufferCount;
         g_rtv_format = swap_chain_desc1.Format;
-        DX12Hook::g_swap_chain->GetHwnd(&g_hwnd);
+        if (FAILED(DX12Hook::g_swap_chain->GetHwnd(&g_hwnd))) {
+            LOG_ERROR("Failed to GetHwnd");
+            return false;
+        }
 
         g_frame_contexts = new FrameContext[g_buffer_count]{};
 
@@ -158,26 +161,39 @@ namespace Overlay {
             desc.NumDescriptors = 64;
             desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
             desc.NodeMask = 1;
-            if (FAILED(DX12Hook::g_device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&g_srv_heap))))
+            if (FAILED(DX12Hook::g_device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&g_srv_heap)))) {
+                LOG_ERROR("Failed to create SRV heap");
                 return false;
+            }
         }
 
         for (UINT i = 0; i < g_buffer_count; ++i) {
-            if (FAILED(DX12Hook::g_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&g_frame_contexts[i].command_allocator))))
+            if (FAILED(DX12Hook::g_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&g_frame_contexts[i].command_allocator)))) {
+                LOG_ERROR("Failed to CreateCommandAllocator[%u]", i);
                 return false;
+            }
         }
 
-        if (FAILED(DX12Hook::g_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, g_frame_contexts[0].command_allocator.Get(), nullptr, IID_PPV_ARGS(&g_command_list))))
+        if (FAILED(DX12Hook::g_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, g_frame_contexts[0].command_allocator.Get(), nullptr, IID_PPV_ARGS(&g_command_list)))) {
+            LOG_ERROR("Failed to CreateCommandList");
             return false;
+        }
 
-        if (FAILED(g_command_list->Close())) 
+        if (FAILED(g_command_list->Close())) {
+            LOG_ERROR("Failed to close command list");
             return false;
+        }
 
-        if (FAILED(DX12Hook::g_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&g_fence))))
+        if (FAILED(DX12Hook::g_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&g_fence)))) {
+            LOG_ERROR("Failed to create fence");
             return false;
+        }
 
         g_fence_event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-        if (!g_fence_event) return false;
+        if (!g_fence_event) {
+            LOG_ERROR("Failed to CreateEvent");
+            return false;
+        }
 
         CreateRenderTargets();
         InitializeImGui();

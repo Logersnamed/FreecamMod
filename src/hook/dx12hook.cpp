@@ -29,16 +29,22 @@ namespace DX12Hook {
     
     inline bool IsFailed(HRESULT result, LPCWSTR error_msg) {
         if (FAILED(result)) {
-            //MessageBoxW(NULL, error_msg, L"DX12Hook error", MB_OK);
-            LOG_ERROR("DX12Hook error: %ls", error_msg);
+            LOG_ERROR("%ls (HRESULT=0x%08X)", error_msg, (UINT)result);
             return true;
         }
         return false;
     }
     
     inline bool Hook(LPVOID pTarget, LPVOID pDetour, LPVOID* ppOriginal) {
-        if (MH_CreateHook(pTarget, pDetour, ppOriginal) != MH_OK) return false;
-        if (MH_EnableHook(pTarget) != MH_OK) return false;
+        LOG_INFO("MH_CreateHook target=%p detour=%p", pTarget, pDetour);
+        if (MH_CreateHook(pTarget, pDetour, ppOriginal) != MH_OK) {
+            LOG_ERROR("MH_CreateHook failed");
+            return false;
+        }
+        if (MH_EnableHook(pTarget) != MH_OK) {
+            LOG_ERROR("MH_EnableHook failed");
+            return false;
+        }
         return true;
     }
     
@@ -123,22 +129,28 @@ namespace DX12Hook {
         LOG_INFO("Initializing DX12Hook...");
         ComPtr<ID3D12Device> device = CreateDummyDevice();
         if (!device) return false;
+        LOG_INFO("Device=%p", device.Get());
 
         ComPtr<ID3D12CommandQueue> commandQueue = CreateDummyCommandQueue(device.Get());
         if (!commandQueue) return false;
+        LOG_INFO("CommandQueue=%p", commandQueue.Get());
 
         void** commandQueueVTable = *reinterpret_cast<void***>(commandQueue.Get());
         g_executeCommandLists = commandQueueVTable[10];
+        LOG_INFO("ExecuteCommandLists = %p", g_executeCommandLists);
 
         ComPtr<IDXGISwapChain> swapChain = CreateDummySwapChain(commandQueue.Get());
         if (!swapChain) return false;
+        LOG_INFO("SwapChain=%p", swapChain.Get());
 
         void** swapChainVTable = *reinterpret_cast<void***>(swapChain.Get());
         g_present = swapChainVTable[8];
         g_resizeBuffers = swapChainVTable[13];
+        LOG_INFO("Present = %p", g_present);
+        LOG_INFO("ResizeBuffers = %p", g_resizeBuffers);
 
-        if (!Hook(g_present, &hkPresent, (void**)&g_origPresent))             return false;
-        if (!Hook(g_resizeBuffers, &hkResizeBuffers, (void**)&g_origResizeBuffers))       return false;
+        if (!Hook(g_present, &hkPresent, (void**)&g_origPresent))  return false;
+        if (!Hook(g_resizeBuffers, &hkResizeBuffers, (void**)&g_origResizeBuffers)) return false;
         if (!Hook(g_executeCommandLists, &hkExecuteCommandLists, (void**)&g_origExecuteCommandLists)) return false;
 
         return true;
