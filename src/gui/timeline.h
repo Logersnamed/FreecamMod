@@ -2,7 +2,12 @@
 #include "imgui.h"
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx12.h"
-//#include <DirectXMath.h>
+
+#include <d3d12.h>
+#include <dxgi1_6.h>
+#include "directxmath.h"
+#include "d3dcompiler.h"
+#pragma comment(lib, "d3dcompiler.lib")
 
 #include <vector>
 #include <string>
@@ -11,9 +16,24 @@
 #include <cmath>
 #include <functional>
 
+#include "core/free_camera.h"
 #include "gui/interpolation.h"
 #include "utils/types.h"
 #include "utils/time.h"
+
+struct InstanceData {
+    DirectX::FXMMATRIX model;
+    float fovScale;
+};
+
+static inline DirectX::XMMATRIX ToXMMATRIX(const matrix3x3& m) {
+    return DirectX::XMMATRIX(
+        m.c0.x, m.c0.y, m.c0.z, 0.0f,
+        m.c1.x, m.c1.y, m.c1.z, 0.0f,
+        m.c2.x, m.c2.y, m.c2.z, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f
+    );
+}
 
 static inline const int sidebar_width = 300;
 static inline const int track_height = 25;
@@ -31,6 +51,8 @@ template<typename T>
 struct Keyframe {
     T data;
     float time;
+
+    bool is_selected = false;
 };
 
 template<typename T>
@@ -39,6 +61,13 @@ class Track {
     
 public:
     std::vector<Keyframe<T>>& GetKeyframes() { return keyframes; }
+    
+    void SortKeyframes() {
+        std::sort(keyframes.begin(), keyframes.end(),
+            [](const Keyframe<T>& a, const Keyframe<T>& b) {
+                return a.time < b.time;
+            });
+    }
 
     void AddKeyframe(const Keyframe<T>& keyframe) {
         for (auto& k : keyframes) {
@@ -139,12 +168,77 @@ public:
         setBound = nullptr;
     }
 
-    void DrawKeyframes(const std::vector<Keyframe<T>>& keyframes) {
+    std::vector<Keyframe<T>>& GetKeyframes() { 
+        return track.GetKeyframes(); 
+    }
+
+    bool is_dragging_keyframes = false;
+    float delta_x = 0;
+
+    void DrawKeyframes(std::vector<Keyframe<T>>& keyframes) {
+        // Drag
+        if (ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+            delta_x = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left).x;
+        }
+        else {
+            // Apply drag
+            if (delta_x) {
+                for (auto& k : keyframes) {
+                    if (!k.is_selected)  continue;
+
+                    k.time += PixelsToTime(delta_x);
+                    k.time = std::max<float>(k.time, 0.0f);
+                }
+
+                track.SortKeyframes();
+
+                delta_x = 0;
+            }
+        }
+
+        // Delete 
+        if (ImGui::IsKeyPressed(ImGuiKey_X)) {
+            for (int i = 0; i < keyframes.size();) {
+                if (keyframes[i].is_selected) {
+                    keyframes.erase(keyframes.begin() + i);
+                }
+                else {
+                    ++i;
+                }
+            }
+        }
+
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
         ImVec2 pos = ImGui::GetCursorScreenPos();
         const int radius = 5;
         for (auto& k : keyframes) {
-            draw_list->AddCircle(ImVec2(pos.x + TimeToPixels(k.time), pos.y + (track_height - radius) * 0.5f), radius, IM_COL32(255, 255, 255, 255), 4, 2);
+            // Select
+            if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+                ImVec2 click_pos = ImGui::GetMousePos();
+                ImVec2 pos = ImGui::GetCursorScreenPos();
+
+                ImVec2 keyframe_center_pos = ImVec2(pos.x + TimeToPixels(k.time), pos.y + (track_height - radius) * 0.5f);
+
+                bool is_keyframe_clicked = abs(keyframe_center_pos.x - click_pos.x) <= radius
+                    && abs(keyframe_center_pos.y - click_pos.y) <= radius;
+
+                if (is_keyframe_clicked) k.is_selected = true;
+                else {
+                    if (k.is_selected && !ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
+                        k.is_selected = false;
+                    }
+                }
+            }
+
+            float drag_delta = k.is_selected ? delta_x : 0;
+
+            // Draw
+            draw_list->AddCircle(
+                ImVec2(pos.x + TimeToPixels(k.time) + drag_delta, pos.y + (track_height - radius) * 0.5f),
+                radius, 
+                k.is_selected ? IM_COL32(255, 255, 0, 255) : IM_COL32(255, 255, 255, 255)
+                , 4, 2
+            );
         }
     }
 
@@ -196,7 +290,11 @@ class Timeline {
     FreeCamera& freeCamera;
 
 public:
+    static inline Timeline* instance;
+
     Timeline(FreeCamera& freeCamera) : freeCamera(freeCamera) {
+        instance = this;
+
         fovTrack.Bind(
             [&freeCamera]() { 
                 auto* cam = freeCamera.GetCamera();  
@@ -229,9 +327,7 @@ public:
         }
     }
 
-    void Render(float dt) {
-        Update(dt);
-
+    void Render() {
         ImGui::Begin("Timeline");
         ImGui::BeginChild("##buttons", ImVec2(sidebar_width, track_height));
         if (ImGui::Button(isPlaybackPlaying ? "Stop" : "Start", ImVec2(ImGui::GetContentRegionAvail()))) {
@@ -295,5 +391,60 @@ public:
         rotTrack.Render(time, isPlaybackPlaying || is_dragging);
 
         ImGui::End();
+    }
+
+    std::vector<InstanceData> GetInstanceData() {
+        const auto& pos_keyframes = posTrack.GetKeyframes();
+        const auto& rot_keyframes = rotTrack.GetKeyframes();
+        auto fov_keyframes = fovTrack.GetKeyframes();   // improve
+
+        std::vector<InstanceData> result;
+        if (pos_keyframes.empty() || rot_keyframes.empty()) return result;
+
+        if (fov_keyframes.empty()) {
+            fov_keyframes.push_back(Keyframe<float>{ DirectX::XM_PIDIV2, 0 });
+        }
+
+        int pos_i = 0;
+        int rot_i = 0;
+        int fov_i = 0;
+
+        while (true) {
+            auto& pos = pos_keyframes[pos_i];
+            auto& rot = rot_keyframes[rot_i];
+            auto& fov = fov_keyframes[fov_i];
+
+            matrix3x3 rot_mat = rot.data.toRotationMatrix();
+            DirectX::XMMATRIX rotation = ToXMMATRIX(rot_mat);
+            DirectX::XMMATRIX model = DirectX::XMMatrixScaling(1, 1, 1) *
+                rotation * DirectX::XMMatrixTranslation(pos.data.x, pos.data.y, pos.data.z);
+            result.push_back(InstanceData{ model, fov.data });
+
+            bool is_any_inc = false;
+            if (pos.time <= rot.time && pos.time <= fov.time) {
+                if (pos_keyframes.size() - 1 > pos_i) {
+                    ++pos_i;
+                    is_any_inc = true;
+                }
+            }
+
+            if (rot.time <= pos.time && rot.time <= fov.time) {
+                if (rot_keyframes.size() - 1 > rot_i) {
+                    ++rot_i;
+                    is_any_inc = true;
+                }
+            }
+
+            if (fov.time <= pos.time && fov.time <= rot.time) {
+                if (fov_keyframes.size() - 1 > fov_i) {
+                    ++fov_i;
+                    is_any_inc = true;
+                }
+            }
+
+            if (!is_any_inc) break;
+        }
+
+        return result;
     }
 };

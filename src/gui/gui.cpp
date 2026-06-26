@@ -763,6 +763,8 @@ void GUI::OnDpiChange() {
 #include "overlay.h"
 
 void GUI::Render() {
+    timeline.Update(ImGui::GetIO().DeltaTime);
+
     IConVar::anyChangeByUi = false;
 
     if (actionMgr.IsJustPressed(ActionType::ToggleMenu, input)) {
@@ -808,7 +810,7 @@ void GUI::Render() {
         ImGui::End();
     }
 
-    timeline.Render(ImGui::GetIO().DeltaTime);
+    timeline.Render();
 
 
     bool oldVisibility = is_visible;
