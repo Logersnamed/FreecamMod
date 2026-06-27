@@ -4,44 +4,10 @@
 #include <optional>
 #include <string>
 
+#include "core/events.h"
+#include "core/input/action_type.h"
 #include "core/input/input.h"
 #include "utils/types.h"
-
-#define ACTION_TYPES \
-    X(Toggle) \
-    X(ToggleMenu) \
-    X(ReloadConfig) \
-    X(ResetSettings) \
-    X(ToggleFreeze) \
-    X(TeleportToCamera) \
-    X(CycleWeatherTime) \
-    X(ExitMod) \
-    X(StartEndRecording) \
-    X(StartEndPlayingRecording) \
-    X(StepFrames) \
-    X(MoveForward) \
-    X(MoveBackward) \
-    X(MoveLeft) \
-    X(MoveRight) \
-    X(MoveUp) \
-    X(MoveDown) \
-    X(Sprint) \
-    X(ZoomIn) \
-    X(ZoomOut) \
-    X(TiltLeft) \
-    X(TiltRight) \
-    X(ScrollZoomModifier) \
-    X(ScrollCameraSpeedModifier) \
-    X(ScrollSpeedhackModifier) \
-    X(ToggleSpeedhack) \
-    X(ResetSpeedhackSpeed)
-
-enum class ActionType : int8_t {
-#define X(name) name,
-	ACTION_TYPES
-#undef X
-	Count
-};
 
 class Action {
 public:
@@ -97,15 +63,30 @@ private:
 
 class ActionManager {
 	std::array<std::optional<Action>, static_cast<size_t>(ActionType::Count)> actions{};
+	std::array<bool, static_cast<size_t>(ActionType::Count)> blocked{};
 
 public:
-	bool IsPressed(ActionType actionType, const Input& input) const {
-		const auto& action = actions[static_cast<size_t>(actionType)];
+	ActionManager() {
+		EventBus::Subscribe<Event::BlockActions>([this](const Event::BlockActions& event) {
+			blocked = event.blocked;
+		});
+	}
+
+	void Block(ActionType type) { blocked[static_cast<size_t>(type)] = true; }
+	void Unblock(ActionType type) { blocked[static_cast<size_t>(type)] = false; }
+
+	void BlockAll() { blocked.fill(true); }
+	void UnblockAll() { blocked.fill(false); }
+
+	bool IsPressed(ActionType type, const Input& input) const {
+		if (blocked[static_cast<size_t>(type)]) return false;
+		const auto& action = actions[static_cast<size_t>(type)];
 		return action.has_value() && action->IsPressed(input);
 	}
 
-	bool IsJustPressed(ActionType actionType, const Input& input) const {
-		const auto& action = actions[static_cast<size_t>(actionType)];
+	bool IsJustPressed(ActionType type, const Input& input) const {
+		if (blocked[static_cast<size_t>(type)]) return false;
+		const auto& action = actions[static_cast<size_t>(type)];
 		return action.has_value() && action->IsJustPressed(input);
 	}
 

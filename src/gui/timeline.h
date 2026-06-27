@@ -145,6 +145,77 @@ struct TrackEditor<Quaternion> {
     }
 };
 
+struct TrackInputEvent {
+    float drag_delta_x;
+    bool drag_released;  
+    bool delete_pressed;   
+    bool mouse_clicked;   
+    bool shift_held;   
+    float2 click_pos;  
+    float2 origin_pos; 
+};
+
+template<typename T>
+struct KeyframesController {
+    static void Update(Track<T>& track, const TrackInputEvent& events) {
+        ProcessDrag(track, events);
+        ProcessDelete(track, events);
+        ProcessSelect(track, events);
+    }
+
+    static void ProcessDrag(Track<T>& track, const TrackInputEvent& events) {
+        if (events.drag_released && events.drag_delta_x) {
+            for (auto& k : track.GetKeyframes()) {
+                if (!k.is_selected)  continue;
+
+                k.time += PixelsToTime(events.drag_delta_x);
+                k.time = std::max<float>(k.time, 0.0f);
+            }
+
+            track.SortKeyframes();
+
+            //events.drag_delta_x = 0;
+        }
+    }
+
+    static void ProcessDelete(Track<T>& track, const TrackInputEvent& events) {
+        if (events.delete_pressed) {
+            auto& keyframes = track.GetKeyframes();
+            for (int i = 0; i < keyframes.size();) {
+                if (keyframes[i].is_selected) {
+                    keyframes.erase(keyframes.begin() + i);
+                }
+                else {
+                    ++i;
+                }
+            }
+        }
+    }
+
+    static void ProcessSelect(Track<T>& track, const TrackInputEvent& events) {
+        if (events.mouse_clicked) {
+            const int radius = 5;
+            auto& keyframes = track.GetKeyframes();
+            for (auto& k : keyframes) {
+                float2 keyframe_center_pos = float2(
+                    events.origin_pos.x + TimeToPixels(k.time), 
+                    events.origin_pos.y + (track_height - radius) * 0.5f
+                );
+
+                bool is_keyframe_clicked = abs(keyframe_center_pos.x - events.click_pos.x) <= radius
+                    && abs(keyframe_center_pos.y - events.click_pos.y) <= radius;
+
+                if (is_keyframe_clicked) k.is_selected = true;
+                else {
+                    if (k.is_selected && !events.shift_held) {
+                        k.is_selected = false;
+                    }
+                }
+            }
+        }
+    }
+};
+
 template<typename T>
 class TrackWidget {
     Track<T> track;
@@ -154,6 +225,8 @@ class TrackWidget {
 
     std::function<T()> getBound;
     std::function<void(const T&)> setBound;
+
+    float delta_x = 0;
 
 public:
     TrackWidget(std::string name) : name(name) {}
@@ -172,65 +245,12 @@ public:
         return track.GetKeyframes(); 
     }
 
-    bool is_dragging_keyframes = false;
-    float delta_x = 0;
-
-    void DrawKeyframes(std::vector<Keyframe<T>>& keyframes) {
-        // Drag
-        if (ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-            delta_x = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left).x;
-        }
-        else {
-            // Apply drag
-            if (delta_x) {
-                for (auto& k : keyframes) {
-                    if (!k.is_selected)  continue;
-
-                    k.time += PixelsToTime(delta_x);
-                    k.time = std::max<float>(k.time, 0.0f);
-                }
-
-                track.SortKeyframes();
-
-                delta_x = 0;
-            }
-        }
-
-        // Delete 
-        if (ImGui::IsKeyPressed(ImGuiKey_X)) {
-            for (int i = 0; i < keyframes.size();) {
-                if (keyframes[i].is_selected) {
-                    keyframes.erase(keyframes.begin() + i);
-                }
-                else {
-                    ++i;
-                }
-            }
-        }
-
+    void DrawKeyframes(std::vector<Keyframe<T>>& keyframes, const TrackInputEvent& events) {
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
         ImVec2 pos = ImGui::GetCursorScreenPos();
         const int radius = 5;
         for (auto& k : keyframes) {
-            // Select
-            if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-                ImVec2 click_pos = ImGui::GetMousePos();
-                ImVec2 pos = ImGui::GetCursorScreenPos();
-
-                ImVec2 keyframe_center_pos = ImVec2(pos.x + TimeToPixels(k.time), pos.y + (track_height - radius) * 0.5f);
-
-                bool is_keyframe_clicked = abs(keyframe_center_pos.x - click_pos.x) <= radius
-                    && abs(keyframe_center_pos.y - click_pos.y) <= radius;
-
-                if (is_keyframe_clicked) k.is_selected = true;
-                else {
-                    if (k.is_selected && !ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-                        k.is_selected = false;
-                    }
-                }
-            }
-
-            float drag_delta = k.is_selected ? delta_x : 0;
+            float drag_delta = (k.is_selected && !events.drag_released) ? events.drag_delta_x : 0;
 
             // Draw
             draw_list->AddCircle(
@@ -242,9 +262,39 @@ public:
         }
     }
 
-    void Render(float time, bool driveExternal) {
+    TrackInputEvent GetEvents(ImVec2 origin) {
+        bool released = false;
+        if (ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+            delta_x = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left).x;
+        }
+        else if (delta_x) {
+            released = true;
+        }
+        ImVec2 mp = ImGui::GetMousePos();
+
+        TrackInputEvent events {
+            delta_x,
+            released,
+            ImGui::IsKeyPressed(ImGuiKey_X),
+            ImGui::IsMouseClicked(ImGuiMouseButton_Left),
+            ImGui::IsKeyDown(ImGuiKey_LeftShift),
+            {mp.x, mp.y},
+            {origin.x, origin.y}
+        };
+
+        return events;
+    }
+
+    void Update(float time, bool driveExternal) {
         data = track.Evaluate(time, data);
 
+        if (getBound && setBound) {
+            if (driveExternal) setBound(data);
+            else               data = getBound();
+        }
+    }
+
+    void Render(float time, bool driveExternal) {
         ImGui::PushID(this);
         ImGui::BeginChild("##track", ImVec2(sidebar_width, track_height));
 
@@ -260,15 +310,17 @@ public:
             if (setBound) setBound(data);
         }
 
-        if (getBound && setBound) {
-            if (driveExternal) setBound(data);
-            else               data = getBound();
-        }
         ImGui::EndChild();
-
         ImGui::SameLine();
 
-        DrawKeyframes(track.GetKeyframes());
+        ImVec2 origin = ImGui::GetCursorScreenPos();
+        TrackInputEvent events = GetEvents(origin);
+
+        KeyframesController<T>::Update(track, events);
+        DrawKeyframes(track.GetKeyframes(), events);
+
+        if (events.drag_released)
+            delta_x = 0;
 
         ImGui::PopID();
     }
@@ -290,11 +342,10 @@ class Timeline {
     FreeCamera& freeCamera;
 
 public:
-    static inline Timeline* instance;
+    static inline Timeline* instance{};
 
     Timeline(FreeCamera& freeCamera) : freeCamera(freeCamera) {
         instance = this;
-
         fovTrack.Bind(
             [&freeCamera]() { 
                 auto* cam = freeCamera.GetCamera();  
@@ -325,10 +376,18 @@ public:
         if (isPlaybackPlaying) {
             time += dt;
         }
+
+        fovTrack.Update(time, isPlaybackPlaying);
+        posTrack.Update(time, isPlaybackPlaying);
+        rotTrack.Update(time, isPlaybackPlaying);
     }
 
+    bool is_visible = false;
+
     void Render() {
-        ImGui::Begin("Timeline");
+        if (!is_visible) return;
+
+        ImGui::Begin("Timeline", &is_visible);
         ImGui::BeginChild("##buttons", ImVec2(sidebar_width, track_height));
         if (ImGui::Button(isPlaybackPlaying ? "Stop" : "Start", ImVec2(ImGui::GetContentRegionAvail()))) {
             isPlaybackPlaying = !isPlaybackPlaying;

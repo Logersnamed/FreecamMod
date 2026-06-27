@@ -36,7 +36,7 @@ public:
     static constexpr int NUM_KEYS_COUNT = 10;
     using ReleasedNumkeys = FixedVec<uint8_t, NUM_KEYS_COUNT>;
 
-    Input() { instance = this; }
+    Input();
     ~Input() { instance = nullptr; }
 
     static Input* GetInstance() { return instance; }
@@ -64,6 +64,7 @@ private:
     static inline LONG_PTR origWndProc = 0;
 
     bool isShouldGetInput = false;
+    bool isMouseInputBlocked = false;
 
     KeyState keyStates[256] = {};
     float scrollDelta = 0.0f;

@@ -9,6 +9,14 @@
 
 #include "imgui_impl_win32.h"
 
+Input::Input() {
+    instance = this; 
+
+    EventBus::Subscribe<Event::BlockCameraMouseMoveInput>([this](const Event::BlockCameraMouseMoveInput& event) {
+        isMouseInputBlocked = event.isEnabled;
+    });
+}
+
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 LRESULT __stdcall Input::hkWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -35,7 +43,7 @@ UINT WINAPI Input::hkGetRawInputData(HRAWINPUT hRawInput, UINT uiCommand, LPVOID
             raw->data.mouse.lLastX = 0;
             raw->data.mouse.lLastY = 0;
         }
-        else if (instance->isShouldGetInput) {
+        else if (instance->isShouldGetInput && !instance->isMouseInputBlocked) {
             instance->mouseDelta.x += raw->data.mouse.lLastX;
             instance->mouseDelta.y += raw->data.mouse.lLastY;
         }

@@ -3,6 +3,8 @@
 #include <functional>
 #include "utils/types.h"
 
+#include "core/input/action_type.h"
+
 namespace Event {
     struct ToggleFreecam { bool isEnabled = false; };
     struct ToggleSpeedhack { bool isEnabled = false; };
@@ -15,6 +17,32 @@ namespace Event {
     struct StateQueued { int slot; };
 
     struct DPIChanged {};
+
+    struct BlockCameraMouseMoveInput { bool isEnabled = false; };
+
+    struct BlockActions {
+        std::array<bool, static_cast<size_t>(ActionType::Count)> blocked{};
+
+        static BlockActions All() {
+            BlockActions b;
+            b.blocked.fill(true);
+            return b;
+        }
+
+        static BlockActions None() {
+            return BlockActions{};
+        }
+
+        BlockActions& With(ActionType type) {
+            blocked[static_cast<size_t>(type)] = true;
+            return *this;
+        }
+
+        BlockActions& Except(ActionType type) {
+            blocked[static_cast<size_t>(type)] = false;
+            return *this;
+        }
+    };
 }
 
 class EventBus {

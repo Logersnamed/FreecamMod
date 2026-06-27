@@ -1,4 +1,5 @@
 #include "gui/gui.h"
+#include "gui/overlay.h"
 #include "core/events.h"
 #include <format>
 
@@ -760,9 +761,29 @@ void GUI::OnDpiChange() {
     style.FontScaleDpi = newScale;
 }
 
-#include "overlay.h"
-
 void GUI::Render() {
+    static bool old_should_block = false;
+    bool should_block_actions = is_visible && timeline.is_visible && !input.IsPressed(VK_LBUTTON);
+    if (old_should_block != should_block_actions) {
+        EventBus::Emit(Event::BlockCameraMouseMoveInput{ should_block_actions });
+        auto block = Event::BlockActions::None();
+        if (should_block_actions) {
+            block
+                .With(ActionType::MoveForward)
+                .With(ActionType::MoveBackward)
+                .With(ActionType::MoveLeft)
+                .With(ActionType::MoveRight)
+                .With(ActionType::MoveUp)
+                .With(ActionType::MoveDown)
+                .With(ActionType::ZoomIn)
+                .With(ActionType::ZoomOut)
+                .With(ActionType::TiltLeft)
+                .With(ActionType::TiltRight);
+        }
+        EventBus::Emit(block);
+        old_should_block = should_block_actions;
+    }
+
     timeline.Update(ImGui::GetIO().DeltaTime);
 
     IConVar::anyChangeByUi = false;
@@ -812,7 +833,6 @@ void GUI::Render() {
 
     timeline.Render();
 
-
     bool oldVisibility = is_visible;
     ImGui::SetNextWindowSize(ImVec2(420, 360), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowSizeConstraints(ImVec2(340, 280), ImVec2(700, 900));
@@ -825,6 +845,20 @@ void GUI::Render() {
     if (ImGui::BeginTabBar("##tabs")) {
         infoTab.Render();
         featuresTab.Render();
+        if (ImGui::BeginTabItem("Sequencer")) {
+            ImGui::BeginScrollableArea("##sequencer_content");
+
+            if (ImGui::Checkbox("is_visible", &timeline.is_visible)) {
+                if (timeline.is_visible) {
+                    static bool was_notified = false;
+                    if (!was_notified) NotificationPopUp::Notify("Info", "Click and hold the left mouse button in the game view to look around", 5);
+                    was_notified = true;
+                }
+            }
+
+            ImGui::EndScrollableArea();
+            ImGui::EndTabItem();
+        }
         configTab.Render();
         keyBindsTab.Render();
         logTab.Render();
