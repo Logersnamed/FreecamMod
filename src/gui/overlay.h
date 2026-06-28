@@ -30,10 +30,10 @@ namespace Overlay {
 
 	inline D3D12_VIEWPORT g_viewport{};
 
-	inline int g_window_width = 1920;
+/*	inline int g_window_width = 1920;
 	inline int g_window_height = 1080;
 
 	inline RenderObject cameraInstance;
 	inline Material cameraMaterial;
-	inline std::vector<RenderObject> cameras;
+	inline std::vector<RenderObject> cameras;*/
 }

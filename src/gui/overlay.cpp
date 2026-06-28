@@ -123,7 +123,7 @@ namespace Overlay {
         InitializeImGuiBackend(g_hwnd);
     }
 
-    static inline bool InitViewport() {
+/*    static inline bool InitViewport() {
         g_viewport.TopLeftX = 0;
         g_viewport.TopLeftY = 0;
         g_viewport.Width = static_cast<float>(g_window_width);
@@ -131,7 +131,7 @@ namespace Overlay {
         g_viewport.MinDepth = 0.0f;
         g_viewport.MaxDepth = 1.0f;
         return true;
-    }
+    }*/
 
 
     bool Initialize() {
@@ -197,6 +197,7 @@ namespace Overlay {
         CreateRenderTargets();
         InitializeImGui();
 
+        /*
         InitViewport();
 
         if (!CreateMaterial(DX12Hook::g_device.Get(), &cameraMaterial))
@@ -205,14 +206,14 @@ namespace Overlay {
         cameraInstance.material = &cameraMaterial;
         cameraInstance.mesh = new Mesh();
         CreateCameraFrustumMesh(DX12Hook::g_device.Get(), cameraInstance.mesh);
-        cameraInstance.Init(DX12Hook::g_device.Get());
+        cameraInstance.Init(DX12Hook::g_device.Get());*/
 
         g_is_initialized = true;
         LOG_INFO("Overlay initialized successfully");
         return true;
     }
 
-    void Render(RenderObject& object, const DirectX::XMMATRIX& view_proj) {
+/*    void Render(RenderObject& object, const DirectX::XMMATRIX& view_proj) {
         DirectX::XMMATRIX model = DirectX::XMMatrixScaling(object.scale.x, object.scale.y, object.scale.z) *
             DirectX::XMMatrixRotationRollPitchYaw(object.rotation.x, object.rotation.y, object.rotation.z) *
             DirectX::XMMatrixTranslation(object.position.x, object.position.y, object.position.z);
@@ -228,7 +229,7 @@ namespace Overlay {
         g_command_list->IASetIndexBuffer(&object.mesh->index_buffer_view);
 
         g_command_list->DrawIndexedInstanced(object.mesh->index_count, 1, 0, 0, 0);
-    }
+    }*/
 
     void Render() {
         ImGui_ImplDX12_NewFrame();
@@ -264,6 +265,7 @@ namespace Overlay {
 
         g_command_list->RSSetViewports(1, &g_viewport);
 
+        /*
         D3D12_RECT rect;
         rect.left = 0;
         rect.top = 0;
@@ -311,7 +313,7 @@ namespace Overlay {
                 }
             }
 
-        }
+        }*/
 
         ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), g_command_list.Get());
 

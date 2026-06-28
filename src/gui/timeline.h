@@ -21,7 +21,7 @@
 #include "utils/types.h"
 #include "utils/time.h"
 
-struct InstanceData {
+/*struct InstanceData {
     DirectX::FXMMATRIX model;
     float fovScale;
 };
@@ -33,10 +33,11 @@ static inline DirectX::XMMATRIX ToXMMATRIX(const matrix3x3& m) {
         m.c2.x, m.c2.y, m.c2.z, 0.0f,
         0.0f, 0.0f, 0.0f, 1.0f
     );
-}
+}*/
 
 static inline const int sidebar_width = 300;
 static inline const int track_height = 25;
+
 
 static inline constexpr float ONE_SEC_IN_PIXELS = 100.0f;
 static inline constexpr int TimeToPixels(float time) {
@@ -46,6 +47,22 @@ static inline constexpr int TimeToPixels(float time) {
 static inline constexpr float PixelsToTime(int pixels) {
     return pixels * (1.0f / ONE_SEC_IN_PIXELS);
 }
+
+static inline const int snap_pixels = 5;
+static inline const bool is_snap_enabled = true;
+
+static inline constexpr int SnapPixelsToGrid(int pixels) {
+    if (!is_snap_enabled || ImGui::IsKeyDown(ImGuiKey_LeftAlt)) return pixels;
+    return ((pixels + snap_pixels / 2) / snap_pixels) * snap_pixels;
+}
+
+static inline constexpr float SnapTimeToGrid(float time) {
+    if (!is_snap_enabled || ImGui::IsKeyDown(ImGuiKey_LeftAlt)) return time;
+    return PixelsToTime(SnapPixelsToGrid(TimeToPixels(time)));
+}
+
+static inline const int track_max_time = 100;
+static inline const int track_width = track_max_time * ONE_SEC_IN_PIXELS;
 
 template<typename T>
 struct Keyframe {
@@ -170,11 +187,10 @@ struct KeyframesController {
 
                 k.time += PixelsToTime(events.drag_delta_x);
                 k.time = std::max<float>(k.time, 0.0f);
+                if (events.drag_delta_x) k.time = SnapTimeToGrid(k.time);   // snapp only after drag
             }
 
             track.SortKeyframes();
-
-            //events.drag_delta_x = 0;
         }
     }
 
@@ -252,9 +268,10 @@ public:
         for (auto& k : keyframes) {
             float drag_delta = (k.is_selected && !events.drag_released) ? events.drag_delta_x : 0;
 
-            // Draw
+            float delta =  std::max<float>(0.0f, TimeToPixels(k.time) + drag_delta);
+            if (drag_delta) delta = SnapPixelsToGrid(delta);    // snapp only after drag
             draw_list->AddCircle(
-                ImVec2(pos.x + TimeToPixels(k.time) + drag_delta, pos.y + (track_height - radius) * 0.5f),
+                ImVec2(pos.x + delta, pos.y + track_height * 0.5f),
                 radius, 
                 k.is_selected ? IM_COL32(255, 255, 0, 255) : IM_COL32(255, 255, 255, 255)
                 , 4, 2
@@ -294,11 +311,11 @@ public:
         }
     }
 
-    void Render(float time, bool driveExternal) {
+    void DrawSidebar(float time, bool driveExternal) {
         ImGui::PushID(this);
-        ImGui::BeginChild("##track", ImVec2(sidebar_width, track_height));
+        //ImGui::BeginChild("##track", ImVec2(sidebar_width, track_height));
 
-        if (ImGui::Button("+") || ImGui::IsKeyPressed(ImGuiKey_O)) {
+        if (ImGui::Button("+", ImVec2(track_height, track_height)) || ImGui::IsKeyPressed(ImGuiKey_O)) {
             T captured = (getBound && !driveExternal) ? getBound() : data;
             track.AddKeyframe(Keyframe<T>{captured, time});
         }
@@ -310,9 +327,14 @@ public:
             if (setBound) setBound(data);
         }
 
-        ImGui::EndChild();
-        ImGui::SameLine();
+        //ImGui::EndChild();
+        ImGui::PopID();
+    }
 
+    void DrawLane(float time, bool driveExternal) {
+        ImGui::PushID(this);
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(0, 0, 0, 0));
+        ImGui::BeginChild("##lane", ImVec2(track_width, track_height));
         ImVec2 origin = ImGui::GetCursorScreenPos();
         TrackInputEvent events = GetEvents(origin);
 
@@ -322,17 +344,20 @@ public:
         if (events.drag_released)
             delta_x = 0;
 
+        ImGui::EndChild();
+        ImGui::PopStyleColor();
         ImGui::PopID();
     }
 };
 
 class Timeline {
-    bool isPlaybackPlaying = false;
+    bool is_playing = false;
     float time = 0;
     bool was_clicked_in_timestamps_zone = false;
 
     void SetTime(float value) {
-        time = std::max<float>(0.0f, value);
+        time = value;
+        //time = std::max<float>(0.0f, value);
     }
 
     TrackWidget<float> fovTrack{"Fov"};
@@ -343,6 +368,7 @@ class Timeline {
 
 public:
     static inline Timeline* instance{};
+    bool is_visible = true;
 
     Timeline(FreeCamera& freeCamera) : freeCamera(freeCamera) {
         instance = this;
@@ -373,86 +399,114 @@ public:
     }
 
     void Update(float dt) {
-        if (isPlaybackPlaying) {
+        if (is_playing) {
             time += dt;
+
+            if (time >= track_max_time) {
+                time = track_max_time;
+                is_playing = false;
+            }
         }
 
-        fovTrack.Update(time, isPlaybackPlaying);
-        posTrack.Update(time, isPlaybackPlaying);
-        rotTrack.Update(time, isPlaybackPlaying);
+        fovTrack.Update(time, is_playing);
+        posTrack.Update(time, is_playing);
+        rotTrack.Update(time, is_playing);
     }
-
-    bool is_visible = false;
 
     void Render() {
         if (!is_visible) return;
 
+        ImGui::SetNextWindowSizeConstraints(ImVec2(600, 160), ImVec2(FLT_MAX, FLT_MAX));
         ImGui::Begin("Timeline", &is_visible);
-        ImGui::BeginChild("##buttons", ImVec2(sidebar_width, track_height));
-        if (ImGui::Button(isPlaybackPlaying ? "Stop" : "Start", ImVec2(ImGui::GetContentRegionAvail()))) {
-            isPlaybackPlaying = !isPlaybackPlaying;
+
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 0));
+
+        ImGui::BeginChild("##sidebar", ImVec2(sidebar_width, track_height * 4), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+        {
+            ImDrawList* draw_list = ImGui::GetWindowDrawList();
+            ImVec2 pos = ImGui::GetCursorScreenPos();
+
+            if (ImGui::Button(is_playing ? "Stop" : "Start", ImVec2(sidebar_width, track_height))) {
+                is_playing = !is_playing;
+            }
+
+            fovTrack.DrawSidebar(time, is_playing);
+            posTrack.DrawSidebar(time, is_playing);
+            rotTrack.DrawSidebar(time, is_playing);
         }
         ImGui::EndChild();
 
-        ImGui::SameLine();
+        ImGui::SameLine(0, 0);
 
-        ImDrawList* draw_list = ImGui::GetWindowDrawList();
-        ImVec2 pos = ImGui::GetCursorScreenPos();
+        const int scroll_height = 14;
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(0, 0, 0, 0));
+        ImGui::BeginChild("##lanes", ImVec2(ImGui::GetContentRegionAvail().x, track_height * 4 + scroll_height), false, ImGuiWindowFlags_HorizontalScrollbar);
+        {
+            ImDrawList* draw_list = ImGui::GetWindowDrawList();
+            ImVec2 pos = ImGui::GetCursorScreenPos();
+            float scroll_x = ImGui::GetScrollX();
 
-        // Drawing border
-        draw_list->AddLine(ImVec2(pos.x, pos.y), ImVec2(pos.x, pos.y + 1000), IM_COL32(255, 255, 255, 255), 1);
+            for (int i = 0; i < 4; ++i) {
+                draw_list->AddRectFilled(
+                    ImVec2(pos.x, pos.y + i * track_height), 
+                    ImVec2(ImGui::GetContentRegionAvail().x + track_width, pos.y + (i + 1) * track_height),
+                    IM_COL32(255, 255, 255, (i % 2 == 1) * 10)
+                );
+            }
 
-        // Drawing timestamps
-        for (int i = 0; i < 2000; i += 10) {
-            draw_list->AddLine(ImVec2(pos.x + i, pos.y), ImVec2(pos.x + i, pos.y + track_height * 0.3), IM_COL32(155, 155, 155, 255), 1);
-            if (i % (int)ONE_SEC_IN_PIXELS == 0) {
-                draw_list->AddLine(ImVec2(pos.x + i, pos.y), ImVec2(pos.x + i, pos.y + track_height * 0.5), IM_COL32(255, 255, 255, 255), 1);
-                draw_list->AddText(ImVec2(pos.x + i + 10, pos.y + track_height * 0.3 + 2), IM_COL32(255, 255, 255, 255), TimeToString(i * 0.01f).c_str());
+            // Drawing timestamps
+            ImGui::BeginChild("##timestamps", ImVec2(track_width, track_height));
+            for (int i = 0; i < track_width; i += 10) {
+                draw_list->AddLine(ImVec2(pos.x + i, pos.y), ImVec2(pos.x + i, pos.y + track_height * 0.3), IM_COL32(155, 155, 155, 255), 1);
+                if (i % (int)ONE_SEC_IN_PIXELS == 0) {
+                    draw_list->AddLine(ImVec2(pos.x + i, pos.y), ImVec2(pos.x + i, pos.y + track_height * 0.5), IM_COL32(255, 255, 255, 255), 1);
+                    draw_list->AddText(ImVec2(pos.x + i + 10, pos.y + track_height * 0.3 + 2), IM_COL32(255, 255, 255, 255), TimeToString(i * 0.01f).c_str());
+                }
+            }
+            ImGui::EndChild();
+
+            fovTrack.DrawLane(time, is_playing);
+            posTrack.DrawLane(time, is_playing);
+            rotTrack.DrawLane(time, is_playing);
+
+            // Drawing playhead
+            const int tringle_radius = 8;
+            draw_list->AddLine(ImVec2(pos.x + TimeToPixels(time), pos.y), ImVec2(pos.x + TimeToPixels(time), pos.y + 1000), IM_COL32(255, 255, 255, 255), 1);
+            draw_list->AddTriangleFilled(
+                ImVec2(pos.x + TimeToPixels(time) - tringle_radius, pos.y),
+                ImVec2(pos.x + TimeToPixels(time) + tringle_radius, pos.y),
+                ImVec2(pos.x + TimeToPixels(time), pos.y + tringle_radius),
+                IM_COL32(255, 255, 255, 255)
+            );
+            draw_list->AddText(ImVec2(pos.x + TimeToPixels(time) + 12, pos.y + 20), IM_COL32(255, 255, 255, 255), TimeToString(time, TimeFormat::MINUTES_SECONDS_MILLISECONDS).c_str());
+
+            bool is_dragging = false;
+            bool s = was_clicked_in_timestamps_zone && ImGui::IsMouseDown(ImGuiMouseButton_Left);
+            if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) || s) {
+                ImVec2 click_pos = ImGui::GetMousePos();
+
+                int scroll_x = ImGui::GetScrollX();
+                bool is_in_timestamps_zone = click_pos.x > pos.x + scroll_x && click_pos.y > pos.y && click_pos.y < pos.y + track_height;
+                if (is_in_timestamps_zone || s) {
+                    is_dragging = true;
+                    int time_in_pixels = click_pos.x - pos.x;
+                    SetTime(PixelsToTime(SnapPixelsToGrid(time_in_pixels)));
+                    was_clicked_in_timestamps_zone = true;
+                    is_playing = false;
+                }
+            }
+            else {
+                was_clicked_in_timestamps_zone = false;
             }
         }
+        ImGui::EndChild();
+        ImGui::PopStyleColor();
 
-        // Drawing playhead
-        const int tringle_radius = 8;
-        draw_list->AddLine(ImVec2(pos.x + TimeToPixels(time), pos.y), ImVec2(pos.x + TimeToPixels(time), pos.y + 1000), IM_COL32(255, 255, 255, 255), 1);
-        draw_list->AddTriangleFilled(
-            ImVec2(pos.x + TimeToPixels(time) - tringle_radius, pos.y),
-            ImVec2(pos.x + TimeToPixels(time) + tringle_radius, pos.y),
-            ImVec2(pos.x + TimeToPixels(time), pos.y + tringle_radius),
-            IM_COL32(255, 255, 255, 255)
-        );
-        draw_list->AddText(ImVec2(pos.x + TimeToPixels(time) + 12, pos.y + 20), IM_COL32(255, 255, 255, 255), TimeToString(time, TimeFormat::MINUTES_SECONDS_MILLISECONDS).c_str());
-
-        bool is_dragging = false;
-        bool s = was_clicked_in_timestamps_zone && ImGui::IsMouseDown(ImGuiMouseButton_Left);
-        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) || s) {
-            ImVec2 click_pos = ImGui::GetMousePos();
-
-            bool is_in_timestamps_zone = click_pos.x > pos.x && click_pos.y > pos.y && click_pos.y < pos.y + track_height;
-            if (is_in_timestamps_zone || s) {
-                is_dragging = true;
-                SetTime(PixelsToTime((int)(click_pos.x - pos.x)));
-                was_clicked_in_timestamps_zone = true;
-                isPlaybackPlaying = false;
-            }
-        }
-        else {
-            was_clicked_in_timestamps_zone = false;
-        }
-
-
-        ImGui::NewLine();
-        fovTrack.Render(time, isPlaybackPlaying || is_dragging);
-
-        ImGui::NewLine();
-        posTrack.Render(time, isPlaybackPlaying || is_dragging);
-
-        ImGui::NewLine();
-        rotTrack.Render(time, isPlaybackPlaying || is_dragging);
-
+        ImGui::PopStyleVar();
         ImGui::End();
     }
 
-    std::vector<InstanceData> GetInstanceData() {
+/*    std::vector<InstanceData> GetInstanceData() {
         const auto& pos_keyframes = posTrack.GetKeyframes();
         const auto& rot_keyframes = rotTrack.GetKeyframes();
         auto fov_keyframes = fovTrack.GetKeyframes();   // improve
@@ -505,5 +559,5 @@ public:
         }
 
         return result;
-    }
+    }*/
 };
