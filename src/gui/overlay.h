@@ -14,7 +14,7 @@
 
 #include "hook/dx12hook.h"
 
-#include "gui/render_object.h"
+//#include "gui/renderer/render_object.h"
 
 namespace Overlay {
 	using render_callback_t = std::function<void(void)>;

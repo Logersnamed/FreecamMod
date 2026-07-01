@@ -1,4 +1,10 @@
+#pragma once
 #include "utils/types.h"
+
+enum class InterpolationType : uint8_t {
+    Linear,
+    CatmullRom
+};
 
 static float CatmullRom(float A, float B, float C, float D, float t) {
     float a = -A / 2.0f + (3.0f * B) / 2.0f - (3.0f * C) / 2.0f + D / 2.0f;
@@ -39,5 +45,37 @@ struct CatmullRomInterpolation<Quaternion> {
             CatmullRom(a.z, b.z, c.z, d.z, t),
             CatmullRom(a.w, b.w, c.w, d.w, t)
         ).normalized();
+    }
+};
+
+static float Lerp(float a, float b, float t) {
+    return a + (b - a) * t;
+}
+
+template<typename T>
+struct LinearInterpolation;
+
+template<>
+struct LinearInterpolation<float> {
+    static float Evaluate(float a, float b, float t) {
+        return Lerp(a, b, t);
+    }
+};
+
+template<>
+struct LinearInterpolation<float3> {
+    static float3 Evaluate(float3 a, float3 b, float t) {
+        return float3(
+            Lerp(a.x, b.x, t),
+            Lerp(a.y, b.y, t),
+            Lerp(a.z, b.z, t)
+        );
+    }
+};
+
+template<>
+struct LinearInterpolation<Quaternion> {
+    static Quaternion Evaluate(Quaternion a, Quaternion b, float t) {
+        return Quaternion::slerp(a, b, t);
     }
 };

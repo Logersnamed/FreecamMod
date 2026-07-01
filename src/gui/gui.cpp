@@ -382,6 +382,64 @@ void GUI::FeaturesTab::Render() {
     }
 }
 
+template<typename T>
+void GUI::SequencerTab::DrawCombo(const char* label, Track<T>& track) {
+    static const char* InterpolationTypeNames[] = { "Linear", "Catmull-Rom" };
+    static const int count = IM_COUNTOF(InterpolationTypeNames);
+    int current = (int)track.GetInterpolationType();
+    ImGui::Combo(label, &current, InterpolationTypeNames, count);
+    track.SetInterpolationType((InterpolationType)current);
+}
+
+void GUI::SequencerTab::Render() {
+    if (ImGui::BeginTabItem("Sequencer")) {
+        ImGui::BeginScrollableArea("##sequencer_content");
+
+        bool isVisible = timelineWindow.IsVisible();
+        if (ImGui::Checkbox("Show timeline", &isVisible)) {
+            timelineWindow.SetVisibility(isVisible);
+            if (isVisible) {
+                static bool was_notified = false;
+                if (!was_notified) NotificationPopUp::Notify("Info", "Click and hold the left mouse button in the game view to look around", 5);
+                was_notified = true;
+            }
+        }
+
+        float max_time = timeline.GetMaxTime();
+        if (ImGui::DragFloat("Timeline lenght", &max_time, 1, 16.0f, 3600.0f, "%.f sec")) {
+            timeline.SetMaxTime(max_time);
+        }
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Text("Interpolation type");
+
+        DrawCombo("FOV##interp", timeline.GetFovTrack());
+        DrawCombo("Position##interp", timeline.GetPosTrack());
+        DrawCombo("Rotation##interp", timeline.GetRotTrack());
+
+        ImGui::Spacing();
+        ImGui::Separator();
+
+        TimelineConfig& config = timelineWindow.GetConfig();
+
+        ImGui::SeparatorText("Timeline");
+
+        ImGui::DragInt("Pixels per Second", &config.pixels_per_second, 1, 10, 1000);
+        ImGui::DragInt("Sidebar Width", &config.sidebar_width, 1, 50, 1000);
+        ImGui::DragInt("Track Height", &config.track_height, 1, 10, 200);
+
+        ImGui::Checkbox("Enable Snap", &config.snap_enabled);
+
+        ImGui::BeginDisabled(!config.snap_enabled);
+        ImGui::DragInt("Snap Pixels", &config.snap_pixels, 1, 1, 100);
+        ImGui::EndDisabled();
+
+        ImGui::EndScrollableArea();
+        ImGui::EndTabItem();
+    }
+}
+
 void GUI::ConfigTab::SortConVars() {
     if (!areSorted) {
         for (auto* conVar : IConVar::allConVars) {
@@ -763,7 +821,7 @@ void GUI::OnDpiChange() {
 
 void GUI::Render() {
     static bool old_should_block = false;
-    bool should_block_actions = is_visible && timeline.is_visible && !input.IsPressed(VK_LBUTTON);
+    bool should_block_actions = is_visible && timeline_window.IsVisible() && !input.IsPressed(VK_LBUTTON);
     if (old_should_block != should_block_actions) {
         EventBus::Emit(Event::BlockCameraMouseMoveInput{ should_block_actions });
         auto block = Event::BlockActions::None();
@@ -797,9 +855,6 @@ void GUI::Render() {
         NotificationPopUp::Render();
     }
 
-    if (!is_visible)
-        return;
-
     bool isSequencerMode = true;
     if (isSequencerMode) {
         ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -831,7 +886,10 @@ void GUI::Render() {
         ImGui::End();
     }
 
-    timeline.Render();
+    if (!is_visible)
+        return;
+
+    timeline_window.Render();
 
     bool oldVisibility = is_visible;
     ImGui::SetNextWindowSize(ImVec2(420, 360), ImGuiCond_FirstUseEver);
@@ -845,20 +903,7 @@ void GUI::Render() {
     if (ImGui::BeginTabBar("##tabs")) {
         infoTab.Render();
         featuresTab.Render();
-        if (ImGui::BeginTabItem("Sequencer")) {
-            ImGui::BeginScrollableArea("##sequencer_content");
-
-            if (ImGui::Checkbox("is_visible", &timeline.is_visible)) {
-                if (timeline.is_visible) {
-                    static bool was_notified = false;
-                    if (!was_notified) NotificationPopUp::Notify("Info", "Click and hold the left mouse button in the game view to look around", 5);
-                    was_notified = true;
-                }
-            }
-
-            ImGui::EndScrollableArea();
-            ImGui::EndTabItem();
-        }
+        sequencerTab.Render();
         configTab.Render();
         keyBindsTab.Render();
         logTab.Render();

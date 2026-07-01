@@ -11,7 +11,8 @@
 
 #include "core/game_data_manager.h"
 #include "hook/hook_manager.h"
-#include "gui/timeline.h"
+#include "core/timeline/timeline.h"
+#include "gui/timeline/timeline_window.h"
 
 #include <MinHook.h>
 
@@ -46,6 +47,19 @@ class GUI {
         void RenderPathRecorder();
         void Render();
     };
+
+    class SequencerTab {
+        Timeline& timeline;
+        TimelineWindow& timelineWindow;
+        
+    public:
+        SequencerTab(Timeline& timeline, TimelineWindow& timelineWindow) 
+            : timeline(timeline), timelineWindow(timelineWindow) {}
+
+        template<typename T>
+        void DrawCombo(const char* label, Track<T>& type);
+        void Render();
+    };
     
     class ConfigTab {
         Config& config;
@@ -75,6 +89,7 @@ class GUI {
 
     InfoTab infoTab;
     FeaturesTab featuresTab;
+    SequencerTab sequencerTab;
     ConfigTab configTab;
     KeyBindsTab keyBindsTab;
     LogTab logTab{};
@@ -84,6 +99,7 @@ class GUI {
     ActionManager& actionMgr;
 
     Timeline timeline;
+    TimelineWindow timeline_window;
 
     bool is_visible = true;
 
@@ -112,9 +128,10 @@ class GUI {
 
 public:
     GUI(FreeCamera& freeCamera, Speedhack& speedhack, HookManager& hookManager, Config& config, Input& input, ActionManager& actionMgr) :
-        config(config), input(input), actionMgr(actionMgr), timeline(freeCamera),
+        config(config), input(input), actionMgr(actionMgr), timeline(freeCamera), timeline_window(timeline),
         infoTab(freeCamera),
         featuresTab(hookManager, freeCamera, speedhack),
+        sequencerTab(timeline, timeline_window),
         configTab(config),
         keyBindsTab(config) { instance = this; }
 

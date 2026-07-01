@@ -1,0 +1,95 @@
+#pragma once
+#include "gui/timeline/track_editor.h"
+#include "gui/timeline/keyframes_editor.h"
+#include "gui/timeline/timeline_config.h"
+#include "core/timeline/track.h"
+
+template<typename T>
+class TrackWidget {
+    Track<T>& track;
+    const TimelineConfig& config;
+
+    std::string name{};
+
+    float delta_x = 0;
+
+public:
+    TrackWidget(std::string name, Track<T>& track, const TimelineConfig& config)
+        : name(std::move(name)), track(track), config(config) {}
+
+    void DrawKeyframes(std::vector<Keyframe<T>>& keyframes, const TrackInputEvent& events) {
+        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+        ImVec2 pos = ImGui::GetCursorScreenPos();
+        const int radius = 5;
+        for (auto& k : keyframes) {
+            float drag_delta = (k.is_selected && !events.drag_released) ? events.drag_delta_x : 0;
+
+            float delta = std::max<float>(0.0f, config.TimeToPixels(k.time) + drag_delta);
+            if (drag_delta) delta = config.SnapPixelsToGrid(delta);    // snap only after drag
+            draw_list->AddCircle(
+                ImVec2(pos.x + delta, pos.y + config.track_height * 0.5f),
+                radius,
+                k.is_selected ? IM_COL32(255, 255, 0, 255) : IM_COL32(255, 255, 255, 255)
+                , 4, 2
+            );
+        }
+    }
+
+    TrackInputEvent GetEvents(ImVec2 origin) {
+        bool released = false;
+        if (ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+            delta_x = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left).x;
+        }
+        else if (delta_x) {
+            released = true;
+        }
+        ImVec2 mp = ImGui::GetMousePos();
+
+        TrackInputEvent events{
+            delta_x,
+            released,
+            ImGui::IsKeyPressed(ImGuiKey_X),
+            ImGui::IsMouseClicked(ImGuiMouseButton_Left),
+            ImGui::IsKeyDown(ImGuiKey_LeftShift),
+            {mp.x, mp.y},
+            {origin.x, origin.y}
+        };
+
+        return events;
+    }
+
+    void DrawSidebar(float time, bool is_playing) {
+        ImGui::PushID(this);
+        if (ImGui::Button("+", ImVec2(config.track_height, config.track_height)) || ImGui::IsKeyPressed(ImGuiKey_O)) {
+            track.AddKeyframe(time);
+        }
+
+        ImGui::SameLine();
+
+        T data = track.GetData();
+        if (TrackEditor<T>::DrawValue(name, data)) {
+            track.SetData(data);
+            track.AddKeyframe(time);
+            track.WriteCameraValue(data);
+        }
+        ImGui::PopID();
+    }
+
+    void DrawLane(float max_time) {
+        ImGui::PushID(this);
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(0, 0, 0, 0));
+        ImGui::BeginChild("##lane", ImVec2(config.TrackWidth(max_time), config.track_height));
+        ImVec2 origin = ImGui::GetCursorScreenPos();
+        TrackInputEvent events = GetEvents(origin);
+
+        KeyframesEditor<T>::Update(track, events, config);
+        DrawKeyframes(track.GetKeyframes(), events);
+
+        if (events.drag_released)
+            delta_x = 0;
+
+        ImGui::EndChild();
+        ImGui::PopStyleColor();
+        ImGui::PopID();
+    }
+};
