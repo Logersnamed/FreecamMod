@@ -60,7 +60,8 @@ public:
 
     void DrawSidebar(float time, bool is_playing) {
         ImGui::PushID(this);
-        if (ImGui::Button("+", ImVec2(config.track_height, config.track_height)) || ImGui::IsKeyPressed(ImGuiKey_O)) {
+        ImGui::BeginChild("##sidebar_header", ImVec2(config.sidebar_width, config.track_height));
+        if (ImGui::Button("+") || ImGui::IsKeyPressed(ImGuiKey_O)) {
             track.AddKeyframe(time);
         }
 
@@ -72,12 +73,13 @@ public:
             track.AddKeyframe(time);
             track.WriteCameraValue(data);
         }
+		ImGui::EndChild();
         ImGui::PopID();
     }
 
-    void DrawLane(float max_time) {
+    void DrawLane(float max_time, ImVec4 bg_color) {
         ImGui::PushID(this);
-        ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(0, 0, 0, 0));
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, bg_color);
         ImGui::BeginChild("##lane", ImVec2(config.TrackWidth(max_time), config.track_height));
         ImVec2 origin = ImGui::GetCursorScreenPos();
         TrackInputEvent events = GetEvents(origin);

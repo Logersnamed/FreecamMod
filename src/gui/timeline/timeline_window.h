@@ -34,19 +34,26 @@ public:
         float max_time = timeline.GetMaxTime();
         bool is_playing = timeline.IsPlaying();
 
-        ImGui::SetNextWindowSizeConstraints(ImVec2(600, 160), ImVec2(FLT_MAX, FLT_MAX));
-        ImGui::Begin("Timeline", &is_visible);
+        std::string title = "Timeline " + TimeToString(time, TimeFormat::MINUTES_SECONDS_MILLISECONDS);
+        ImGui::Begin((title + "###timeline").c_str(), &is_visible);
 
-        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 0));
-
+		int spacing = 4;
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(spacing, 0));
         ImGui::BeginChild("##sidebar", ImVec2(config.sidebar_width, config.track_height * 4), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
         {
-            ImDrawList* draw_list = ImGui::GetWindowDrawList();
-            ImVec2 pos = ImGui::GetCursorScreenPos();
+            ImGui::BeginChild("##sidebar_header", ImVec2(config.sidebar_width, config.track_height));
+            if (ImGui::Button("+##add_all")) {
+                timeline.GetFovTrack().AddKeyframe(time);
+                timeline.GetPosTrack().AddKeyframe(time);
+                timeline.GetRotTrack().AddKeyframe(time);
+            }
 
-            if (ImGui::Button(is_playing ? "Stop" : "Start", ImVec2(config.sidebar_width, config.track_height))) {
+			ImGui::SameLine();
+
+            if (ImGui::Button(is_playing ? "Stop" : "Start", ImVec2(ImGui::GetContentRegionAvail().x - spacing, 0))) {
                 is_playing ? timeline.StopPlay() : timeline.Play();
             }
+            ImGui::EndChild();
 
             fovWidget.DrawSidebar(time, is_playing);
             posWidget.DrawSidebar(time, is_playing);
@@ -54,6 +61,8 @@ public:
         }
         ImGui::EndChild();
 
+        ImGui::SameLine(0, 0);
+        ImGui::Dummy(ImVec2(spacing, 0));
         ImGui::SameLine(0, 0);
 
         const int scroll_height = 14;
@@ -65,14 +74,6 @@ public:
             float scroll_x = ImGui::GetScrollX();
             int track_width = config.TrackWidth(max_time);
 
-            for (int i = 0; i < 4; ++i) {
-                draw_list->AddRectFilled(
-                    ImVec2(pos.x, pos.y + i * config.track_height),
-                    ImVec2(ImGui::GetContentRegionAvail().x + track_width, pos.y + (i + 1) * config.track_height),
-                    IM_COL32(255, 255, 255, (i % 2 == 1) * 10)
-                );
-            }
-
             // Drawing timestamps
             ImGui::BeginChild("##timestamps", ImVec2(track_width, config.track_height));
             const int seconds = ceil(config.PixelsToTime(track_width));
@@ -81,7 +82,8 @@ public:
                 draw_list->AddLine(
                     ImVec2(pos.x + x, pos.y),
                     ImVec2(pos.x + x, pos.y + config.track_height * 0.3f),
-                    IM_COL32(155, 155, 155, 255));
+                    IM_COL32(155, 155, 155, 255)
+                );
             }
 
             for (int sec = 0; sec <= seconds; ++sec) {
@@ -90,18 +92,23 @@ public:
                 draw_list->AddLine(
                     ImVec2(pos.x + x, pos.y),
                     ImVec2(pos.x + x, pos.y + config.track_height * 0.5f),
-                    IM_COL32(255, 255, 255, 255));
+                    IM_COL32(255, 255, 255, 255)
+                );
 
                 draw_list->AddText(
                     ImVec2(pos.x + x + 10, pos.y + config.track_height * 0.3f + 2),
                     IM_COL32(255, 255, 255, 255),
-                    TimeToString((float)sec).c_str());
+                    TimeToString((float)sec).c_str()
+                );
             }
             ImGui::EndChild();
 
-            fovWidget.DrawLane(max_time);
-            posWidget.DrawLane(max_time);
-            rotWidget.DrawLane(max_time);
+            const ImVec4 bg1 = ImVec4(0.06f, 0.06f, 0.07f, 1.00f);
+            const ImVec4 bg2 = ImVec4(0.09f, 0.09f, 0.10f, 1.00f);
+
+            fovWidget.DrawLane(max_time, bg2);
+            posWidget.DrawLane(max_time, bg1);
+            rotWidget.DrawLane(max_time, bg2);
 
             // Drawing playhead
             const int tringle_radius = 8;
@@ -112,7 +119,6 @@ public:
                 ImVec2(pos.x + time_pixels, pos.y + tringle_radius),
                 IM_COL32(255, 255, 255, 255)
             );
-            draw_list->AddText(ImVec2(pos.x + time_pixels + 12, pos.y + 20), IM_COL32(255, 255, 255, 255), TimeToString(time, TimeFormat::MINUTES_SECONDS_MILLISECONDS).c_str());
 
             bool is_dragging = false;
             bool s = was_clicked_in_timestamps_zone && ImGui::IsMouseDown(ImGuiMouseButton_Left);
