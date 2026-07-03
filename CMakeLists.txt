@@ -14,7 +14,7 @@ add_subdirectory(extern)
 add_library(${PROJECT_NAME} SHARED
     ${SRC}
     src/hook/daytime_update.asm
-)
+ )
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 

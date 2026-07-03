@@ -1,13 +1,5 @@
 #pragma once
-#include <vector>
-
-#include "MinHook.h"
-#include "ModUtils.h"
-
 #include "core/config/con_var.h"
-#include "core/events.h"
-#include "utils/memory.h"
-#include "utils/debug.h"
 
 class CodeCave {
 protected:
@@ -35,12 +27,7 @@ public:
     bool IsFreecamOnly() const { return isFreecamOnly; }
     int* GetCycleSpeedPtr() const { return cycleSpeed; }
 
-    void ToggleCycleWeatherTime() { 
-        if (isCycleWeatherTime) {
-            *isCycleWeatherTime = !(*isCycleWeatherTime);
-            EventBus::Emit(Event::ToggleCycleWeatherTime{ .isEnabled = *isCycleWeatherTime });
-        }
-    }
+    void ToggleCycleWeatherTime();
 
     bool IsCycleWeatherTime() { return isCycleWeatherTime ? *isCycleWeatherTime : false; }
     void SetCycleWeatherTime(bool enabled) { if (isCycleWeatherTime) *isCycleWeatherTime = enabled; }

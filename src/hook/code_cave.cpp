@@ -1,5 +1,10 @@
 #include "hook/code_cave.h"
+
+#include "core/events.h"
 #include "utils/memory.h"
+#include "utils/debug.h"
+
+#include "ModUtils.h"
 
 namespace CodeCaveAsm {
     namespace DaytimeUpdateAsm {
@@ -61,4 +66,11 @@ void DaytimeUpdateCave::SaveOriginalBytes(uintptr_t hkAddress) {
 
 uintptr_t DaytimeUpdateCave::GetDestinationAddress() {
     return (uintptr_t)&CodeCaveAsm::DaytimeUpdateAsm::DaytimeUpdateFunc;
+}
+
+void DaytimeUpdateCave::ToggleCycleWeatherTime() {
+    if (isCycleWeatherTime) {
+        *isCycleWeatherTime = !(*isCycleWeatherTime);
+        EventBus::Emit(Event::ToggleCycleWeatherTime{ .isEnabled = *isCycleWeatherTime });
+    }
 }

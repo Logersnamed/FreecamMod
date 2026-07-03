@@ -4,11 +4,8 @@
 
 #include <d3d12.h>
 #include <dxgi1_6.h>
-#include <d3dcompiler.h>
 
 #include <functional>
-
-#include <MinHook.h>
 
 using Microsoft::WRL::ComPtr;
 

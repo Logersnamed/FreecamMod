@@ -1,11 +1,7 @@
 #pragma once
-#include <algorithm>
-#include <cmath>
-
-#include "core/free_camera.h"
-#include "core/events.h"
 #include "core/timeline/track.h"
-#include "utils/types.h"
+
+class FreeCamera;
 
 class Timeline {
     float time = 0;
@@ -20,53 +16,9 @@ class Timeline {
     FreeCamera& freeCamera;
 
 public:
-    Timeline(FreeCamera& freeCamera) : freeCamera(freeCamera) {
-        fovTrack.Bind(
-            [&freeCamera]() { 
-                auto* cam = freeCamera.GetCamera();  
-                return cam ? cam->fov : 0.0f; 
-            },
-            [&freeCamera](const float& v) { 
-                auto* cam = freeCamera.GetCamera();
-                if (cam) cam->fov = v;
-            }
-        );
-        posTrack.Bind(
-            [&freeCamera]() { 
-                auto* cam = freeCamera.GetCamera(); 
-                return cam ? cam->matrix.position() : float3(); 
-            },
-            [&freeCamera](const float3& v) { 
-                auto* cam = freeCamera.GetCamera();
-                if (cam) cam->matrix.position() = v;
-            }
-        );
-        rotTrack.Bind(
-            [&freeCamera]() { return freeCamera.GetRotation().toQuaternion(); },
-            [&freeCamera](const Quaternion& v) { freeCamera.SetRotation(v.toEuler()); }
-        );
+    Timeline(FreeCamera& freeCamera);
 
-        EventBus::Subscribe<Event::ToggleFreecam>([this](const Event::ToggleFreecam& event) {
-            if (!event.isEnabled) {
-                StopPlay();
-            }
-        });
-    }
-
-    void Update(float dt) {
-        if (is_playing) {
-            time += dt;
-
-            if (time >= max_time) {
-                time = max_time;
-                is_playing = false;
-            }
-        }
-
-        fovTrack.Update(time, is_playing);
-        posTrack.Update(time, is_playing);
-        rotTrack.Update(time, is_playing);
-    }
+    void Update(float dt);
 
     void Play() { is_playing = true; }
     void StopPlay() { is_playing = false; }

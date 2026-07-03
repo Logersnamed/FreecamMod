@@ -3,8 +3,6 @@
 #include <string>
 #include <map>
 
-#include <MinHook.h>
-
 #include "core/mod_context.h"
 #include "core/config/con_var.h"
 #include "core/timeline/timeline.h"
@@ -39,10 +37,7 @@ class GUI {
         PathRecorder& pathRecorder;
 
     public:
-        FeaturesTab(HookManager& hookManager, FreeCamera& freeCamera, Speedhack& speedhack)
-            : hookManager(hookManager), freeCamera(freeCamera), speedhack(speedhack), 
-            frameStepper(freeCamera.GetFrameStepper()), cameraStateMgr(freeCamera.GetCameraStateManager()),
-            pathRecorder(freeCamera.GetPathRecorder()) {}
+        FeaturesTab(HookManager& hookManager, FreeCamera& freeCamera, Speedhack& speedhack);
 
         void RenderSpeedhack();
         void RenderFrameStepper();

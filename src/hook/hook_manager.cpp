@@ -1,5 +1,10 @@
 #include "hook/hook_manager.h"
 
+#include "MinHook.h"
+#include "ModUtils.h"
+
+#include "utils/debug.h"
+
 bool HookManager::Initialize() {
     if (isInitialized) {
         LOG_WARN("HookManager already initialized");

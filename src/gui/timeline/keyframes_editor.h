@@ -1,5 +1,6 @@
 #pragma once
 #include "gui/timeline/timeline_config.h"
+#include "core/timeline/track.h"
 
 struct TrackInputEvent {
     float drag_delta_x = 0;

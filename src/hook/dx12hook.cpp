@@ -1,6 +1,7 @@
 #include "dx12hook.h"
 
 #include "utils/debug.h"
+#include <MinHook.h>
 
 namespace DX12Hook {
     void* g_executeCommandLists{};

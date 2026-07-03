@@ -1,11 +1,7 @@
 #pragma once
 #include <vector>
 
-#include "MinHook.h"
-#include "ModUtils.h"
-
 #include "hook/code_cave.h"
-#include "utils/debug.h"
 
 class HookManager {
     struct Hook {

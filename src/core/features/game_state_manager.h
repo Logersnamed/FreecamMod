@@ -1,6 +1,4 @@
 #pragma once
-#include <cstddef>
-
 #include "core/config/con_var.h"
 #include "core/game_data/game_data.h"
 #include "core/settings_backup.h"

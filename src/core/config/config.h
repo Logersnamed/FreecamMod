@@ -1,7 +1,5 @@
 #pragma once
-#include "utils/windows_lean.h"
 #include <string>
-#include <type_traits>
 #include <filesystem>
 #include <optional>
 #include <functional>
@@ -9,10 +7,9 @@
 
 #include "mini/ini.h"
 
-#include "core/config/con_var.h"
 #include "core/input/action_system.h"
-#include "core/free_camera.h"
-#include "utils/debug.h"
+
+class IConVar;
 
 class Config {
 	using enum ActionType;
@@ -36,18 +33,7 @@ public:
         return keybinds;
     }
 
-    bool GetKeybindString(const Keybind& keybind, std::string* string) {
-        static const char* keybindSection = "keybinds";
-        const char* keybindName = keybind.name;
-
-        if (!ini.has(keybindSection)) return false;
-        auto& collection = ini[keybindSection];
-
-        if (!collection.has(keybindName)) return false;
-        *string = collection[keybindName];
-    
-        return true;
-    }
+    bool GetKeybindString(const Keybind& keybind, std::string* string);
 
 private:
     ActionManager* actionMgr = nullptr;

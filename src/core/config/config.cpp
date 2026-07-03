@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string_view>
 
+#include "core/config/con_var.h"
 #include "utils/math.h"
 
 bool Config::Initialize(HMODULE hModule, ActionManager& actionMgr) {
@@ -190,4 +191,17 @@ std::string Config::KeyToString(int key) {
     std::stringstream ss;
     ss << "0x" << std::hex << std::uppercase << key;
     return ss.str();
+}
+
+bool Config::GetKeybindString(const Keybind& keybind, std::string* string) {
+    static const char* keybindSection = "keybinds";
+    const char* keybindName = keybind.name;
+
+    if (!ini.has(keybindSection)) return false;
+    auto& collection = ini[keybindSection];
+
+    if (!collection.has(keybindName)) return false;
+    *string = collection[keybindName];
+
+    return true;
 }

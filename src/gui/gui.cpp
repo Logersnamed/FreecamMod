@@ -3,6 +3,7 @@
 #include <format>
 
 #include "imgui.h"
+#include "imgui_impl_win32.h"
 
 #include "gui/overlay.h"
 #include "core/events.h"
@@ -183,6 +184,12 @@ void GUI::InfoTab::Render() {
         ImGui::EndScrollableArea();
         ImGui::EndTabItem();
     }
+}
+
+GUI::FeaturesTab::FeaturesTab(HookManager& hookManager, FreeCamera& freeCamera, Speedhack& speedhack)
+    : hookManager(hookManager), freeCamera(freeCamera), speedhack(speedhack),
+    frameStepper(freeCamera.GetFrameStepper()), cameraStateMgr(freeCamera.GetCameraStateManager()),
+    pathRecorder(freeCamera.GetPathRecorder()) {
 }
 
 void GUI::FeaturesTab::RenderSpeedhack() {
