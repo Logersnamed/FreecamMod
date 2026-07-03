@@ -1,7 +1,6 @@
 #pragma once
-#include <windows.h>
-
 #include "hook/hook_manager.h"
+#include "core/mod_context.h"
 #include "core/config/config.h"
 #include "core/features/speedhack.h"
 #include "core/game_data/game_data.h"
@@ -9,9 +8,6 @@
 #include "core/input/input.h"
 #include "core/free_camera.h"
 #include "gui/gui.h"
-
-
-#include "core/config/con_var.h"
 
 class Freecam {
 public:
@@ -27,14 +23,16 @@ public:
 
 private:
     HMODULE hModule{};
-    FreeCamera freeCamera{};
-    Config config{};
-    Input input{};
-    ActionManager actionMgr{};
-    HookManager hookManager{};
-    Speedhack speedhack{};
 
-    GUI gui{ freeCamera, speedhack, hookManager, config, input, actionMgr };
+    FreeCamera    freeCamera{};
+    Config        config{};
+    Input         input{};
+    ActionManager actionMgr{};
+    HookManager   hookManager{};
+    Speedhack     speedhack{};
+
+    ModContext context{ config, input, actionMgr, hookManager, speedhack, freeCamera };
+    GUI gui{ context };
 
     bool isRunning = true;
 

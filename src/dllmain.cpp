@@ -1,4 +1,4 @@
-#include <windows.h>
+#include "utils/windows_lean.h"
 
 #include "freecam.h"
 

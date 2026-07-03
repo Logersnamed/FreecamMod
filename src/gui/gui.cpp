@@ -1,7 +1,16 @@
 #include "gui/gui.h"
+
+#include <format>
+
+#include "imgui.h"
+
 #include "gui/overlay.h"
 #include "core/events.h"
-#include <format>
+#include "core/config/config.h"
+#include "core/free_camera.h"
+#include "core/features/speedhack.h"
+#include "core/game_data_manager.h"
+#include "hook/hook_manager.h"
 
 namespace Layout {
     constexpr float ITEM_WIDTH = -150.0f;
@@ -13,24 +22,7 @@ namespace Layout {
     }
 }
 
-
 namespace ImGui {
-    // aproach 1 (for some reason removes padding of child's child elements)
-    /*
-    static inline void BeginScrollableArea(const char* str_id) {
-        // tried to remove weird padding from child
-        float padding = ImGui::GetStyle().WindowPadding.x * 0.5f;
-        ImGui::SetCursorPosX(ImGui::GetCursorPosX() - padding);
-
-        ImGui::BeginChild(str_id, ImVec2(ImGui::GetContentRegionAvail().x + padding, 0), 0, ImGuiWindowFlags_NoBackground);
-    }
-
-    static inline void EndScrollableArea() {
-        ImGui::EndChild();
-    }
-    */
-
-    // aproach 2 
     static inline void BeginScrollableArea(const char* str_id) {
         ImGui::SetCursorPosX(0);
 

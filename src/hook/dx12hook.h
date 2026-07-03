@@ -1,5 +1,5 @@
 #pragma once
-#include <Windows.h>
+#include "utils/windows_lean.h"
 #include <wrl.h>
 
 #include <d3d12.h>

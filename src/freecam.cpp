@@ -222,7 +222,7 @@ void Freecam::Dispose() {
     DX12Hook::Uninitialize();
 
     freeCamera.DisableCamera();
-	speedhack.SetSpeed(1.0);
+	speedhack.Disable();
     hookManager.Shutdown();
     input.UnhookWndProc(ModUtils::muWindow);
     Logger::Shutdown();

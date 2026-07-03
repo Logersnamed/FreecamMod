@@ -1,6 +1,5 @@
 #pragma once
 #include <vector>
-#include <functional>
 
 #include "MinHook.h"
 #include "ModUtils.h"
@@ -28,7 +27,9 @@ public:
 	DaytimeUpdateCave& GetDaytimeUpdateCave() { return daytimeUpdateCave; }
 
     bool Initialize();
+    bool Enable(void* target);
     bool Hook(void* target, void* detour, void** original);
+    bool HookAndEnable(void* target, void* detour, void** original);
     bool EnableAll();
     void RemoveAll();
     void Shutdown();

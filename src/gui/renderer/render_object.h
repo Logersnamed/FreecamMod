@@ -1,7 +1,6 @@
 #pragma once
 
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
+#include "utils/windows_lean.h"
 
 #include <wrl.h>
 using Microsoft::WRL::ComPtr;

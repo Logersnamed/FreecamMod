@@ -1,6 +1,5 @@
 #pragma once
-#include <windows.h>
-#include <windowsx.h>
+#include "utils/windows_lean.h"
 #include <Xinput.h>
 #include <cstdint>
 #include <array>

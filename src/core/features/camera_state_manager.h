@@ -58,7 +58,7 @@ public:
 		slotOrder.clear();
 		if (positionSlots.empty()) return;
 		for (uint8_t slot : positionSlots) {
-			if (slot < 0 || slot >= MAX_SLOTS) continue;
+			if (slot >= MAX_SLOTS) continue;
 			if (stateSlots[(int)slot].isSaved) slotOrder.push_back(slot);
 		}
 		if (slotOrder.empty()) return;

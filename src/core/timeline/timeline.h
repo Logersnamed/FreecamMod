@@ -2,8 +2,9 @@
 #include <algorithm>
 #include <cmath>
 
-#include "core/timeline/track.h"
 #include "core/free_camera.h"
+#include "core/events.h"
+#include "core/timeline/track.h"
 #include "utils/types.h"
 
 class Timeline {
@@ -44,6 +45,12 @@ public:
             [&freeCamera]() { return freeCamera.GetRotation().toQuaternion(); },
             [&freeCamera](const Quaternion& v) { freeCamera.SetRotation(v.toEuler()); }
         );
+
+        EventBus::Subscribe<Event::ToggleFreecam>([this](const Event::ToggleFreecam& event) {
+            if (!event.isEnabled) {
+                StopPlay();
+            }
+        });
     }
 
     void Update(float dt) {

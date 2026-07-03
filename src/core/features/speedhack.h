@@ -1,5 +1,5 @@
 #pragma once
-#include <windows.h>
+#include "utils/windows_lean.h"
 #include <array>
 #include <algorithm>
 
@@ -20,7 +20,7 @@ class Speedhack {
 
 	bool isInitialized = false;
 
-	ConVar<bool> isFreecamOnly{ "features_work_only_in_freecam", "speehack", true };
+	ConVar<bool> isFreecamOnly{ "features_work_only_in_freecam", "speedhack", true };
 
 	void ApplySpeed(double scale) {
 		if (scale <= 1.0) {
@@ -29,14 +29,11 @@ class Speedhack {
 		MS::SetSpeed(scale);
 	}
 
+	HookManager* hookManager{};
+
 public:
 	bool Initialize(HookManager &hookManager) {
-		size_t hookCount = 0;
-		const auto* hooks = MS::GetHooks(hookCount);
-		for (size_t i = 0; i < hookCount; ++i) {
-			if (!hookManager.Hook(hooks[i].target, hooks[i].detour, hooks[i].original))
-				return false;
-		}
+		this->hookManager = &hookManager;
 
 		uintptr_t framelimitAddress = GameDataManager::FrametimeLimit.Get();
 		if (!framelimitAddress) return false;
@@ -94,14 +91,31 @@ public:
 
 	bool IsEnabled() const { return isEnabled; }
 
+	bool OnFirstEnable() {
+		size_t hookCount = 0;
+		const auto* hooks = MS::GetHooks(hookCount);
+		for (size_t i = 0; i < hookCount; ++i) {
+			if (!hookManager->HookAndEnable(hooks[i].target, hooks[i].detour, hooks[i].original)) {
+				return false;
+			}
+		}
+
+		// Speedhack only "eldenring.exe" module
+		MS::IncludeModule(GetModuleHandleW(NULL));
+
+		return true;
+	}
+
 	void Enable() {
 		if (!isInitialized || isEnabled) return;
 
-		static bool modulesRegistered = false;
-		if (!modulesRegistered) {
-			// Speedhack only "eldenring.exe" module
-			MS::IncludeModule(GetModuleHandleW(NULL));
-			modulesRegistered = true;
+		static bool isFirstEnable = true;
+		if (isFirstEnable) {
+			if (!OnFirstEnable()) {
+				isInitialized = false;
+				return;
+			}
+			isFirstEnable = false;
 		}
 
 		isEnabled = true;

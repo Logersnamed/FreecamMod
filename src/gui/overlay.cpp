@@ -263,7 +263,7 @@ namespace Overlay {
         g_command_list->OMSetRenderTargets(1, &g_frame_contexts[back_buffer_idx].render_target_descriptor, FALSE, nullptr);
         g_command_list->SetDescriptorHeaps(1, heaps);
 
-        g_command_list->RSSetViewports(1, &g_viewport);
+        //g_command_list->RSSetViewports(1, &g_viewport);
 
         /*
         D3D12_RECT rect;

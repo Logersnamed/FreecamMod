@@ -1,20 +1,24 @@
 #pragma once
-#include "imgui.h"
-#include "imgui_impl_win32.h"
-#include "imgui_impl_dx12.h"
+#include <vector>
+#include <string>
+#include <map>
+
+#include <MinHook.h>
+
+#include "core/mod_context.h"
 #include "core/config/con_var.h"
-#include "core/config/config.h"
-#include "core/free_camera.h"
-#include "core/features/speedhack.h"
-
-#include <unordered_map>
-
-#include "core/game_data_manager.h"
-#include "hook/hook_manager.h"
 #include "core/timeline/timeline.h"
 #include "gui/timeline/timeline_window.h"
 
-#include <MinHook.h>
+class FreeCamera;
+class Speedhack;
+class HookManager;
+class Config;
+class Input;
+class ActionManager;
+class FrameStepper;
+class CameraStateManager;
+class PathRecorder;
 
 class GUI {
     class InfoTab {
@@ -127,13 +131,14 @@ class GUI {
     ConVar<bool> notifyStateQueued{ "gui", "notify_state_queued", false };
 
 public:
-    GUI(FreeCamera& freeCamera, Speedhack& speedhack, HookManager& hookManager, Config& config, Input& input, ActionManager& actionMgr) :
-        config(config), input(input), actionMgr(actionMgr), timeline(freeCamera), timeline_window(timeline),
-        infoTab(freeCamera),
-        featuresTab(hookManager, freeCamera, speedhack),
+    explicit GUI(ModContext& ctx)
+        : config(ctx.config), input(ctx.input), actionMgr(ctx.actionMgr),
+        timeline(ctx.freeCamera), timeline_window(timeline),
+        infoTab(ctx.freeCamera),
+        featuresTab(ctx.hookManager, ctx.freeCamera, ctx.speedhack),
         sequencerTab(timeline, timeline_window),
-        configTab(config),
-        keyBindsTab(config) { instance = this; }
+        configTab(ctx.config),
+        keyBindsTab(ctx.config) { instance = this; }
 
     ImGuiStyle baseStyle{};
 

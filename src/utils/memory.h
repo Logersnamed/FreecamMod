@@ -1,5 +1,5 @@
 #pragma once
-#include <windows.h>
+#include "utils/windows_lean.h"
 #include <vector>
 
 // From https://github.com/koalabear420/EROverlay/tree/main

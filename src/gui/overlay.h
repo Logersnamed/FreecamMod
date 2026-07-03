@@ -1,6 +1,5 @@
 #pragma once
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
+#include "utils/windows_lean.h"
 
 #include <d3d12.h>
 #include <dxgi1_6.h>
@@ -28,7 +27,7 @@ namespace Overlay {
 	void SetRenderCallback(render_callback_t callback);
 	void SetImGuiInitCallback(imgui_init_callback_t callback);
 
-	inline D3D12_VIEWPORT g_viewport{};
+	//inline D3D12_VIEWPORT g_viewport{};
 
 /*	inline int g_window_width = 1920;
 	inline int g_window_height = 1080;

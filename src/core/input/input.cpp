@@ -23,7 +23,7 @@ LRESULT __stdcall Input::hkWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
     if (Overlay::IsInitialized())
         ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam);
 
-    instance->UpdateKeyboard(hWnd, uMsg, wParam, lParam);
+    if (instance) instance->UpdateKeyboard(hWnd, uMsg, wParam, lParam);
 
     return CallWindowProcW((WNDPROC)Input::origWndProc, hWnd, uMsg, wParam, lParam);
 }
@@ -43,7 +43,7 @@ UINT WINAPI Input::hkGetRawInputData(HRAWINPUT hRawInput, UINT uiCommand, LPVOID
             raw->data.mouse.lLastX = 0;
             raw->data.mouse.lLastY = 0;
         }
-        else if (instance->isShouldGetInput && !instance->isMouseInputBlocked) {
+        else if (instance && instance->isShouldGetInput && !instance->isMouseInputBlocked) {
             instance->mouseDelta.x += raw->data.mouse.lLastX;
             instance->mouseDelta.y += raw->data.mouse.lLastY;
         }
@@ -109,6 +109,7 @@ void Input::UpdateKeyboard(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         case WM_DPICHANGED:
             EventBus::Emit(Event::DPIChanged{});
+            break;
 
         case WM_KEYDOWN:
         case WM_SYSKEYDOWN:

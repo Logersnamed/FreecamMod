@@ -1,5 +1,5 @@
 #pragma once
-#include <windows.h>
+#include "utils/windows_lean.h"
 #include <algorithm>
 #include <optional>
 #include <cstddef>

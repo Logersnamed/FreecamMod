@@ -16,7 +16,7 @@ class TimelineWindow {
     TrackWidget<Quaternion> rotWidget{ "Rotation", timeline.GetRotTrack(), config };
 
     bool was_clicked_in_timestamps_zone = false;
-    bool is_visible = true;
+    bool is_visible = false;
 
 public:
     explicit TimelineWindow(Timeline& timeline) : timeline(timeline) {}
