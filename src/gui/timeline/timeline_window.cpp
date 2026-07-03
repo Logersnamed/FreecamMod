@@ -15,6 +15,11 @@ void TimelineWindow::Render() {
     std::string title = "Timeline " + TimeToString(time, TimeFormat::MINUTES_SECONDS_MILLISECONDS);
     ImGui::Begin((title + "###timeline").c_str(), &is_visible);
 
+    is_hovered = ImGui::IsWindowHovered(
+        ImGuiHoveredFlags_ChildWindows |
+        ImGuiHoveredFlags_AllowWhenBlockedByActiveItem
+    );
+
     int spacing = 4;
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(spacing, 0));
     ImGui::BeginChild("##sidebar", ImVec2(config.sidebar_width, config.track_height * 4), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);

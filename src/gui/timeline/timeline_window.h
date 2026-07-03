@@ -14,12 +14,14 @@ class TimelineWindow {
 
     bool was_clicked_in_timestamps_zone = false;
     bool is_visible = false;
+	bool is_hovered = false;
 
 public:
     explicit TimelineWindow(Timeline& timeline) : timeline(timeline) {}
 
     void SetVisibility(bool show) { is_visible = show; }
     bool IsVisible() const { return is_visible; }
+	bool IsHovered() const { return is_hovered; }
 
     TimelineConfig& GetConfig() { return config; }
 

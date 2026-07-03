@@ -820,7 +820,10 @@ void GUI::OnDpiChange() {
 
 void GUI::Render() {
     static bool old_should_block = false;
-    bool should_block_actions = is_visible && timeline_window.IsVisible() && !input.IsPressed(VK_LBUTTON);
+    bool should_block_actions = false;
+    if (is_visible && timeline_window.IsVisible()) {
+        should_block_actions = timeline_window.IsHovered() || !input.IsPressed(VK_LBUTTON);
+    }
     if (old_should_block != should_block_actions) {
         EventBus::Emit(Event::BlockCameraMouseMoveInput{ should_block_actions });
         auto block = Event::BlockActions::None();
@@ -874,7 +877,7 @@ void GUI::Render() {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 
-        ImGui::Begin("##GameDockspace", nullptr, host_flags);
+        ImGui::Begin("##Dockspace", nullptr, host_flags);
         ImGui::PopStyleVar(3);
 
         ImGuiID dockspace_id = ImGui::GetID("GameDockspace");
