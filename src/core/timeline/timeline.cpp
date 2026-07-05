@@ -56,6 +56,18 @@ void Timeline::Update(float dt) {
     rotTrack.Update(time, is_playing);
 }
 
+void Timeline::AddAllKeyframes(float time) {
+    fovTrack.AddKeyframe(time);
+    posTrack.AddKeyframe(time);
+    rotTrack.AddKeyframe(time);
+}
+
+void Timeline::SelectAllKeyframes() {
+	for (auto& kf : fovTrack.GetKeyframes()) kf.is_selected = true;
+	for (auto& kf : posTrack.GetKeyframes()) kf.is_selected = true;
+	for (auto& kf : rotTrack.GetKeyframes()) kf.is_selected = true;
+}
+
 float Timeline::GetLastKeyframeTime() {
     float t = 0;
     t = std::max(t, fovTrack.GetLastKeyframeTime());

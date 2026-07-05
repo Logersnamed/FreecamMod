@@ -166,6 +166,16 @@ void Input::Reset() {
     isWindowJustFocused = false;
 }
 
+bool Input::IsHotkeyPressed(std::initializer_list<int> keys) const {
+    bool allPressed = true;
+    bool anyJustPressed = false;
+    for (int k : keys) {
+        if (!IsPressed(k)) { allPressed = false; break; }
+        if (IsJustPressed(k)) anyJustPressed = true;
+    }
+    return allPressed && anyJustPressed;
+}
+
 Input::ReleasedNumkeys Input::GetReleasedNumkeys() {
     bool isAnyPressed = false;
     for (int key = 0; key < NUM_KEYS_COUNT; ++key) {

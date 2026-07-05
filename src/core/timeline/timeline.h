@@ -25,6 +25,9 @@ public:
     void Play() { is_playing = true; }
     void StopPlay() { is_playing = false; }
 
+	void AddAllKeyframes(float time);
+	void SelectAllKeyframes();
+
     void SetTime(float value) { time = std::max<float>(0.0f, value); }
     float GetTime() const { return time; }
 

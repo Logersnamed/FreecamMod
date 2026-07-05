@@ -39,8 +39,7 @@ void MenuWindow::Render() {
     if (!is_visible) return;
 
     ImGui::SetNextWindowSize(ImVec2(420, 360), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSizeConstraints(ImVec2(340, 280), ImVec2(700, 900));
-    ImGui::Begin("Freecam v2.0.0-beta", &is_visible, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+    ImGui::Begin("Freecam v2.0.0", &is_visible, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 
     if (ImGui::BeginTabBar("##tabs")) {
         infoTab.Render();
@@ -385,6 +384,7 @@ void MenuWindow::SequencerTab::Render() {
 		ImGui::Text("[O]"); ImGui::SameLine(); ImGui::TextDisabled("- Add all keyframes");
 		ImGui::Text("[X]"); ImGui::SameLine(); ImGui::TextDisabled("- Delete selected keyframes");
 		ImGui::Text("[Shift + Scroll]"); ImGui::SameLine(); ImGui::TextDisabled("- Scroll timeline");
+		ImGui::Text("[Ctrl + Scroll]"); ImGui::SameLine(); ImGui::TextDisabled("- Zoom timeline");
         ImGui::TextDisabled("Hold"); ImGui::SameLine(); ImGui::Text("[RMB]"); ImGui::SameLine(); ImGui::TextDisabled("in game area to look around");
         ImGui::TextDisabled("Hold"); ImGui::SameLine(); ImGui::Text("[Shift]"); ImGui::SameLine(); ImGui::TextDisabled("and click to select multiple keyframes");
 		ImGui::TextDisabled("Hold"); ImGui::SameLine(); ImGui::Text("[Alt]"); ImGui::SameLine(); ImGui::TextDisabled("to disable playhead/keyframes snap to grid");

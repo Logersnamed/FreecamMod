@@ -57,6 +57,8 @@ public:
     bool IsJustPressed(int vk) const { return keyStates[vk].pressed && !disableKeyboard; }
     bool IsReleased(int vk) const { return keyStates[vk].released && !disableKeyboard; }
 
+    bool IsHotkeyPressed(std::initializer_list<int> keys) const;
+
     float GetScrollDelta() const { return scrollDelta; }
     int2 GetMouseDelta() const { return mouseDelta; }
 

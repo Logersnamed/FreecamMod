@@ -14,7 +14,18 @@ void TimelineWindow::Render() {
     float max_time = timeline.GetMaxTime();
     bool is_playing = timeline.IsPlaying();
 
+	// Handle input
 	bool isTimelineInput = input.GetInputSource() == InputSource::Timeline;
+    if (isTimelineInput) {
+        if (input.IsHotkeyPressed({ VK_CONTROL, 'A' })) {
+			timeline.SelectAllKeyframes();
+		}
+
+        if (input.IsPressed(VK_CONTROL)) {
+            float delta = input.GetScrollDelta();
+			config.pixels_per_second += (int)(delta * 5.0f);
+        }
+    }
 
     std::string title = "Timeline " + TimeToString(time, TimeFormat::MINUTES_SECONDS_MILLISECONDS);
     ImGui::Begin((title + "###timeline").c_str(), &is_visible, is_mouse_under_titlebar ? ImGuiWindowFlags_NoMove : 0);
@@ -28,9 +39,7 @@ void TimelineWindow::Render() {
     {
         ImGui::BeginChild("##sidebar_header", ImVec2(config.sidebar_width, config.track_height));
         if (ImGui::Button("+##add_all") || input.IsJustPressed('O')) {
-            timeline.GetFovTrack().AddKeyframe(time);
-            timeline.GetPosTrack().AddKeyframe(time);
-            timeline.GetRotTrack().AddKeyframe(time);
+            timeline.AddAllKeyframes(time);
         }
 		ImHelpers::TooltipWithShortcut("Add all keyframes", "O");
 
