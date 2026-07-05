@@ -16,6 +16,8 @@ class TimelineWindow {
     bool is_visible = false;
 	bool is_hovered = false;
 
+	bool is_mouse_under_titlebar = false;
+
 public:
     explicit TimelineWindow(Timeline& timeline) : timeline(timeline) {}
 

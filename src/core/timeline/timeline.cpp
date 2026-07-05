@@ -39,6 +39,12 @@ void Timeline::Update(float dt) {
     if (is_playing) {
         time += dt;
 
+        float last_time = GetLastKeyframeTime();
+        if (last_time && last_time < time) {
+            time = last_time;
+            is_playing = false;
+        }
+
         if (time >= max_time) {
             time = max_time;
             is_playing = false;
@@ -48,4 +54,12 @@ void Timeline::Update(float dt) {
     fovTrack.Update(time, is_playing);
     posTrack.Update(time, is_playing);
     rotTrack.Update(time, is_playing);
+}
+
+float Timeline::GetLastKeyframeTime() {
+    float t = 0;
+    t = std::max(t, fovTrack.GetLastKeyframeTime());
+    t = std::max(t, posTrack.GetLastKeyframeTime());
+    t = std::max(t, rotTrack.GetLastKeyframeTime());
+    return t;
 }

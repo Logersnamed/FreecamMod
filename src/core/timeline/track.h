@@ -18,6 +18,7 @@ class Track {
 
 public:
     std::vector<Keyframe<T>>& GetKeyframes() { return keyframes; }
+    float GetLastKeyframeTime() { return keyframes.empty() ? 0.0f : keyframes.back().time; }
 
     T GetData() const { return data; }
     void SetData(const T& value) { data = value; }

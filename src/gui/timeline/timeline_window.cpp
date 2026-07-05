@@ -1,4 +1,5 @@
 #include "gui/timeline/timeline_window.h"
+#include "gui/helpers.h"
 
 #include "utils/time.h"
 
@@ -13,29 +14,29 @@ void TimelineWindow::Render() {
     bool is_playing = timeline.IsPlaying();
 
     std::string title = "Timeline " + TimeToString(time, TimeFormat::MINUTES_SECONDS_MILLISECONDS);
-    ImGui::Begin((title + "###timeline").c_str(), &is_visible);
+    ImGui::Begin((title + "###timeline").c_str(), &is_visible, is_mouse_under_titlebar ? ImGuiWindowFlags_NoMove : 0);
 
-    is_hovered = ImGui::IsWindowHovered(
-        ImGuiHoveredFlags_ChildWindows |
-        ImGuiHoveredFlags_AllowWhenBlockedByActiveItem
-    );
+	is_mouse_under_titlebar = ImGui::GetCursorScreenPos().y < ImGui::GetMousePos().y;
+    is_hovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
 
     int spacing = 4;
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(spacing, 0));
     ImGui::BeginChild("##sidebar", ImVec2(config.sidebar_width, config.track_height * 4), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
     {
         ImGui::BeginChild("##sidebar_header", ImVec2(config.sidebar_width, config.track_height));
-        if (ImGui::Button("+##add_all")) {
+        if (ImGui::Button("+##add_all") || ImGui::IsKeyPressed(ImGuiKey_O)) {
             timeline.GetFovTrack().AddKeyframe(time);
             timeline.GetPosTrack().AddKeyframe(time);
             timeline.GetRotTrack().AddKeyframe(time);
         }
+		ImHelpers::TooltipWithShortcut("Add all keyframes", "O");
 
         ImGui::SameLine();
 
-        if (ImGui::Button(is_playing ? "Stop" : "Start", ImVec2(ImGui::GetContentRegionAvail().x - spacing, 0))) {
+        if (ImGui::Button(is_playing ? "Pause" : "Play", ImVec2(ImGui::GetContentRegionAvail().x - spacing, 0)) || (ImGui::IsKeyPressed(ImGuiKey_Space) && !ImGui::IsMouseDown(ImGuiMouseButton_Right))) {
             is_playing ? timeline.StopPlay() : timeline.Play();
         }
+        ImHelpers::TooltipWithShortcut("Play/Pause", "Space");
         ImGui::EndChild();
 
         fovWidget.DrawSidebar(time, is_playing);

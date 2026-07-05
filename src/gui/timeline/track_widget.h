@@ -2,6 +2,7 @@
 #include "gui/timeline/track_editor.h"
 #include "gui/timeline/keyframes_editor.h"
 #include "gui/timeline/timeline_config.h"
+#include "gui/helpers.h"
 #include "core/timeline/track.h"
 
 template<typename T>
@@ -61,9 +62,10 @@ public:
     void DrawSidebar(float time, bool is_playing) {
         ImGui::PushID(this);
         ImGui::BeginChild("##sidebar_header", ImVec2(config.sidebar_width, config.track_height));
-        if (ImGui::Button("+") || ImGui::IsKeyPressed(ImGuiKey_O)) {
+        if (ImGui::Button("+")) {
             track.AddKeyframe(time);
         }
+		ImHelpers::Tooltip("Add keyframe");
 
         ImGui::SameLine();
 

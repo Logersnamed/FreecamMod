@@ -1,106 +1,41 @@
 #pragma once
-#include <vector>
-#include <string>
-#include <map>
-
 #include "core/mod_context.h"
 #include "core/config/con_var.h"
 #include "core/timeline/timeline.h"
 #include "gui/timeline/timeline_window.h"
+#include "gui/menu_window.h"
 
-class FreeCamera;
-class Speedhack;
 class HookManager;
 class Config;
 class Input;
 class ActionManager;
-class FrameStepper;
-class CameraStateManager;
-class PathRecorder;
 
 class GUI {
-    class InfoTab {
-        FreeCamera& freeCamera;
+public:
+    explicit GUI(ModContext& ctx)
+        : config(ctx.config), input(ctx.input), actionMgr(ctx.actionMgr),
+        timeline(ctx.freeCamera), timeline_window(timeline),
+        menu_window(ctx, timeline, timeline_window) {
+        instance = this;
+    }
 
-    public:
-        InfoTab(FreeCamera& freeCamera) : freeCamera(freeCamera) {}
+    void Initialize();
+    bool RegisterHooks(HookManager& hookManager);
+    void Render();
 
-        void Render();
-    };
+private:
+    Timeline timeline;
 
-    class FeaturesTab {
-        HookManager& hookManager;
-        FreeCamera& freeCamera;
-        Speedhack& speedhack;
-        FrameStepper& frameStepper;
-        CameraStateManager& cameraStateMgr;
-        PathRecorder& pathRecorder;
-
-    public:
-        FeaturesTab(HookManager& hookManager, FreeCamera& freeCamera, Speedhack& speedhack);
-
-        void RenderSpeedhack();
-        void RenderFrameStepper();
-        void RenderCycleWeatherTime();
-        void RenderCameraStateManager();
-        void RenderPathRecorder();
-        void Render();
-    };
-
-    class SequencerTab {
-        Timeline& timeline;
-        TimelineWindow& timelineWindow;
-        
-    public:
-        SequencerTab(Timeline& timeline, TimelineWindow& timelineWindow) 
-            : timeline(timeline), timelineWindow(timelineWindow) {}
-
-        template<typename T>
-        void DrawCombo(const char* label, Track<T>& type);
-        void Render();
-    };
-    
-    class ConfigTab {
-        Config& config;
-
-        std::map<std::string, std::vector<IConVar*>> sortedConVars;
-        bool areSorted = false;
-
-    public:
-        ConfigTab(Config& config) : config(config) {}
-
-        void SortConVars();
-        void Render();
-    };
-
-    class KeyBindsTab {
-        Config& config;
-    public:
-        KeyBindsTab(Config& config) : config(config) {}
-
-        void Render();
-    };
-
-    class LogTab {
-    public:
-        void Render();
-    };
-
-    InfoTab infoTab;
-    FeaturesTab featuresTab;
-    SequencerTab sequencerTab;
-    ConfigTab configTab;
-    KeyBindsTab keyBindsTab;
-    LogTab logTab{};
+    MenuWindow menu_window;
+    TimelineWindow timeline_window;
 
     Config& config;
     Input& input;
     ActionManager& actionMgr;
 
-    Timeline timeline;
-    TimelineWindow timeline_window;
-
     bool is_visible = true;
+    bool is_cursor_visible = true;
+    ImGuiStyle baseStyle{};
 
     static inline GUI* instance = nullptr;
 
@@ -108,10 +43,11 @@ class GUI {
     static inline SetCursorPos_t origSetCursorPos = nullptr;
 
     static BOOL WINAPI hkSetCursorPos(int X, int Y);
-    void HandleCursorVisibility();
-    void OnDpiChange(); // todo
+    void HandleCursorVisibility(bool draw_cursor_if_is_visible = true);
+    void OnDpiChange();
     void InitializeStyle();
     void SubscribeEvents();
+    void SetupDockspace();
 
     ConVar<bool> showMenuOnStartup{ "gui", "show_menu_on_startup", true };
     ConVar<bool> enableNotifications{ "gui", "enable_notifications", true };
@@ -124,20 +60,4 @@ class GUI {
     ConVar<bool> notifySaveState{ "gui", "notify_save_state", true };
     ConVar<bool> notifyInterpolate{ "gui", "notify_interpolate", true };
     ConVar<bool> notifyStateQueued{ "gui", "notify_state_queued", false };
-
-public:
-    explicit GUI(ModContext& ctx)
-        : config(ctx.config), input(ctx.input), actionMgr(ctx.actionMgr),
-        timeline(ctx.freeCamera), timeline_window(timeline),
-        infoTab(ctx.freeCamera),
-        featuresTab(ctx.hookManager, ctx.freeCamera, ctx.speedhack),
-        sequencerTab(timeline, timeline_window),
-        configTab(ctx.config),
-        keyBindsTab(ctx.config) { instance = this; }
-
-    ImGuiStyle baseStyle{};
-
-    bool RegisterHooks(HookManager& hookManager);
-    void Initialize();
-    void Render();
 };

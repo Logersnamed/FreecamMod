@@ -15,6 +15,8 @@ class Timeline {
 
     FreeCamera& freeCamera;
 
+    float GetLastKeyframeTime();
+
 public:
     Timeline(FreeCamera& freeCamera);
 
