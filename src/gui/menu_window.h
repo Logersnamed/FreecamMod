@@ -22,11 +22,11 @@ class PathRecorder;
 class MenuWindow {
 public:
     explicit MenuWindow(ModContext& ctx, Timeline& timeline, TimelineWindow& timeline_window)
-        : infoTab(ctx.freeCamera, ctx.config)
-        , featuresTab(ctx.hookManager, ctx.freeCamera, ctx.speedhack, ctx.config)
-        , sequencerTab(timeline, timeline_window)
-        , configTab(ctx.config)
-        , keyBindsTab(ctx.config) {
+        : infoTab(ctx.freeCamera, ctx.cfg)
+        , featuresTab(ctx.hookManager, ctx.freeCamera, ctx.speedhack, ctx.cfg)
+        , sequencerTab(timeline, timeline_window, ctx.cfg)
+        , configTab(ctx.cfg)
+        , keyBindsTab(ctx.cfg) {
     }
 
     void Render();
@@ -39,10 +39,10 @@ private:
 
     class InfoTab {
         FreeCamera& freeCamera;
-		Config& config;
+		Config& cfg;
 
     public:
-        InfoTab(FreeCamera& freeCamera, Config& config) : freeCamera(freeCamera), config(config) {}
+        InfoTab(FreeCamera& freeCamera, Config& cfg) : freeCamera(freeCamera), cfg(cfg) {}
 
         void Render();
     };
@@ -54,10 +54,10 @@ private:
         FrameStepper& frameStepper;
         CameraStateManager& cameraStateMgr;
         PathRecorder& pathRecorder;
-		Config& config;
+		Config& cfg;
 
     public:
-        FeaturesTab(HookManager& hookManager, FreeCamera& freeCamera, Speedhack& speedhack, Config& config);
+        FeaturesTab(HookManager& hookManager, FreeCamera& freeCamera, Speedhack& speedhack, Config& cfg);
 
         void RenderSpeedhack();
         void RenderFrameStepper();
@@ -70,10 +70,11 @@ private:
     class SequencerTab {
         Timeline& timeline;
         TimelineWindow& timelineWindow;
+		Config& cfg;
 
     public:
-        SequencerTab(Timeline& timeline, TimelineWindow& timelineWindow)
-            : timeline(timeline), timelineWindow(timelineWindow) {}
+        SequencerTab(Timeline& timeline, TimelineWindow& timelineWindow, Config& cfg)
+            : timeline(timeline), timelineWindow(timelineWindow), cfg(cfg) {}
 
         template<typename T>
         void DrawCombo(const char* label, Track<T>& type);
@@ -81,22 +82,22 @@ private:
     };
 
     class ConfigTab {
-        Config& config;
+        Config& cfg;
 
         std::map<std::string, std::vector<IConVar*>> sortedConVars;
         bool areSorted = false;
 
     public:
-        ConfigTab(Config& config) : config(config) {}
+        ConfigTab(Config& cfg) : cfg(cfg) {}
 
         void SortConVars();
         void Render();
     };
 
     class KeyBindsTab {
-        Config& config;
+        Config& cfg;
     public:
-        KeyBindsTab(Config& config) : config(config) {}
+        KeyBindsTab(Config& cfg) : cfg(cfg) {}
 
         void Render();
     };

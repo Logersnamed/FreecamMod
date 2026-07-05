@@ -69,7 +69,7 @@ private:
         Keybind{"toggle_freeze", Action{ ToggleFreeze, { 'P' }}},
         Keybind{"teleport_to_camera", Action{ TeleportToCamera, { VK_F3 }}},
         Keybind{"cycle_weather_time", Action{ CycleWeatherTime, { VK_F4 }}},
-        Keybind{"exit_mod", Action{ ExitMod, { VK_DELETE }}},
+        Keybind{"exit_mod", Action{ ExitMod, { VK_CONTROL, VK_DELETE }}},
         Keybind{"start/end_recording", Action{ StartEndRecording, { VK_F8 }}},
         Keybind{"start/end_playing_recording", Action{ StartEndPlayingRecording, { VK_F9}}},
         Keybind{"step_frames", Action{ StepFrames, { VK_F2}}},
@@ -89,6 +89,10 @@ private:
         Keybind{"scroll_speedhack_modifier", Action{ ScrollSpeedhackModifier, { 'V' }}},
         Keybind{"toggle_speedhack", Action{ ToggleSpeedhack, { VK_F7 }}},
         Keybind{"reset_speedhack_speed", Action{ ResetSpeedhackSpeed, { VK_CONTROL, 'V' }}},
+        Keybind{"timeline_play_pause", Action{ TimelinePlayPause, { VK_SPACE }}},
+        Keybind{"timeline_add_all_keyframes", Action{ TimelineAddAllKeyframes, { 'O' }}},
+        Keybind{"timeline_delete_selected_keyframes", Action{ TimelineDeleteSelectedKeyframes, { 'X'}}},
+        Keybind{"timeline_select_all_keyframes", Action{ TimelineSelectAllKeyframes, { VK_CONTROL, 'A' }}},
     };
 
     bool ValidateKeybindOrder() {

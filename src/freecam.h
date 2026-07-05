@@ -25,13 +25,13 @@ private:
     HMODULE hModule{};
 
     FreeCamera    freeCamera{};
-    Config        config{};
+    Config        cfg{};
     Input         input{};
-    ActionManager actionMgr{};
+    ActionManager actionMgr{ input };
     HookManager   hookManager{};
     Speedhack     speedhack{};
 
-    ModContext context{ config, input, actionMgr, hookManager, speedhack, freeCamera };
+    ModContext context{ cfg, input, actionMgr, hookManager, speedhack, freeCamera };
     GUI gui{ context };
 
     bool isRunning = true;
@@ -39,8 +39,8 @@ private:
     void Update(GameData::GameRend* gameRend);
     void ProcessInput(GameData::GameRend* gameRend, float deltaTime);
 
-    bool IsPressed(ActionType actionType) const { return actionMgr.IsPressed(actionType, input); }
-    bool IsJustPressed(ActionType actionType) const { return actionMgr.IsJustPressed(actionType, input); }
+    bool IsPressed(ActionType actionType) const { return actionMgr.IsPressed(actionType); }
+    bool IsJustPressed(ActionType actionType) const { return actionMgr.IsJustPressed(actionType); }
 
     void ToggleFreecam(GameData::GameRend* gameRend);
 

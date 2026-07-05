@@ -13,7 +13,7 @@ void GUI::Initialize() {
     is_visible = showMenuOnStartup;
     is_cursor_visible = showMenuOnStartup;
 
-    static std::string iniPath = (config.GetConfigDirPath() / "imgui.ini").string();
+    static std::string iniPath = (cfg.GetConfigDirPath() / "imgui.ini").string();
     ImGui::GetIO().IniFilename = iniPath.c_str();
     LOG_INFO("Path to imgui.ini: %s", iniPath.c_str());
 
@@ -38,7 +38,7 @@ void GUI::Update() {
 
     timeline.Update(ImGui::GetIO().DeltaTime);
 
-    if (actionMgr.IsJustPressed(ActionType::ToggleMenu, input)) {
+    if (actionMgr.IsJustPressed(ActionType::ToggleMenu)) {
         is_visible = !is_visible;
 
         if (is_visible) {
@@ -71,7 +71,7 @@ void GUI::Render() {
     }
 
     if (IConVar::anyChangeByUi)
-        config.Reload();
+        cfg.Reload();
 }
 
 void GUI::HandleCursorVisibility(bool draw_cursor_if_is_visible) {

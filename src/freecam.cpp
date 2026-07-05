@@ -23,8 +23,8 @@ Freecam::Freecam(HMODULE hModule) : hModule(hModule) {
 }
 
 bool Freecam::Initialize() {
-    if (!config.Initialize(hModule, actionMgr)) return false;
-    config.Reload();
+    if (!cfg.Initialize(hModule, actionMgr)) return false;
+    cfg.Reload();
 
     ModUtils::AttemptToGetWindowHandle();
     if (!ModUtils::muWindow) return false;
@@ -50,12 +50,12 @@ bool Freecam::Initialize() {
     Overlay::SetRenderCallback([this]() { gui.Render(); });
     Overlay::InitializeOverlay();
 
-    SettingsBackup::SetFolderPath(config.GetConfigDirPath());
+    SettingsBackup::SetFolderPath(cfg.GetConfigDirPath());
 
     freeCamera.Initialize();
 
-    config.AddReloadCallback([this]() { freeCamera.OnConfigReload(); });
-    config.AddReloadCallback([this]() { this->OnConfigReload(); });
+    cfg.AddReloadCallback([this]() { freeCamera.OnConfigReload(); });
+    cfg.AddReloadCallback([this]() { this->OnConfigReload(); });
 
     return true;
 }
@@ -64,7 +64,7 @@ void Freecam::Run() {
     if (!Initialize()) return;
 
     while (isRunning) {
-        if (actionMgr.IsPressed(ActionType::ExitMod, input)) break;
+        if (actionMgr.IsPressed(ActionType::ExitMod)) break;
         Sleep(10);
     }
 }
@@ -84,7 +84,7 @@ void Freecam::OnConfigReload() {
 
 void Freecam::ToggleFreecam(GameData::GameRend* gameRend) {
     freeCamera.Toggle(gameRend);
-    config.Reload();
+    cfg.Reload();
 }
 
 void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
@@ -148,7 +148,7 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
     freeCamera.SetIsSprinting(IsPressed(Sprint) || input.IsGamepadPressed(XINPUT_GAMEPAD_X));
     if (IsJustPressed(ToggleFreeze)) freeCamera.ToggleFreeze();
     if (IsJustPressed(ResetSettings) || input.IsGamepadJustPressed(XINPUT_GAMEPAD_Y)) freeCamera.ResetCameraState(gameRend);
-    if (IsJustPressed(ReloadConfig)) config.Reload();
+    if (IsJustPressed(ReloadConfig)) cfg.Reload();
 
     if (input.IsGamepadJustPressed(XINPUT_GAMEPAD_DPAD_UP)) {
         hookManager.GetDaytimeUpdateCave().ToggleCycleWeatherTime();
@@ -210,7 +210,7 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
     
 void Freecam::Update(GameData::GameRend* gameRend) {
     if (input.IsWindowJustGetFocused()) {
-        config.Reload();
+        cfg.Reload();
     }
 
     float deltaTime = std::clamp(Time::DeltaTime(), 0.0f, 0.4f);

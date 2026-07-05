@@ -64,13 +64,17 @@ private:
 class ActionManager {
 	std::array<std::optional<Action>, static_cast<size_t>(ActionType::Count)> actions{};
 
-public:
-	bool IsPressed(ActionType actionType, const Input& input) const {
+	const Input& input;
+
+public:	
+	ActionManager(const Input& input) : input(input) {}
+
+	bool IsPressed(ActionType actionType) const {
 		const auto& action = actions[static_cast<size_t>(actionType)];
 		return action.has_value() && action->IsPressed(input);
 	}
 
-	bool IsJustPressed(ActionType actionType, const Input& input) const {
+	bool IsJustPressed(ActionType actionType) const {
 		const auto& action = actions[static_cast<size_t>(actionType)];
 		return action.has_value() && action->IsJustPressed(input);
 	}

@@ -68,6 +68,12 @@ void Timeline::SelectAllKeyframes() {
 	for (auto& kf : rotTrack.GetKeyframes()) kf.is_selected = true;
 }
 
+void Timeline::DeleteSelectedKeyframes() {
+    fovTrack.DeleteSelectedKeyframes();
+    posTrack.DeleteSelectedKeyframes();
+    rotTrack.DeleteSelectedKeyframes();
+}
+
 float Timeline::GetLastKeyframeTime() {
     float t = 0;
     t = std::max(t, fovTrack.GetLastKeyframeTime());

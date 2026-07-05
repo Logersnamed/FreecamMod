@@ -27,6 +27,7 @@ public:
 
 	void AddAllKeyframes(float time);
 	void SelectAllKeyframes();
+	void DeleteSelectedKeyframes();
 
     void SetTime(float value) { time = std::max<float>(0.0f, value); }
     float GetTime() const { return time; }

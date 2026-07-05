@@ -8,7 +8,7 @@ class Speedhack;
 class FreeCamera;
 
 struct ModContext {
-    Config& config;
+    Config& cfg;
     Input& input;
     ActionManager& actionMgr;
     HookManager& hookManager;

@@ -28,7 +28,11 @@
     X(ScrollCameraSpeedModifier) \
     X(ScrollSpeedhackModifier) \
     X(ToggleSpeedhack) \
-    X(ResetSpeedhackSpeed)
+    X(ResetSpeedhackSpeed) \
+    X(TimelinePlayPause) \
+    X(TimelineAddAllKeyframes) \
+    X(TimelineDeleteSelectedKeyframes) \
+    X(TimelineSelectAllKeyframes)
 
 enum class ActionType : int8_t {
 #define X(name) name,

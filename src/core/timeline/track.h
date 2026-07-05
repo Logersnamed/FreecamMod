@@ -23,6 +23,17 @@ public:
     T GetData() const { return data; }
     void SetData(const T& value) { data = value; }
 
+    void DeleteSelectedKeyframes() {
+        for (int i = 0; i < keyframes.size();) {
+            if (keyframes[i].is_selected) {
+                keyframes.erase(keyframes.begin() + i);
+            }
+            else {
+                ++i;
+            }
+        }
+    }
+
     InterpolationType GetInterpolationType() const { return interpolation_type; }
     void SetInterpolationType(InterpolationType type) { interpolation_type = type; }
 

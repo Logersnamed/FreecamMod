@@ -13,8 +13,8 @@ class ActionManager;
 class GUI {
 public:
     explicit GUI(ModContext& ctx)
-        : config(ctx.config), input(ctx.input), actionMgr(ctx.actionMgr),
-        timeline(ctx.freeCamera), timeline_window(timeline, ctx.input),
+        : cfg(ctx.cfg), input(ctx.input), actionMgr(ctx.actionMgr),
+        timeline(ctx.freeCamera), timeline_window(timeline, ctx.input, ctx.actionMgr, ctx.cfg),
         menu_window(ctx, timeline, timeline_window) {
         instance = this;
     }
@@ -29,7 +29,7 @@ private:
     MenuWindow menu_window;
     TimelineWindow timeline_window;
 
-    Config& config;
+    Config& cfg;
     Input& input;
     ActionManager& actionMgr;
 

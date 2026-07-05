@@ -78,7 +78,7 @@ void MenuWindow::InfoTab::Render() {
             ImGui::BulletText("Freecam v2.0.0");
             ImGui::BulletText("Build date: %s", __DATE__);
 
-            ImGui::BulletText("Wiki & docs:");
+            ImGui::BulletText("Wiki & docs: ");
             ImGui::SameLine(0, 0);
             ImGui::TextLinkOpenURL("https://github.com/Logersnamed/FreecamMod/wiki ");
 
@@ -89,30 +89,32 @@ void MenuWindow::InfoTab::Render() {
             ImGui::Spacing();
             ImGui::SeparatorText("Quick Start");
 
-            ImGui::BulletText("Toggle UI: [%s]", config.GetKeybindString(ActionType::ToggleMenu).c_str());
+            ImGui::BulletText("Toggle UI: [%s]", cfg.GetKeybindString(ActionType::ToggleMenu).c_str());
             ImGui::SameLine();
             ImGui::TextDisabled("(?)");
             ImHelpers::Tooltip("Rebindable in config.ini");
 
-            ImGui::BulletText("Toggle freecam: [%s]", config.GetKeybindString(ActionType::Toggle).c_str());
+            ImGui::BulletText("Toggle freecam: [%s]", cfg.GetKeybindString(ActionType::Toggle).c_str());
             ImGui::SameLine();
             ImGui::TextDisabled("(?)");
             ImHelpers::Tooltip("Rebindable in config.ini");
 
-            ImGui::BulletText("Move: [%s %s %s %s]", config.GetKeybindString(ActionType::MoveForward).c_str(), config.GetKeybindString(ActionType::MoveLeft).c_str(), config.GetKeybindString(ActionType::MoveBackward).c_str(), config.GetKeybindString(ActionType::MoveRight).c_str());
+            ImGui::BulletText("Move: [%s %s %s %s]", cfg.GetKeybindString(ActionType::MoveForward).c_str(), cfg.GetKeybindString(ActionType::MoveLeft).c_str(), cfg.GetKeybindString(ActionType::MoveBackward).c_str(), cfg.GetKeybindString(ActionType::MoveRight).c_str());
             ImGui::SameLine();
             ImGui::TextDisabled("(?)");
             ImHelpers::Tooltip("Rebindable in config.ini");
 
-            ImGui::BulletText("Move up / down: [%s] / [%s]", config.GetKeybindString(ActionType::MoveUp).c_str(), config.GetKeybindString(ActionType::MoveDown).c_str());
+            ImGui::BulletText("Move up / down: [%s] / [%s]", cfg.GetKeybindString(ActionType::MoveUp).c_str(), cfg.GetKeybindString(ActionType::MoveDown).c_str());
             ImGui::SameLine();
             ImGui::TextDisabled("(?)");
             ImHelpers::Tooltip("Rebindable in config.ini");
 
-            ImGui::BulletText("Tilt: [%s] / [%s]", config.GetKeybindString(ActionType::TiltLeft).c_str(), config.GetKeybindString(ActionType::TiltRight).c_str());
+            ImGui::BulletText("Tilt: [%s] / [%s]", cfg.GetKeybindString(ActionType::TiltLeft).c_str(), cfg.GetKeybindString(ActionType::TiltRight).c_str());
             ImGui::SameLine();
             ImGui::TextDisabled("(?)");
             ImHelpers::Tooltip("Rebindable in config.ini");
+
+            ImGui::TextDisabled("You can disable show_menu_on_startup via config/gui");
 
             ImGui::Spacing();
             ImGui::SeparatorText("Tabs");
@@ -138,7 +140,7 @@ void MenuWindow::InfoTab::Render() {
 #ifdef _WIN32
             ImGui::Spacing();
             if (ImGui::Button("Open Config Folder", ImVec2(Layout::BUTTON_WIDTH, 0.0f))) {
-                ShellExecuteW(NULL, L"open", config.GetConfigDirPath().c_str(), NULL, NULL, SW_SHOWNORMAL);
+                ShellExecuteW(NULL, L"open", cfg.GetConfigDirPath().c_str(), NULL, NULL, SW_SHOWNORMAL);
             }
 #endif
 
@@ -179,7 +181,7 @@ void MenuWindow::InfoTab::Render() {
         if (ImGui::DragFloat("Speed", &speed, 0.1f, 0.0f, 0.0f, "%.2f")) {
             freeCamera.SetSpeed(speed);
         }
-		ImHelpers::TooltipWithShortcut("Adjust camera fly speed.", std::format("{} + Scroll", config.GetKeybindString(ActionType::ScrollCameraSpeedModifier).c_str()).c_str());
+		ImHelpers::TooltipWithShortcut("Adjust camera fly speed.", std::format("{} + Scroll", cfg.GetKeybindString(ActionType::ScrollCameraSpeedModifier).c_str()).c_str());
         ImGui::EndDisabled();
 
         ImGui::Spacing();
@@ -202,8 +204,8 @@ void MenuWindow::InfoTab::Render() {
     }
 }
 
-MenuWindow::FeaturesTab::FeaturesTab(HookManager& hookManager, FreeCamera& freeCamera, Speedhack& speedhack, Config& config)
-    : hookManager(hookManager), freeCamera(freeCamera), speedhack(speedhack), config(config),
+MenuWindow::FeaturesTab::FeaturesTab(HookManager& hookManager, FreeCamera& freeCamera, Speedhack& speedhack, Config& cfg)
+    : hookManager(hookManager), freeCamera(freeCamera), speedhack(speedhack), cfg(cfg),
     frameStepper(freeCamera.GetFrameStepper()), cameraStateMgr(freeCamera.GetCameraStateManager()),
     pathRecorder(freeCamera.GetPathRecorder()) {
 }
@@ -225,7 +227,7 @@ void MenuWindow::FeaturesTab::RenderSpeedhack() {
                 );
             }
             else {
-				ImHelpers::TooltipWithShortcut("Enable/disable speedhack.", std::format("{}", config.GetKeybindString(ActionType::ToggleSpeedhack).c_str()).c_str());
+				ImHelpers::TooltipWithShortcut("Enable/disable speedhack.", std::format("{}", cfg.GetKeybindString(ActionType::ToggleSpeedhack).c_str()).c_str());
             }
         }
         ImGui::EndDisabled();
@@ -234,7 +236,7 @@ void MenuWindow::FeaturesTab::RenderSpeedhack() {
         if (ImGui::DragFloat("Speedhack speed", &timeScale, 0.001)) {
             speedhack.SetSpeed(timeScale);
         }
-		ImHelpers::TooltipWithShortcut("Adjust speedhack speed.", std::format("{} + Scroll", config.GetKeybindString(ActionType::ScrollSpeedhackModifier).c_str()).c_str());
+		ImHelpers::TooltipWithShortcut("Adjust speedhack speed.", std::format("{} + Scroll", cfg.GetKeybindString(ActionType::ScrollSpeedhackModifier).c_str()).c_str());
 
         float gameSpeed = speedhack.GetGameSpeed();
         ImGui::BeginDisabled();
@@ -262,7 +264,7 @@ void MenuWindow::FeaturesTab::RenderFrameStepper() {
         if (ImGui::Button(canStopStepping ? "Stop stepping" : "Step frames", ImVec2(Layout::SMALL_BUTTON_WIDTH, 0.0f))) {
             canStopStepping ? frameStepper.Reset() : frameStepper.StepFrames();
         }
-		ImHelpers::TooltipWithShortcut("Step frames forward.", std::format("{}", config.GetKeybindString(ActionType::StepFrames).c_str()).c_str());
+		ImHelpers::TooltipWithShortcut("Step frames forward.", std::format("{}", cfg.GetKeybindString(ActionType::StepFrames).c_str()).c_str());
         ImGui::EndDisabled();
 
         if (ImGui::InputInt("Step", &step)) {
@@ -293,7 +295,7 @@ void MenuWindow::FeaturesTab::RenderCycleWeatherTime() {
                 );
             }
             else {
-				ImHelpers::TooltipWithShortcut("Start/stop cycling weather and time.", std::format("{}", config.GetKeybindString(ActionType::CycleWeatherTime).c_str()).c_str());
+				ImHelpers::TooltipWithShortcut("Start/stop cycling weather and time.", std::format("{}", cfg.GetKeybindString(ActionType::CycleWeatherTime).c_str()).c_str());
             }
         }
         ImGui::EndDisabled();
@@ -369,7 +371,7 @@ void MenuWindow::FeaturesTab::RenderPathRecorder() {
             if (ImGui::Button(pathRecorder.IsRecording() ? "Stop Recording" : "Start Recording", ImVec2(Layout::BUTTON_WIDTH, 0.0f))) {
                 pathRecorder.IsRecording() ? pathRecorder.EndRecord() : pathRecorder.StartRecord();
             }
-			ImHelpers::TooltipWithShortcut("Start/stop recording camera path.", std::format("{}", config.GetKeybindString(ActionType::StartEndRecording).c_str()).c_str());
+			ImHelpers::TooltipWithShortcut("Start/stop recording camera path.", std::format("{}", cfg.GetKeybindString(ActionType::StartEndRecording).c_str()).c_str());
 
             int framesPlayed = pathRecorder.GetFramesPlayed();
             ImGui::BeginDisabled();
@@ -382,7 +384,7 @@ void MenuWindow::FeaturesTab::RenderPathRecorder() {
             if (ImGui::Button(pathRecorder.IsPlaying() ? "Stop Playing" : "Start Playing", ImVec2(Layout::BUTTON_WIDTH, 0.0f))) {
                 pathRecorder.IsPlaying() ? pathRecorder.EndPlay() : pathRecorder.StartPlay();
             }
-			ImHelpers::TooltipWithShortcut("Start/stop playing recorded camera path.", std::format("{}", config.GetKeybindString(ActionType::StartEndPlayingRecording).c_str()).c_str());
+			ImHelpers::TooltipWithShortcut("Start/stop playing recorded camera path.", std::format("{}", cfg.GetKeybindString(ActionType::StartEndPlayingRecording).c_str()).c_str());
             ImGui::EndDisabled();
 
             ImGui::PopItemWidth();
@@ -437,28 +439,28 @@ void MenuWindow::SequencerTab::Render() {
         DrawCombo("Position##interp", timeline.GetPosTrack());
         DrawCombo("Rotation##interp", timeline.GetRotTrack());
 
-        TimelineConfig& config = timelineWindow.GetConfig();
+        TimelineConfig& timeline_cfg = timelineWindow.GetConfig();
 
         ImGui::Spacing();
         ImGui::SeparatorText("Timeline");
 
-        ImGui::DragInt("Pixels per Second", &config.pixels_per_second, 1, 10, 1000);
-        ImGui::DragInt("Sidebar Width", &config.sidebar_width, 1, 50, 1000);
-        ImGui::DragInt("Track Height", &config.track_height, 1, 10, 200);
+        ImGui::DragInt("Pixels per Second", &timeline_cfg.pixels_per_second, 1, 10, 1000);
+        ImGui::DragInt("Sidebar Width", &timeline_cfg.sidebar_width, 1, 50, 1000);
+        ImGui::DragInt("Track Height", &timeline_cfg.track_height, 1, 10, 200);
 
-        ImGui::Checkbox("Enable Snap", &config.snap_enabled);
+        ImGui::Checkbox("Enable Snap", &timeline_cfg.snap_enabled);
 		ImHelpers::TooltipWithShortcut("Snap playhead/keyframes to grid when dragging", "Alt");
 
-        ImGui::BeginDisabled(!config.snap_enabled);
-        ImGui::DragInt("Snap Pixels", &config.snap_pixels, 1, 1, 100);
+        ImGui::BeginDisabled(!timeline_cfg.snap_enabled);
+        ImGui::DragInt("Snap Pixels", &timeline_cfg.snap_pixels, 1, 1, 100);
         ImGui::EndDisabled();
 
         ImGui::Spacing();
         ImGui::SeparatorText("Controls");
-        ImGui::Text("[Space]"); ImGui::SameLine(); ImGui::TextDisabled("- Play/Pause");
-		ImGui::Text("[O]"); ImGui::SameLine(); ImGui::TextDisabled("- Add all keyframes");
-		ImGui::Text("[X]"); ImGui::SameLine(); ImGui::TextDisabled("- Delete selected keyframes");
-		ImGui::Text("[Ctrl + A]"); ImGui::SameLine(); ImGui::TextDisabled("- Select all keyframes");
+        ImGui::Text(std::format("[{}]", cfg.GetKeybindString(ActionType::TimelinePlayPause).c_str()).c_str()); ImGui::SameLine(); ImGui::TextDisabled("- Play/Pause"); ImGui::SameLine(); ImGui::TextDisabled("(?)"); ImHelpers::Tooltip("Rebindable in config.ini");
+		ImGui::Text(std::format("[{}]", cfg.GetKeybindString(ActionType::TimelineAddAllKeyframes).c_str()).c_str()); ImGui::SameLine(); ImGui::TextDisabled("- Add all keyframes"); ImGui::SameLine(); ImGui::TextDisabled("(?)"); ImHelpers::Tooltip("Rebindable in config.ini");
+		ImGui::Text(std::format("[{}]", cfg.GetKeybindString(ActionType::TimelineDeleteSelectedKeyframes).c_str()).c_str()); ImGui::SameLine(); ImGui::TextDisabled("- Delete selected keyframes"); ImGui::SameLine(); ImGui::TextDisabled("(?)"); ImHelpers::Tooltip("Rebindable in config.ini");
+        ImGui::Text(std::format("[{}]", cfg.GetKeybindString(ActionType::TimelineSelectAllKeyframes).c_str()).c_str()); ImGui::SameLine(); ImGui::TextDisabled("- Select all keyframes"); ImGui::SameLine(); ImGui::TextDisabled("(?)"); ImHelpers::Tooltip("Rebindable in config.ini");
 		ImGui::Text("[Ctrl + Scroll]"); ImGui::SameLine(); ImGui::TextDisabled("- Zoom timeline");
         ImGui::Text("[Shift + Scroll]"); ImGui::SameLine(); ImGui::TextDisabled("- Scroll timeline");
         ImGui::TextDisabled("Hold"); ImGui::SameLine(); ImGui::Text("[RMB]"); ImGui::SameLine(); ImGui::TextDisabled("in game area to look around");
@@ -542,7 +544,7 @@ void MenuWindow::KeyBindsTab::Render() {
         ImGui::BeginScrollableArea("##keybinds_content");
         ImGui::PushItemWidth(Layout::ITEM_WIDTH);
 
-        auto& keybinds = config.GetKeybinds();
+        auto& keybinds = cfg.GetKeybinds();
 
         static const char* capturingKeybind = nullptr;
 
@@ -550,7 +552,7 @@ void MenuWindow::KeyBindsTab::Render() {
             std::string name = keybind.name;
             std::string keybindStr{};
             // fix: every frame getting string from file
-            if (!config.GetKeybindString(keybind, &keybindStr)) continue;
+            if (!cfg.GetKeybindString(keybind, &keybindStr)) continue;
 
             ImGui::PushID(keybind.name);
 
