@@ -1,5 +1,6 @@
 #include "gui/timeline/timeline_window.h"
 #include "gui/helpers.h"
+#include "core/input/input.h"
 
 #include "utils/time.h"
 
@@ -13,6 +14,8 @@ void TimelineWindow::Render() {
     float max_time = timeline.GetMaxTime();
     bool is_playing = timeline.IsPlaying();
 
+	bool isTimelineInput = input.GetInputSource() == InputSource::Timeline;
+
     std::string title = "Timeline " + TimeToString(time, TimeFormat::MINUTES_SECONDS_MILLISECONDS);
     ImGui::Begin((title + "###timeline").c_str(), &is_visible, is_mouse_under_titlebar ? ImGuiWindowFlags_NoMove : 0);
 
@@ -24,7 +27,7 @@ void TimelineWindow::Render() {
     ImGui::BeginChild("##sidebar", ImVec2(config.sidebar_width, config.track_height * 4), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
     {
         ImGui::BeginChild("##sidebar_header", ImVec2(config.sidebar_width, config.track_height));
-        if (ImGui::Button("+##add_all") || ImGui::IsKeyPressed(ImGuiKey_O)) {
+        if (ImGui::Button("+##add_all") || input.IsJustPressed('O')) {
             timeline.GetFovTrack().AddKeyframe(time);
             timeline.GetPosTrack().AddKeyframe(time);
             timeline.GetRotTrack().AddKeyframe(time);
@@ -33,7 +36,7 @@ void TimelineWindow::Render() {
 
         ImGui::SameLine();
 
-        if (ImGui::Button(is_playing ? "Pause" : "Play", ImVec2(ImGui::GetContentRegionAvail().x - spacing, 0)) || (ImGui::IsKeyPressed(ImGuiKey_Space) && !ImGui::IsMouseDown(ImGuiMouseButton_Right))) {
+        if (ImGui::Button(is_playing ? "Pause" : "Play", ImVec2(ImGui::GetContentRegionAvail().x - spacing, 0)) || (input.IsJustPressed(VK_SPACE) && isTimelineInput)) {
             is_playing ? timeline.StopPlay() : timeline.Play();
         }
         ImHelpers::TooltipWithShortcut("Play/Pause", "Space");

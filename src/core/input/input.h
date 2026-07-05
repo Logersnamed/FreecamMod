@@ -10,6 +10,11 @@
 
 #pragma comment(lib, "Xinput9_1_0.lib")
 
+enum class InputSource {
+    Default,
+    Timeline,
+};
+
 class Input {
     struct KeyState {
         bool down;
@@ -45,6 +50,9 @@ public:
 
     void Reset();
 
+	InputSource GetInputSource() const { return inputSource; }
+	void SetInputSource(InputSource source) { inputSource = source; }
+
     bool IsPressed(int vk) const { return keyStates[vk].down && !disableKeyboard; }
     bool IsJustPressed(int vk) const { return keyStates[vk].pressed && !disableKeyboard; }
     bool IsReleased(int vk) const { return keyStates[vk].released && !disableKeyboard; }
@@ -63,7 +71,8 @@ private:
     static inline LONG_PTR origWndProc = 0;
 
     bool isShouldGetInput = false;
-    bool isMouseInputBlocked = false;
+
+	InputSource inputSource = InputSource::Default;
 
     KeyState keyStates[256] = {};
     float scrollDelta = 0.0f;

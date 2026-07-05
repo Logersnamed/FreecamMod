@@ -381,10 +381,12 @@ void MenuWindow::SequencerTab::Render() {
 
         ImGui::Spacing();
         ImGui::SeparatorText("Controls");
-		ImGui::Text("[Space]"); ImGui::SameLine(); ImGui::TextDisabled("- Play/Pause");
+        ImGui::Text("[Space]"); ImGui::SameLine(); ImGui::TextDisabled("- Play/Pause");
 		ImGui::Text("[O]"); ImGui::SameLine(); ImGui::TextDisabled("- Add all keyframes");
+		ImGui::Text("[X]"); ImGui::SameLine(); ImGui::TextDisabled("- Delete selected keyframes");
 		ImGui::Text("[Shift + Scroll]"); ImGui::SameLine(); ImGui::TextDisabled("- Scroll timeline");
-		ImGui::TextDisabled("Hold"); ImGui::SameLine(); ImGui::Text("[Shift]"); ImGui::SameLine(); ImGui::TextDisabled("and click to select multiple keyframes");
+        ImGui::TextDisabled("Hold"); ImGui::SameLine(); ImGui::Text("[RMB]"); ImGui::SameLine(); ImGui::TextDisabled("in game area to look around");
+        ImGui::TextDisabled("Hold"); ImGui::SameLine(); ImGui::Text("[Shift]"); ImGui::SameLine(); ImGui::TextDisabled("and click to select multiple keyframes");
 		ImGui::TextDisabled("Hold"); ImGui::SameLine(); ImGui::Text("[Alt]"); ImGui::SameLine(); ImGui::TextDisabled("to disable playhead/keyframes snap to grid");
 
         ImGui::EndScrollableArea();

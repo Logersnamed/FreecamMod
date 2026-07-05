@@ -3,8 +3,11 @@
 #include "gui/timeline/timeline_config.h"
 #include "core/timeline/timeline.h"
 
+class Input;
+
 class TimelineWindow {
     Timeline& timeline;
+    Input& input;
 
     TimelineConfig config{};
 
@@ -19,7 +22,7 @@ class TimelineWindow {
 	bool is_mouse_under_titlebar = false;
 
 public:
-    explicit TimelineWindow(Timeline& timeline) : timeline(timeline) {}
+    explicit TimelineWindow(Timeline& timeline, Input& input) : timeline(timeline), input(input) {}
 
     void SetVisibility(bool show) { is_visible = show; }
     bool IsVisible() const { return is_visible; }

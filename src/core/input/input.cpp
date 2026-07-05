@@ -11,10 +11,6 @@
 
 Input::Input() {
     instance = this; 
-
-    EventBus::Subscribe<Event::BlockCameraMouseMoveInput>([this](const Event::BlockCameraMouseMoveInput& event) {
-        isMouseInputBlocked = event.isEnabled;
-    });
 }
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -43,7 +39,7 @@ UINT WINAPI Input::hkGetRawInputData(HRAWINPUT hRawInput, UINT uiCommand, LPVOID
             raw->data.mouse.lLastX = 0;
             raw->data.mouse.lLastY = 0;
         }
-        else if (instance && instance->isShouldGetInput && !instance->isMouseInputBlocked) {
+        else if (instance && instance->isShouldGetInput) {
             instance->mouseDelta.x += raw->data.mouse.lLastX;
             instance->mouseDelta.y += raw->data.mouse.lLastY;
         }
@@ -98,14 +94,16 @@ void Input::UpdateGamepad() {
 }
 
 void Input::UpdateKeyboard(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    isShouldGetInput = !IsCursorVisible() && isWindowFocused;
-
     int key = -1;
     switch (uMsg) {
         case WM_KILLFOCUS:
         case WM_ACTIVATEAPP:
             OnWindowFocus(uMsg == WM_ACTIVATEAPP, wParam);
             return;
+
+        case WM_SETCURSOR:
+            isShouldGetInput = !IsCursorVisible() && isWindowFocused;
+            break;
 
         case WM_DPICHANGED:
             EventBus::Emit(Event::DPIChanged{});
@@ -142,6 +140,7 @@ void Input::UpdateKeyboard(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 void Input::OnWindowFocus(bool getFocused, WPARAM wParam) {
     isWindowFocused = getFocused;
     isWindowJustFocused = getFocused;
+    isShouldGetInput = !IsCursorVisible() && isWindowFocused;
 
     if (!wParam) {
         Reset();

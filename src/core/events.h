@@ -15,34 +15,7 @@ namespace Event {
     struct SaveState { int slot{}; float3 pos{}; };
     struct Interpolate { bool isEnabled = false; FixedVec<uint8_t, 10> slots{}; };
     struct StateQueued { int slot; };
-
     struct DPIChanged {};
-
-    struct BlockCameraMouseMoveInput { bool isEnabled = false; };
-
-    struct BlockActions {
-        std::array<bool, static_cast<size_t>(ActionType::Count)> blocked{};
-
-        static BlockActions All() {
-            BlockActions b;
-            b.blocked.fill(true);
-            return b;
-        }
-
-        static BlockActions None() {
-            return BlockActions{};
-        }
-
-        BlockActions& With(ActionType type) {
-            blocked[static_cast<size_t>(type)] = true;
-            return *this;
-        }
-
-        BlockActions& Except(ActionType type) {
-            blocked[static_cast<size_t>(type)] = false;
-            return *this;
-        }
-    };
 }
 
 class EventBus {

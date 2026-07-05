@@ -63,30 +63,15 @@ private:
 
 class ActionManager {
 	std::array<std::optional<Action>, static_cast<size_t>(ActionType::Count)> actions{};
-	std::array<bool, static_cast<size_t>(ActionType::Count)> blocked{};
 
 public:
-	ActionManager() {
-		EventBus::Subscribe<Event::BlockActions>([this](const Event::BlockActions& event) {
-			blocked = event.blocked;
-		});
-	}
-
-	void Block(ActionType type) { blocked[static_cast<size_t>(type)] = true; }
-	void Unblock(ActionType type) { blocked[static_cast<size_t>(type)] = false; }
-
-	void BlockAll() { blocked.fill(true); }
-	void UnblockAll() { blocked.fill(false); }
-
-	bool IsPressed(ActionType type, const Input& input) const {
-		if (blocked[static_cast<size_t>(type)]) return false;
-		const auto& action = actions[static_cast<size_t>(type)];
+	bool IsPressed(ActionType actionType, const Input& input) const {
+		const auto& action = actions[static_cast<size_t>(actionType)];
 		return action.has_value() && action->IsPressed(input);
 	}
 
-	bool IsJustPressed(ActionType type, const Input& input) const {
-		if (blocked[static_cast<size_t>(type)]) return false;
-		const auto& action = actions[static_cast<size_t>(type)];
+	bool IsJustPressed(ActionType actionType, const Input& input) const {
+		const auto& action = actions[static_cast<size_t>(actionType)];
 		return action.has_value() && action->IsJustPressed(input);
 	}
 

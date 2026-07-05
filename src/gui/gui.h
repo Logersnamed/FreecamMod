@@ -14,7 +14,7 @@ class GUI {
 public:
     explicit GUI(ModContext& ctx)
         : config(ctx.config), input(ctx.input), actionMgr(ctx.actionMgr),
-        timeline(ctx.freeCamera), timeline_window(timeline),
+        timeline(ctx.freeCamera), timeline_window(timeline, ctx.input),
         menu_window(ctx, timeline, timeline_window) {
         instance = this;
     }
@@ -48,6 +48,8 @@ private:
     void InitializeStyle();
     void SubscribeEvents();
     void SetupDockspace();
+
+    void Update();
 
     ConVar<bool> showMenuOnStartup{ "gui", "show_menu_on_startup", true };
     ConVar<bool> enableNotifications{ "gui", "enable_notifications", true };

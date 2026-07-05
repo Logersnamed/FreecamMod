@@ -88,6 +88,8 @@ void Freecam::ToggleFreecam(GameData::GameRend* gameRend) {
 }
 
 void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
+	bool isDefaultSource = input.GetInputSource() == InputSource::Default;  // Prevent input from timeline window
+
     using enum ActionType;
     const float scrollDelta = input.GetScrollDelta();
 
@@ -140,8 +142,8 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
         frameStepperTimePressed = 0.0f;
     }
 
-    freeCamera.SetMouseDelta(input.GetMouseDelta());
-    freeCamera.SetGamepadDelta(input.GetThumbRight());
+    freeCamera.SetMouseDelta(isDefaultSource ? input.GetMouseDelta() : 0);
+    freeCamera.SetGamepadDelta(isDefaultSource ? input.GetThumbRight() : 0);
 
     freeCamera.SetIsSprinting(IsPressed(Sprint) || input.IsGamepadPressed(XINPUT_GAMEPAD_X));
     if (IsJustPressed(ToggleFreeze)) freeCamera.ToggleFreeze();
@@ -155,21 +157,30 @@ void Freecam::ProcessInput(GameData::GameRend* gameRend, float deltaTime) {
     if (IsJustPressed(StartEndRecording) || input.IsGamepadJustPressed(XINPUT_GAMEPAD_DPAD_LEFT)) freeCamera.GetPathRecorder().Record();
     if (IsJustPressed(StartEndPlayingRecording) || input.IsGamepadJustPressed(XINPUT_GAMEPAD_DPAD_RIGHT)) freeCamera.GetPathRecorder().PlayRecord();
 
-    const float2 thumbLeft = input.GetThumbLeft();
-    const float moveForward = IsPressed(MoveForward) - IsPressed(MoveBackward) + thumbLeft.y;
-    const float moveRight   = IsPressed(MoveRight)   - IsPressed(MoveLeft)     + thumbLeft.x;
-    const float moveUp      = IsPressed(MoveUp)      - IsPressed(MoveDown) 
-                            + input.IsGamepadPressed(XINPUT_GAMEPAD_A)
-                            - input.IsGamepadPressed(XINPUT_GAMEPAD_B);
-	freeCamera.AddVelocity(float3(moveRight, moveUp, moveForward));
+    float3 velocity = 0;
+    float rollVelocity = 0;
+	float zoomVelocity = 0;
+    if (isDefaultSource) {
+        const float2 thumbLeft = input.GetThumbLeft();
+        const float moveForward = IsPressed(MoveForward) - IsPressed(MoveBackward) + thumbLeft.y;
+        const float moveRight   = IsPressed(MoveRight)   - IsPressed(MoveLeft)     + thumbLeft.x;
+        const float moveUp      = IsPressed(MoveUp)      - IsPressed(MoveDown) 
+                                + input.IsGamepadPressed(XINPUT_GAMEPAD_A)
+                                - input.IsGamepadPressed(XINPUT_GAMEPAD_B);
+		velocity = { moveRight, moveUp, moveForward };
 
-    freeCamera.AddRollVelocity(IsPressed(TiltLeft) - IsPressed(TiltRight) 
-        + input.IsGamepadPressed(XINPUT_GAMEPAD_LEFT_SHOULDER) - input.IsGamepadPressed(XINPUT_GAMEPAD_RIGHT_SHOULDER));
+        rollVelocity = IsPressed(TiltLeft) - IsPressed(TiltRight)
+            + input.IsGamepadPressed(XINPUT_GAMEPAD_LEFT_SHOULDER) - input.IsGamepadPressed(XINPUT_GAMEPAD_RIGHT_SHOULDER);
 
-    freeCamera.AddZoomVelocity(IsPressed(ZoomOut) - IsPressed(ZoomIn) 
-        + input.GetLeftTrigger() - input.GetRightTrigger() - IsPressed(ScrollZoomModifier) * scrollDelta);
+        zoomVelocity = IsPressed(ZoomOut) - IsPressed(ZoomIn)
+            + input.GetLeftTrigger() - input.GetRightTrigger() - IsPressed(ScrollZoomModifier) * scrollDelta;
+    }
 
-    if (IsPressed(ScrollCameraSpeedModifier)) freeCamera.AddSpeed(scrollDelta);
+	freeCamera.AddVelocity(velocity);
+    freeCamera.AddRollVelocity(rollVelocity);
+    freeCamera.AddZoomVelocity(zoomVelocity);
+    
+    if (IsPressed(ScrollCameraSpeedModifier)) freeCamera.AddSpeed(isDefaultSource ? scrollDelta : 0);
 
     // Number keys row
     if (input.IsPressed(VK_CONTROL)) {

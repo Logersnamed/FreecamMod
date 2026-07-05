@@ -22,38 +22,21 @@ void GUI::Initialize() {
     HandleCursorVisibility();
 }
 
-void GUI::Render() {
+void GUI::Update() {
     static bool old_should_block = false;
     bool should_block_actions = false;
     if (is_visible && timeline_window.IsVisible()) {
         should_block_actions = timeline_window.IsHovered() || !input.IsPressed(VK_RBUTTON);
     }
+
+    input.SetInputSource(should_block_actions ? InputSource::Timeline : InputSource::Default);
+
     if (old_should_block != should_block_actions) {
         HandleCursorVisibility(!timeline_window.IsVisible() || should_block_actions);
-
-        EventBus::Emit(Event::BlockCameraMouseMoveInput{ should_block_actions });
-        auto block = Event::BlockActions::None();
-        if (should_block_actions) {
-            block
-                .With(ActionType::MoveForward)
-                .With(ActionType::MoveBackward)
-                .With(ActionType::MoveLeft)
-                .With(ActionType::MoveRight)
-                .With(ActionType::MoveUp)
-                .With(ActionType::MoveDown)
-                .With(ActionType::ZoomIn)
-                .With(ActionType::ZoomOut)
-                .With(ActionType::TiltLeft)
-                .With(ActionType::TiltRight);
-        }
-        EventBus::Emit(block);
-
         old_should_block = should_block_actions;
     }
 
     timeline.Update(ImGui::GetIO().DeltaTime);
-
-    IConVar::anyChangeByUi = false;
 
     if (actionMgr.IsJustPressed(ActionType::ToggleMenu, input)) {
         is_visible = !is_visible;
@@ -64,6 +47,12 @@ void GUI::Render() {
 
         HandleCursorVisibility();
     }
+}
+
+void GUI::Render() {
+    Update();
+
+    IConVar::anyChangeByUi = false;
 
     if (enableNotifications) {
         NotificationPopUp::Render();
