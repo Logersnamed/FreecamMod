@@ -35,6 +35,9 @@ class FreeCamera {
     ConVar<float> maxFov                 { "camera_settings", "max_fov",              2.70f,     MIN_FOV, MAX_FOV };
     ConVar<float> pitchLimit             { "camera_settings", "pitch_limit",          1.55f };
 
+    ConVar<bool>  invert_camera_x        { "camera_settings", "invert_camera_x",      false };
+    ConVar<bool>  invert_camera_y        { "camera_settings", "invert_camera_y",      false };
+
     ConVar<bool>  smoothCameraMovement   { "smooth_camera_settings", "smooth_camera_movement", true  };
     ConVar<bool>  smoothCameraRotation   { "smooth_camera_settings", "smooth_camera_rotation", false };
     ConVar<float> smoothSensitivity      { "smooth_camera_settings", "sensitivity",            1.0f  };

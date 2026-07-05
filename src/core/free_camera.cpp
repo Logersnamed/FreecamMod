@@ -146,6 +146,15 @@ void FreeCamera::UpdatePosition(GameData::Camera* camera, float dt) {
 void FreeCamera::UpdateRotation(GameData::Camera* freeCamera, float dt) {
     RotationCache& c = rotationCache;
 
+    if (invert_camera_x) {
+		mouseDelta.x = -mouseDelta.x;
+		gamepadDelta.x = -gamepadDelta.x;
+    }
+	if (invert_camera_y) {
+        mouseDelta.y = -mouseDelta.y;
+        gamepadDelta.y = -gamepadDelta.y;
+	}
+
     float _tiltSpeed = smoothCameraRotation ? smoothTiltSpeed : tiltSpeed;
     rotation.roll += rollVelocity * _tiltSpeed * dt;
     c.roll.CacheSinCos(rotation.roll);
