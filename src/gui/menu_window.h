@@ -22,8 +22,8 @@ class PathRecorder;
 class MenuWindow {
 public:
     explicit MenuWindow(ModContext& ctx, Timeline& timeline, TimelineWindow& timeline_window)
-        : infoTab(ctx.freeCamera)
-        , featuresTab(ctx.hookManager, ctx.freeCamera, ctx.speedhack)
+        : infoTab(ctx.freeCamera, ctx.config)
+        , featuresTab(ctx.hookManager, ctx.freeCamera, ctx.speedhack, ctx.config)
         , sequencerTab(timeline, timeline_window)
         , configTab(ctx.config)
         , keyBindsTab(ctx.config) {
@@ -39,9 +39,10 @@ private:
 
     class InfoTab {
         FreeCamera& freeCamera;
+		Config& config;
 
     public:
-        InfoTab(FreeCamera& freeCamera) : freeCamera(freeCamera) {}
+        InfoTab(FreeCamera& freeCamera, Config& config) : freeCamera(freeCamera), config(config) {}
 
         void Render();
     };
@@ -53,9 +54,10 @@ private:
         FrameStepper& frameStepper;
         CameraStateManager& cameraStateMgr;
         PathRecorder& pathRecorder;
+		Config& config;
 
     public:
-        FeaturesTab(HookManager& hookManager, FreeCamera& freeCamera, Speedhack& speedhack);
+        FeaturesTab(HookManager& hookManager, FreeCamera& freeCamera, Speedhack& speedhack, Config& config);
 
         void RenderSpeedhack();
         void RenderFrameStepper();

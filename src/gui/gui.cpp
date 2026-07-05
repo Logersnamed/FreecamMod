@@ -4,11 +4,11 @@
 #include "imgui_impl_win32.h"
 #include "imgui_internal.h"
 
-#include "gui/notification_popup.h"
 #include "core/events.h"
 #include "core/config/config.h"
+#include "gui/notification_popup.h"
 #include "hook/hook_manager.h"
-
+  
 void GUI::Initialize() {
     is_visible = showMenuOnStartup;
     is_cursor_visible = showMenuOnStartup;
@@ -163,31 +163,38 @@ void GUI::SubscribeEvents() {
     EventBus::Subscribe<Event::ToggleFreecam>([this](const Event::ToggleFreecam& event) {
         if (notifyFreecam)
             NotificationPopUp::Notify("Info", event.isEnabled ? "Free camera enabled" : "Free camera disabled");
-        });
+        }
+    );
     EventBus::Subscribe<Event::ToggleSpeedhack>([this](const Event::ToggleSpeedhack& event) {
         if (notifySpeedhack)
             NotificationPopUp::Notify("Info", event.isEnabled ? "Speedhack enabled" : "Speedhack disabled");
-        });
+        }
+    );
     EventBus::Subscribe<Event::FrameStepped>([this](const Event::FrameStepped& event) {
         if (notifyFrameStepped)
             NotificationPopUp::Notify("Info", std::format("{} frames stepped", event.framesStepped));
-        });
+        }
+    );
     EventBus::Subscribe<Event::ToggleCycleWeatherTime>([this](const Event::ToggleCycleWeatherTime& event) {
         if (notifyCycleWeatherTime)
             NotificationPopUp::Notify("Info", event.isEnabled ? "Started cycling weather time" : "Finished cycling weather time");
-        });
+        }
+    );
     EventBus::Subscribe<Event::Record>([this](const Event::Record& event) {
         if (notifyRecord)
             NotificationPopUp::Notify("Info", event.isEnabled ? "Started recording" : "Finished recording");
-        });
+        }
+    );
     EventBus::Subscribe<Event::PlayRecord>([this](const Event::PlayRecord& event) {
         if (notifyPlayRecord)
             NotificationPopUp::Notify("Info", event.isEnabled ? "Started playing recording" : "Finished playing recording");
-        });
+        }
+    );
     EventBus::Subscribe<Event::SaveState>([this](const Event::SaveState& event) {
         if (notifySaveState)
             NotificationPopUp::Notify("Info", std::format("Saved state [{}], position = ({:.2f}, {:.2f}, {:.2f})", event.slot, event.pos.x, event.pos.y, event.pos.z));
-        });
+        }
+    );
     EventBus::Subscribe<Event::Interpolate>([this](const Event::Interpolate& event) {
         if (!notifyInterpolate) return;
         std::string slotsStr = "[";
@@ -197,11 +204,13 @@ void GUI::SubscribeEvents() {
         }
         slotsStr += "]";
         NotificationPopUp::Notify("Info", event.isEnabled ? std::format("Interpolation started between states = {}", slotsStr) : "Interpolation ended");
-        });
+        }
+    );
     EventBus::Subscribe<Event::StateQueued>([this](const Event::StateQueued& event) {
         if (notifyStateQueued)
             NotificationPopUp::Notify("Info", std::format("State [{}] queued", event.slot));
-        });
+        }
+    );
 }
 
 void GUI::InitializeStyle() {

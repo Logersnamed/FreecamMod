@@ -3,8 +3,6 @@
 #include <functional>
 #include "utils/types.h"
 
-#include "core/input/action_type.h"
-
 namespace Event {
     struct ToggleFreecam { bool isEnabled = false; };
     struct ToggleSpeedhack { bool isEnabled = false; };
@@ -14,9 +12,17 @@ namespace Event {
     struct PlayRecord { bool isEnabled = false; };
     struct SaveState { int slot{}; float3 pos{}; };
     struct Interpolate { bool isEnabled = false; FixedVec<uint8_t, 10> slots{}; };
-    struct StateQueued { int slot; };
+    struct StateQueued { int slot{}; };
     struct DPIChanged {};
 }
+
+/*
+    Subcribe to an event:
+    EventBus::Subscribe<Event::EventStruct>([this](const Event::EventStruct& event) { });
+
+	Emit an event:
+    EventBus::Emit(Event::EventStruct{});
+*/
 
 class EventBus {
 public:

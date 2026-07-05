@@ -6,11 +6,8 @@
 
 #include "ModUtils.h"
 
-#include "core/game_data/game_data.h"
-#include "core/game_data_manager.h"
-#include "core/settings_backup.h"
 #include "core/events.h"
-#include "utils/types.h"
+#include "core/settings_backup.h"
 #include "utils/debug.h"
 #include "utils/math.h"
 
@@ -33,9 +30,8 @@ void FreeCamera::OnConfigReload() {
     ApplyGameOptions(true);
     ApplyFreezeState(true);
     
-    GameData::FieldArea* fieldArea = GameDataManager::FieldArea.Get();
-    if (fieldArea && fieldArea->gameRend) {
-        fieldArea->gameRend->EnableFreecam(disablePlayerControls);
+    if (auto* gameRend = GetGameRend()) {
+        gameRend->EnableFreecam(disablePlayerControls);
     }
 }
 
@@ -115,13 +111,13 @@ void FreeCamera::DisableCamera(GameData::GameRend* rend) {
 }
 
 void FreeCamera::DisableCamera() {
-    GameData::FieldArea* fieldArea = GameDataManager::FieldArea.Get();
-    if (!fieldArea || !fieldArea->gameRend) {
+    auto* gameRend = GetGameRend();
+    if (!gameRend) {
         LOG_WARN("FieldArea or gameRend is null in FreeCamera::DisableCamera");
         return;
     }
 
-    DisableCamera(fieldArea->gameRend);
+    DisableCamera(gameRend);
 }
 
 void FreeCamera::ResetCameraState(GameData::GameRend* gameRend) {

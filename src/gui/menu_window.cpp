@@ -1,15 +1,17 @@
 #include "gui/menu_window.h"
 
+#include <format>
+#include "shellapi.h"
+
 #include "imgui.h"
 
 #include "core/config/config.h"
 #include "core/free_camera.h"
 #include "core/features/speedhack.h"
 #include "core/game_data_manager.h"
-#include "hook/hook_manager.h"
-
 #include "gui/notification_popup.h"
 #include "gui/helpers.h"
+#include "hook/hook_manager.h"
 
 namespace Layout {
     constexpr float ITEM_WIDTH = -150.0f;
@@ -60,20 +62,86 @@ void MenuWindow::InfoTab::Render() {
         ImGui::BeginScrollableArea("##info_content");
         GameData::GameRend* gameRend = freeCamera.GetGameRend();
 
-        if (!gameRend) {
-            ImGui::Spacing();
-            ImGui::TextDisabled("World isn't loaded.");
-            ImGui::EndScrollableArea();
-            ImGui::EndTabItem();
-            return;
+        const bool isFreecamEnabled = freeCamera.IsEnabled();
+        GameData::Camera* activeCamera{};
+        if (gameRend) {
+            activeCamera = isFreecamEnabled ? gameRend->csDebugCam : gameRend->csPersCam1;
         }
 
-        const bool isFreecamEnabled = freeCamera.IsEnabled();
-        GameData::Camera* activeCamera = isFreecamEnabled ? gameRend->csDebugCam : gameRend->csPersCam1;
-
-        if (!activeCamera) {
+        if (!gameRend || !activeCamera) {
             ImGui::Spacing();
             ImGui::TextDisabled("No active camera.");
+
+            ImGui::Spacing();
+            ImGui::SeparatorText("About");
+
+            ImGui::BulletText("Freecam v2.0.0");
+            ImGui::BulletText("Build date: %s", __DATE__);
+
+            ImGui::BulletText("Wiki & docs:");
+            ImGui::SameLine(0, 0);
+            ImGui::TextLinkOpenURL("https://github.com/Logersnamed/FreecamMod/wiki ");
+
+            ImGui::BulletText("Report a bug/feature: ");
+            ImGui::SameLine(0, 0);
+            ImGui::TextLinkOpenURL("https://github.com/Logersnamed/FreecamMod/issues");
+
+            ImGui::Spacing();
+            ImGui::SeparatorText("Quick Start");
+
+            ImGui::BulletText("Toggle UI: [%s]", config.GetKeybindString(ActionType::ToggleMenu).c_str());
+            ImGui::SameLine();
+            ImGui::TextDisabled("(?)");
+            ImHelpers::Tooltip("Rebindable in config.ini");
+
+            ImGui::BulletText("Toggle freecam: [%s]", config.GetKeybindString(ActionType::Toggle).c_str());
+            ImGui::SameLine();
+            ImGui::TextDisabled("(?)");
+            ImHelpers::Tooltip("Rebindable in config.ini");
+
+            ImGui::BulletText("Move: [%s %s %s %s]", config.GetKeybindString(ActionType::MoveForward).c_str(), config.GetKeybindString(ActionType::MoveLeft).c_str(), config.GetKeybindString(ActionType::MoveBackward).c_str(), config.GetKeybindString(ActionType::MoveRight).c_str());
+            ImGui::SameLine();
+            ImGui::TextDisabled("(?)");
+            ImHelpers::Tooltip("Rebindable in config.ini");
+
+            ImGui::BulletText("Move up / down: [%s] / [%s]", config.GetKeybindString(ActionType::MoveUp).c_str(), config.GetKeybindString(ActionType::MoveDown).c_str());
+            ImGui::SameLine();
+            ImGui::TextDisabled("(?)");
+            ImHelpers::Tooltip("Rebindable in config.ini");
+
+            ImGui::BulletText("Tilt: [%s] / [%s]", config.GetKeybindString(ActionType::TiltLeft).c_str(), config.GetKeybindString(ActionType::TiltRight).c_str());
+            ImGui::SameLine();
+            ImGui::TextDisabled("(?)");
+            ImHelpers::Tooltip("Rebindable in config.ini");
+
+            ImGui::Spacing();
+            ImGui::SeparatorText("Tabs");
+
+            ImGui::BulletText("Features");
+            ImGui::SameLine();
+            ImGui::BeginDisabled();
+            ImGui::TextWrapped("- controls freecam features: speedhack, change weather/daytime, etc.");
+            ImGui::EndDisabled();
+
+            ImGui::BulletText("Timeline");
+            ImGui::SameLine();
+            ImGui::BeginDisabled();
+            ImGui::TextWrapped("- set keyframes for the camera and play back smooth camera paths.");
+            ImGui::EndDisabled();
+
+            ImGui::BulletText("Config");
+            ImGui::SameLine();
+            ImGui::BeginDisabled();
+            ImGui::TextWrapped("- adjust mod settings. Changes are saved across restarts.");
+            ImGui::EndDisabled();
+
+#ifdef _WIN32
+            ImGui::Spacing();
+            if (ImGui::Button("Open Config Folder", ImVec2(Layout::BUTTON_WIDTH, 0.0f))) {
+                ShellExecuteW(NULL, L"open", config.GetConfigDirPath().c_str(), NULL, NULL, SW_SHOWNORMAL);
+            }
+#endif
+
             ImGui::EndScrollableArea();
             ImGui::EndTabItem();
             return;
@@ -108,8 +176,10 @@ void MenuWindow::InfoTab::Render() {
         ImGui::DragFloat("Render Distance", &activeCamera->renderDistance, 10.0f, 0.0f, 0.0f, "%.0f m");
 
         float speed = freeCamera.GetSpeed();
-        if (ImGui::DragFloat("Speed", &speed, 0.1f, 0.0f, 0.0f, "%.2f"))
+        if (ImGui::DragFloat("Speed", &speed, 0.1f, 0.0f, 0.0f, "%.2f")) {
             freeCamera.SetSpeed(speed);
+        }
+		ImHelpers::TooltipWithShortcut("Adjust camera fly speed.", std::format("{} + Scroll", config.GetKeybindString(ActionType::ScrollCameraSpeedModifier).c_str()).c_str());
         ImGui::EndDisabled();
 
         ImGui::Spacing();
@@ -132,8 +202,8 @@ void MenuWindow::InfoTab::Render() {
     }
 }
 
-MenuWindow::FeaturesTab::FeaturesTab(HookManager& hookManager, FreeCamera& freeCamera, Speedhack& speedhack)
-    : hookManager(hookManager), freeCamera(freeCamera), speedhack(speedhack),
+MenuWindow::FeaturesTab::FeaturesTab(HookManager& hookManager, FreeCamera& freeCamera, Speedhack& speedhack, Config& config)
+    : hookManager(hookManager), freeCamera(freeCamera), speedhack(speedhack), config(config),
     frameStepper(freeCamera.GetFrameStepper()), cameraStateMgr(freeCamera.GetCameraStateManager()),
     pathRecorder(freeCamera.GetPathRecorder()) {
 }
@@ -154,6 +224,9 @@ void MenuWindow::FeaturesTab::RenderSpeedhack() {
                     "Enable this option or turn on freecam mode to unlock."
                 );
             }
+            else {
+				ImHelpers::TooltipWithShortcut("Enable/disable speedhack.", std::format("{}", config.GetKeybindString(ActionType::ToggleSpeedhack).c_str()).c_str());
+            }
         }
         ImGui::EndDisabled();
 
@@ -161,6 +234,7 @@ void MenuWindow::FeaturesTab::RenderSpeedhack() {
         if (ImGui::DragFloat("Speedhack speed", &timeScale, 0.001)) {
             speedhack.SetSpeed(timeScale);
         }
+		ImHelpers::TooltipWithShortcut("Adjust speedhack speed.", std::format("{} + Scroll", config.GetKeybindString(ActionType::ScrollSpeedhackModifier).c_str()).c_str());
 
         float gameSpeed = speedhack.GetGameSpeed();
         ImGui::BeginDisabled();
@@ -188,6 +262,7 @@ void MenuWindow::FeaturesTab::RenderFrameStepper() {
         if (ImGui::Button(canStopStepping ? "Stop stepping" : "Step frames", ImVec2(Layout::SMALL_BUTTON_WIDTH, 0.0f))) {
             canStopStepping ? frameStepper.Reset() : frameStepper.StepFrames();
         }
+		ImHelpers::TooltipWithShortcut("Step frames forward.", std::format("{}", config.GetKeybindString(ActionType::StepFrames).c_str()).c_str());
         ImGui::EndDisabled();
 
         if (ImGui::InputInt("Step", &step)) {
@@ -216,6 +291,9 @@ void MenuWindow::FeaturesTab::RenderCycleWeatherTime() {
                     "Disabled by config: features_work_only_in_freecam.cycle_weather_time\n"
                     "Enable this option or turn on freecam mode to unlock."
                 );
+            }
+            else {
+				ImHelpers::TooltipWithShortcut("Start/stop cycling weather and time.", std::format("{}", config.GetKeybindString(ActionType::CycleWeatherTime).c_str()).c_str());
             }
         }
         ImGui::EndDisabled();
@@ -291,6 +369,7 @@ void MenuWindow::FeaturesTab::RenderPathRecorder() {
             if (ImGui::Button(pathRecorder.IsRecording() ? "Stop Recording" : "Start Recording", ImVec2(Layout::BUTTON_WIDTH, 0.0f))) {
                 pathRecorder.IsRecording() ? pathRecorder.EndRecord() : pathRecorder.StartRecord();
             }
+			ImHelpers::TooltipWithShortcut("Start/stop recording camera path.", std::format("{}", config.GetKeybindString(ActionType::StartEndRecording).c_str()).c_str());
 
             int framesPlayed = pathRecorder.GetFramesPlayed();
             ImGui::BeginDisabled();
@@ -303,6 +382,7 @@ void MenuWindow::FeaturesTab::RenderPathRecorder() {
             if (ImGui::Button(pathRecorder.IsPlaying() ? "Stop Playing" : "Start Playing", ImVec2(Layout::BUTTON_WIDTH, 0.0f))) {
                 pathRecorder.IsPlaying() ? pathRecorder.EndPlay() : pathRecorder.StartPlay();
             }
+			ImHelpers::TooltipWithShortcut("Start/stop playing recorded camera path.", std::format("{}", config.GetKeybindString(ActionType::StartEndPlayingRecording).c_str()).c_str());
             ImGui::EndDisabled();
 
             ImGui::PopItemWidth();
@@ -343,11 +423,6 @@ void MenuWindow::SequencerTab::Render() {
         bool isVisible = timelineWindow.IsVisible();
         if (ImGui::Checkbox("Show timeline", &isVisible)) {
             timelineWindow.SetVisibility(isVisible);
-            if (isVisible) {
-                static bool was_notified = false;
-                if (!was_notified) NotificationPopUp::Notify("Info", "Click and hold the left mouse button in the game view to look around", 5);
-                was_notified = true;
-            }
         }
 
         float max_time = timeline.GetMaxTime();
@@ -383,8 +458,9 @@ void MenuWindow::SequencerTab::Render() {
         ImGui::Text("[Space]"); ImGui::SameLine(); ImGui::TextDisabled("- Play/Pause");
 		ImGui::Text("[O]"); ImGui::SameLine(); ImGui::TextDisabled("- Add all keyframes");
 		ImGui::Text("[X]"); ImGui::SameLine(); ImGui::TextDisabled("- Delete selected keyframes");
-		ImGui::Text("[Shift + Scroll]"); ImGui::SameLine(); ImGui::TextDisabled("- Scroll timeline");
+		ImGui::Text("[Ctrl + A]"); ImGui::SameLine(); ImGui::TextDisabled("- Select all keyframes");
 		ImGui::Text("[Ctrl + Scroll]"); ImGui::SameLine(); ImGui::TextDisabled("- Zoom timeline");
+        ImGui::Text("[Shift + Scroll]"); ImGui::SameLine(); ImGui::TextDisabled("- Scroll timeline");
         ImGui::TextDisabled("Hold"); ImGui::SameLine(); ImGui::Text("[RMB]"); ImGui::SameLine(); ImGui::TextDisabled("in game area to look around");
         ImGui::TextDisabled("Hold"); ImGui::SameLine(); ImGui::Text("[Shift]"); ImGui::SameLine(); ImGui::TextDisabled("and click to select multiple keyframes");
 		ImGui::TextDisabled("Hold"); ImGui::SameLine(); ImGui::Text("[Alt]"); ImGui::SameLine(); ImGui::TextDisabled("to disable playhead/keyframes snap to grid");

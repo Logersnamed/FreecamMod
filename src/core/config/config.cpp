@@ -8,6 +8,7 @@
 #include "utils/math.h"
 
 bool Config::Initialize(HMODULE hModule, ActionManager& actionMgr) {
+    if (!ValidateKeybindOrder()) return false;
     if (!findDllPath(hModule)) return false;
 
     modDirectoryPath = dllPath / modDirectoryName;

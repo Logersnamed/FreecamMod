@@ -1,10 +1,4 @@
 #pragma once
-#include "utils/windows_lean.h"
-#include <algorithm>
-#include <optional>
-#include <cstddef>
-#include <cstdint>
-
 #include "core/config/con_var.h" 
 #include "core/features/frame_stepper.h"
 #include "core/features/game_state_manager.h"
@@ -12,7 +6,6 @@
 #include "core/features/camera_state_manager.h"
 #include "core/game_data/game_data.h"
 #include "utils/types.h"
-#include "utils/debug.h"
 
 class FreeCamera {
     ConVar<bool>  freezeGame             { "freecam", "freeze_game",                  true  };

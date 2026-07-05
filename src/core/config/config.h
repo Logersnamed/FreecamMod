@@ -35,6 +35,18 @@ public:
 
     bool GetKeybindString(const Keybind& keybind, std::string* string);
 
+	std::string GetKeybindString(ActionType actionType) {
+		for (const Keybind& keybind : keybinds) {
+			if (keybind.defaultAction.GetType() == actionType) {
+				std::string keybindStr{};
+				if (GetKeybindString(keybind, &keybindStr)) {
+					return keybindStr;
+				}
+			}
+		}
+		return "";
+	}
+
 private:
     ActionManager* actionMgr = nullptr;
     std::vector<std::function<void()>> onReloadCallbacks;
@@ -78,6 +90,16 @@ private:
         Keybind{"toggle_speedhack", Action{ ToggleSpeedhack, { VK_F7 }}},
         Keybind{"reset_speedhack_speed", Action{ ResetSpeedhackSpeed, { VK_CONTROL, 'V' }}},
     };
+
+    bool ValidateKeybindOrder() {
+        for (size_t i = 0; i < keybinds.size(); ++i) {
+            if (static_cast<size_t>(keybinds[i].defaultAction.GetType()) != i) {
+				MessageBoxExW(nullptr, L"Keybinds are not in the correct order.", L"Error", MB_OK | MB_ICONERROR, 0);
+                return false;
+            }
+        }
+        return true;
+    }
 
     bool findDllPath(HMODULE hModule);
 
