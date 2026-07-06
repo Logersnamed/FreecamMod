@@ -3,10 +3,14 @@ A [mod](https://www.nexusmods.com/eldenring/mods/9420) that detaches camera from
 Works with Seamless Co-op, ER Reforged. Tested on EldenModLoader, modengine2, me3.  
 
 ![Freecam preview](https://github.com/user-attachments/assets/9b9569fb-8401-4d98-a025-8c6dc6ec98fa)
+
+<img width="1920" height="1080" alt="2086FD~1" src="https://github.com/user-attachments/assets/cd09f0ce-e9cb-44be-943c-8df30cf57fe9" />
+
 ## Features
 - Freeze game, player, and entities independently
 - Change weather/daytime 
 - Teleport to camera
+- Timeline window for keyframe-based camera animation
 - Frame stepper
 - Save / load state + interpolation between states
 - Path recorder 
@@ -44,7 +48,7 @@ cd FreecamMod
 ```
 Configure the project. Optionally you can specify a DLL output folder using DGAME_DIR variable:
 ```bash
-cmake -S . -B build [-DGAME_DIR="path/to/modflolder/"]
+cmake -S . -B build -G "Visual Studio 17 2022" [-DGAME_DIR="path/to/modflolder/"]
 ```
 Build the project:
 ```bash
@@ -55,6 +59,7 @@ The built DLL will be located in: `build/Release/FreecamMod.dll`
 ## Credits & References
 [EROverlay](https://github.com/koalabear420/EROverlay) – Reference and partial code usage  
 [EldenRing-PostureBarMod](https://github.com/Mordrog/EldenRing-PostureBarMod) – Reference  
+[DX12 ImGui Overlay](https://github.com/kacejot/dx12-imgui-overlay) – Reference  
 [Techiew ModUtils](https://github.com/techiew/EldenRingMods/blob/master/ModUtils.h) - Elden ring mod utils  
 [Techiew EldenRingMods](https://github.com/techiew/EldenRingMods) - Reference and partial code usage   
 [The Grand Archives](https://github.com/The-Grand-Archives/Elden-Ring-CT-TGA) - Cheat Table  
