@@ -29,7 +29,7 @@ void TimelineWindow::Render() {
 
         if (input.IsPressed(VK_CONTROL)) {
             float delta = input.GetScrollDelta();
-			cfg.pixels_per_second += (int)(delta * 5.0f);
+			cfg.SetPixelsPerSecond(cfg.pixels_per_second + (int)(delta * 5.0f), max_time);
         }
     }
 
@@ -75,6 +75,7 @@ void TimelineWindow::Render() {
         ImVec2 pos = ImGui::GetCursorScreenPos();
         float scroll_x = ImGui::GetScrollX();
         int track_width = cfg.TrackWidth(max_time);
+        cfg.track_visible_width = ImGui::GetContentRegionAvail().x;
 
         // Drawing timestamps
         ImGui::BeginChild("##timestamps", ImVec2(track_width, cfg.track_height));

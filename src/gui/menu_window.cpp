@@ -137,12 +137,10 @@ void MenuWindow::InfoTab::Render() {
             ImGui::TextWrapped("- adjust mod settings. Changes are saved across restarts.");
             ImGui::EndDisabled();
 
-#ifdef _WIN32
             ImGui::Spacing();
             if (ImGui::Button("Open Config Folder", ImVec2(Layout::BUTTON_WIDTH, 0.0f))) {
-                ShellExecuteW(NULL, L"open", cfg.GetConfigDirPath().c_str(), NULL, NULL, SW_SHOWNORMAL);
+                ::ShellExecuteW(NULL, L"open", cfg.GetConfigDirPath().c_str(), NULL, NULL, SW_SHOWNORMAL);
             }
-#endif
 
             ImGui::EndScrollableArea();
             ImGui::EndTabItem();
@@ -444,7 +442,7 @@ void MenuWindow::SequencerTab::Render() {
         ImGui::Spacing();
         ImGui::SeparatorText("Timeline");
 
-        ImGui::DragInt("Pixels per Second", &timeline_cfg.pixels_per_second, 1, 10, 1000);
+        ImGui::DragInt("Pixels per Second", &timeline_cfg.pixels_per_second, 1, timeline_cfg.GetMinPixelsPerSecond(max_time), 1000);
         ImGui::DragInt("Sidebar Width", &timeline_cfg.sidebar_width, 1, 50, 1000);
         ImGui::DragInt("Track Height", &timeline_cfg.track_height, 1, 10, 200);
 

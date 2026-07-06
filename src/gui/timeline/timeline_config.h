@@ -6,6 +6,7 @@ struct TimelineConfig {
     int sidebar_width = 300;
     int track_height = 25;
     int snap_pixels = 5;
+	int track_visible_width = 1000;
     bool snap_enabled = true;
 
     int TimeToPixels(float time)  const { return (int)(time * (float)pixels_per_second); }
@@ -23,5 +24,14 @@ struct TimelineConfig {
 
     int TrackWidth(float max_time) const {
         return (int)(max_time * (float)pixels_per_second);
+    }
+
+	void SetPixelsPerSecond(int pps, float max_time) {
+		pixels_per_second = std::max(pps, GetMinPixelsPerSecond(max_time));
+	}
+
+    int GetMinPixelsPerSecond(float max_time) const {
+        if (max_time <= 0.0f) return pixels_per_second;
+        return (int)((float)track_visible_width / max_time);
     }
 };
