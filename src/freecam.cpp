@@ -216,7 +216,12 @@ void Freecam::Update(GameData::GameRend* gameRend) {
     float deltaTime = std::clamp(Time::DeltaTime(), 0.0f, 0.4f);
     input.UpdateGamepad();
     ProcessInput(gameRend, deltaTime);
+
+    freeCamera.LoadCameraState(gameRend);
+    timeline.Update(gameRend, deltaTime);
     freeCamera.Update(gameRend, deltaTime);
+    freeCamera.SaveCameraState(gameRend);
+
     if (!Overlay::IsInitialized()) input.Reset();
 }
 

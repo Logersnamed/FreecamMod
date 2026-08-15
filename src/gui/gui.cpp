@@ -36,8 +36,6 @@ void GUI::Update() {
         old_should_block = should_block_actions;
     }
 
-    timeline.Update(ImGui::GetIO().DeltaTime);
-
     if (actionMgr.IsJustPressed(ActionType::ToggleMenu)) {
         is_visible = !is_visible;
 

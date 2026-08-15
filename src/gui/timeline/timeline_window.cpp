@@ -3,6 +3,7 @@
 #include "core/config/config.h"
 #include "core/input/input.h"
 #include "core/input/action_system.h"
+#include "core/free_camera.h"
 
 #include "utils/time.h"
 
@@ -57,9 +58,11 @@ void TimelineWindow::Render() {
         ImHelpers::TooltipWithShortcut("Play/Pause", config.GetKeybindString(ActionType::TimelinePlayPause).c_str());
         ImGui::EndChild();
 
-        fovWidget.DrawSidebar(time, is_playing);
-        posWidget.DrawSidebar(time, is_playing);
-        rotWidget.DrawSidebar(time, is_playing);
+        auto* camera = freeCamera.GetCameraState();
+
+        fovWidget.DrawSidebar(camera, time, is_playing);
+        posWidget.DrawSidebar(camera, time, is_playing);
+        rotWidget.DrawSidebar(camera, time, is_playing);
     }
     ImGui::EndChild();
 

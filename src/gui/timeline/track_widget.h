@@ -58,7 +58,7 @@ public:
         return events;
     }
 
-    void DrawSidebar(float time, bool is_playing) {
+    void DrawSidebar(GameData::Camera* camera, float time, bool is_playing) {
         ImGui::PushID(this);
         ImGui::BeginChild("##sidebar_header", ImVec2(cfg.sidebar_width, cfg.track_height));
         if (ImGui::Button("+")) {
@@ -72,7 +72,7 @@ public:
         if (TrackEditor<T>::DrawValue(name, data)) {
             track.SetData(data);
             track.AddKeyframe(time);
-            track.WriteCameraValue(data);
+            track.WriteCameraValue(camera, data);
         }
 		ImGui::EndChild();
         ImGui::PopID();

@@ -20,7 +20,7 @@ class Timeline {
 public:
     Timeline(FreeCamera& freeCamera);
 
-    void Update(float dt);
+    void Update(GameData::GameRend* gameRend, float dt);
 
     void Play() { is_playing = true; }
     void StopPlay() { is_playing = false; }

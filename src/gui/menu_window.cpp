@@ -60,15 +60,11 @@ void MenuWindow::Render() {
 void MenuWindow::InfoTab::Render() {
     if (ImGui::BeginTabItem("Info")) {
         ImGui::BeginScrollableArea("##info_content");
-        GameData::GameRend* gameRend = freeCamera.GetGameRend();
 
         const bool isFreecamEnabled = freeCamera.IsEnabled();
-        GameData::Camera* activeCamera{};
-        if (gameRend) {
-            activeCamera = isFreecamEnabled ? gameRend->csDebugCam : gameRend->csPersCam1;
-        }
+        GameData::Camera* activeCamera = freeCamera.GetCameraState();
 
-        if (!gameRend || !activeCamera) {
+        if (!activeCamera) {
             ImGui::Spacing();
             ImGui::TextDisabled("No active camera.");
 
@@ -77,7 +73,7 @@ void MenuWindow::InfoTab::Render() {
 
             ImGui::BulletText("Freecam v2.0.0");
             ImGui::BulletText("Build date: %s", __DATE__);
-
+            
             ImGui::BulletText("Wiki & docs: ");
             ImGui::SameLine(0, 0);
             ImGui::TextLinkOpenURL("https://github.com/Logersnamed/FreecamMod/wiki ");
@@ -159,7 +155,7 @@ void MenuWindow::InfoTab::Render() {
 
             Layout::RightAlignNext(Layout::BUTTON_WIDTH);
             if (ImGui::Button("Toggle Freecam", ImVec2(Layout::BUTTON_WIDTH, 0.0f)))
-                if (gameRend) freeCamera.Toggle(gameRend);
+                freeCamera.Toggle();
         }
 
         ImGui::SeparatorText("Camera");

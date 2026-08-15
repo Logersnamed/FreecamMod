@@ -4,28 +4,24 @@
 
 Timeline::Timeline(FreeCamera& freeCamera) : freeCamera(freeCamera) {
     fovTrack.Bind(
-        [&freeCamera]() {
-            auto* cam = freeCamera.GetCamera();
+        [&freeCamera](GameData::Camera* cam) {
             return cam ? cam->fov : 0.0f;
         },
-        [&freeCamera](const float& v) {
-            auto* cam = freeCamera.GetCamera();
+        [&freeCamera](GameData::Camera* cam, const float& v) {
             if (cam) cam->fov = v;
         }
     );
     posTrack.Bind(
-        [&freeCamera]() {
-            auto* cam = freeCamera.GetCamera();
+        [&freeCamera](GameData::Camera* cam) {
             return cam ? cam->matrix.position() : float3();
         },
-        [&freeCamera](const float3& v) {
-            auto* cam = freeCamera.GetCamera();
+        [&freeCamera](GameData::Camera* cam, const float3& v) {
             if (cam) cam->matrix.position() = v;
         }
     );
     rotTrack.Bind(
-        [&freeCamera]() { return freeCamera.GetRotation().toQuaternion(); },
-        [&freeCamera](const Quaternion& v) { freeCamera.SetRotation(v.toEuler()); }
+        [&freeCamera](GameData::Camera* cam) { return freeCamera.GetRotation().toQuaternion(); },
+        [&freeCamera](GameData::Camera* cam, const Quaternion& v) { freeCamera.SetRotation(v.toEuler()); }
     );
 
     EventBus::Subscribe<Event::ToggleFreecam>([this](const Event::ToggleFreecam& event) {
@@ -35,7 +31,10 @@ Timeline::Timeline(FreeCamera& freeCamera) : freeCamera(freeCamera) {
     });
 }
 
-void Timeline::Update(float dt) {
+void Timeline::Update(GameData::GameRend* gameRend, float dt) {
+    auto* freeCamera = gameRend->csDebugCam;
+    if (!freeCamera) return;
+
     if (is_playing) {
         time += dt;
 
@@ -51,9 +50,9 @@ void Timeline::Update(float dt) {
         }
     }
 
-    fovTrack.Update(time, is_playing);
-    posTrack.Update(time, is_playing);
-    rotTrack.Update(time, is_playing);
+    fovTrack.Update(freeCamera, time, is_playing);
+    posTrack.Update(freeCamera, time, is_playing);
+    rotTrack.Update(freeCamera, time, is_playing);
 }
 
 void Timeline::AddAllKeyframes(float time) {

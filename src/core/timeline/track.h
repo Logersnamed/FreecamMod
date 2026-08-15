@@ -1,6 +1,7 @@
 #pragma once
 #include "core/timeline/keyframe.h"
 #include "core/timeline/interpolation.h"
+#include "core/game_data/game_data.h"
 
 #include <vector>
 #include <algorithm>
@@ -11,8 +12,11 @@ class Track {
     std::vector<Keyframe<T>> keyframes;
     T data{};
 
-    std::function<T()> read_camera;
-    std::function<void(const T&)> write_camera;
+    using read_camera_t = std::function<T(GameData::Camera*)>;
+    using write_camera_t = std::function<void(GameData::Camera*, const T&)>;
+
+    read_camera_t read_camera;
+    write_camera_t write_camera;
 
     InterpolationType interpolation_type = InterpolationType::CatmullRom;
 
@@ -37,7 +41,7 @@ public:
     InterpolationType GetInterpolationType() const { return interpolation_type; }
     void SetInterpolationType(InterpolationType type) { interpolation_type = type; }
 
-    void Bind(std::function<T()> getter, std::function<void(const T&)> setter) {
+    void Bind(read_camera_t getter, write_camera_t setter) {
         read_camera = std::move(getter);
         write_camera = std::move(setter);
     }
@@ -47,23 +51,23 @@ public:
         write_camera = nullptr;
     }
 
-    void WriteCameraValue(const T& value) {
-        if (write_camera) write_camera(value);
+    void WriteCameraValue(GameData::Camera* camera, const T& value) {
+        if (write_camera && camera) write_camera(camera, value);
     }
 
-    std::optional<T> ReadCameraValue() {
-        if (read_camera) return read_camera();
+    std::optional<T> ReadCameraValue(GameData::Camera* camera) {
+        if (read_camera && camera) return read_camera(camera);
         return std::nullopt;
     }
 
-    void Update(float time, bool is_playing) {
+    void Update(GameData::Camera* camera, float time, bool is_playing) {
         data = Evaluate(time);
 
         if (is_playing) {
-            WriteCameraValue(data);
+            WriteCameraValue(camera, data);
         }
         else {
-            data = ReadCameraValue().value_or(data);
+            data = ReadCameraValue(camera).value_or(data);
         }
     }
 

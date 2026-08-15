@@ -30,8 +30,8 @@ void FreeCamera::OnConfigReload() {
     ApplyGameOptions(true);
     ApplyFreezeState(true);
     
-    if (auto* gameRend = GetGameRend()) {
-        gameRend->EnableFreecam(disablePlayerControls);
+    if (m_gameRend) {
+        m_gameRend->EnableFreecam(disablePlayerControls);
     }
 }
 
@@ -39,18 +39,23 @@ void FreeCamera::Update(GameData::GameRend* gameRend, float deltaTime) {
     m_gameRend = gameRend;
 
     RestorePendingOptions();
-    if (!gameRend->IsFreecamEnabled()) {
-        if (isEnabled) {
-            LOG_INFO("Freecam wasn't disabled properly, disabling now...");
-            DisableCamera(gameRend);
-        }
-        return;
-    }
 
     GameData::Camera* freeCamera = gameRend->csDebugCam;
     GameData::Camera* playerCamera = gameRend->csPersCam1;
     if (!freeCamera || !playerCamera) return;
 
+    if (!gameRend->IsFreecamEnabled()) {
+        if (isEnabled) {
+            LOG_INFO("Freecam wasn't disabled properly, disabling now...");
+            DisableCamera(gameRend);
+        }
+
+        if (resetCameraState || isFirstEnable) 
+            savedCameraState = *playerCamera;
+
+        return;
+    }
+    
     UpdatePosition(freeCamera, deltaTime);
     UpdateRotation(freeCamera, deltaTime);
     UpdateFov(freeCamera, deltaTime);
@@ -64,6 +69,10 @@ void FreeCamera::Update(GameData::GameRend* gameRend, float deltaTime) {
     frameStepper.Update();
 
     cameraStateManager.Update(freeCamera, &rotation, deltaTime);
+}
+
+void FreeCamera::Toggle() {
+    if (m_gameRend) Toggle(m_gameRend);
 }
 
 void FreeCamera::Toggle(GameData::GameRend* rend) {
@@ -111,13 +120,12 @@ void FreeCamera::DisableCamera(GameData::GameRend* rend) {
 }
 
 void FreeCamera::DisableCamera() {
-    auto* gameRend = GetGameRend();
-    if (!gameRend) {
+    if (!m_gameRend) {
         LOG_WARN("FieldArea or gameRend is null in FreeCamera::DisableCamera");
         return;
     }
 
-    DisableCamera(gameRend);
+    DisableCamera(m_gameRend);
 }
 
 void FreeCamera::ResetCameraState(GameData::GameRend* gameRend) {

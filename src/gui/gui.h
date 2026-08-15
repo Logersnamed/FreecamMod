@@ -13,9 +13,10 @@ class ActionManager;
 class GUI {
 public:
     explicit GUI(ModContext& ctx)
-        : cfg(ctx.cfg), input(ctx.input), actionMgr(ctx.actionMgr),
-        timeline(ctx.freeCamera), timeline_window(timeline, ctx.input, ctx.actionMgr, ctx.cfg),
-        menu_window(ctx, timeline, timeline_window) {
+        : cfg(ctx.cfg), input(ctx.input), actionMgr(ctx.actionMgr)
+        , timeline_window(ctx.timeline, ctx.freeCamera, ctx.input, ctx.actionMgr, ctx.cfg)
+        , menu_window(ctx, ctx.timeline, timeline_window) 
+    {
         instance = this;
     }
 
@@ -24,8 +25,6 @@ public:
     void Render();
 
 private:
-    Timeline timeline;
-
     MenuWindow menu_window;
     TimelineWindow timeline_window;
 

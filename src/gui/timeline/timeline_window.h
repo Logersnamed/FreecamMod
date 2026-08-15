@@ -5,12 +5,14 @@
 
 #include "ModUtils.h"
 
+class FreeCamera;
 class Input;
 class ActionManager;
 class Config;
 
 class TimelineWindow {
     Timeline& timeline;
+    FreeCamera& freeCamera;
     Input& input;
 	ActionManager& actionMgr;
 
@@ -28,7 +30,9 @@ class TimelineWindow {
 	bool is_mouse_under_titlebar = false;
 
 public:
-    explicit TimelineWindow(Timeline& timeline, Input& input, ActionManager& actionMgr, Config& config) : timeline(timeline), input(input), actionMgr(actionMgr), config(config) {
+    explicit TimelineWindow(Timeline& timeline, FreeCamera& freeCamera, Input& input, ActionManager& actionMgr, Config& config) 
+        : timeline(timeline), freeCamera(freeCamera), input(input), actionMgr(actionMgr), config(config) 
+    {
         if (!ModUtils::muWindow) {
             ModUtils::AttemptToGetWindowHandle();
         }

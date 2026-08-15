@@ -7,6 +7,7 @@
 #include "core/input/action_system.h"
 #include "core/input/input.h"
 #include "core/free_camera.h"
+#include "core/timeline/timeline.h"
 #include "gui/gui.h"
 
 class Freecam {
@@ -30,8 +31,9 @@ private:
     ActionManager actionMgr{ input };
     HookManager   hookManager{};
     Speedhack     speedhack{};
+    Timeline      timeline{ freeCamera };
 
-    ModContext context{ cfg, input, actionMgr, hookManager, speedhack, freeCamera };
+    ModContext context{ freeCamera, cfg, input, actionMgr, hookManager, speedhack, timeline };
     GUI gui{ context };
 
     bool isRunning = true;

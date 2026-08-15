@@ -44,9 +44,8 @@ public:
     void OnConfigReload();
     void Update(GameData::GameRend* gameRend, float deltaTime);
 
+    void Toggle();
     void Toggle(GameData::GameRend* rend);
-    void EnableCamera(GameData::GameRend* rend);
-    void DisableCamera(GameData::GameRend* rend);
     void DisableCamera();
 
     void ToggleFreeze() { ApplyFreezeState(!isFrozen); }
@@ -71,12 +70,25 @@ public:
     float GetSpeed() const { return speed; }
     void SetSpeed(float newSpeed) { speed = std::max<float>(newSpeed, 0.0f); }
 
-    GameData::GameRend* GetGameRend() const { return m_gameRend; }
-    GameData::Camera* GetCamera() const { return m_gameRend ? m_gameRend->csDebugCam : nullptr; }
+    GameData::Camera* GetCameraState() { return m_gameRend ? &savedCameraState : nullptr; }
     FrameStepper& GetFrameStepper() { return frameStepper; }
     PathRecorder& GetPathRecorder() { return pathRecorder; }
     CameraStateManager& GetCameraStateManager() { return cameraStateManager; }
     void StepFrames() { frameStepper.StepFrames(); }
+
+    void SaveCameraState(GameData::GameRend* gameRend) {
+        auto* freeCamera = gameRend->csDebugCam;
+        if (isEnabled && freeCamera) {
+            savedCameraState = *freeCamera;
+        }
+    }
+
+    void LoadCameraState(GameData::GameRend* gameRend) {
+        auto* freeCamera = gameRend->csDebugCam;
+        if (isEnabled && freeCamera) {
+            *freeCamera = savedCameraState;
+        }
+    }
 
 private:
     bool isEnabled = false;
@@ -90,6 +102,7 @@ private:
     CameraStateManager cameraStateManager{};
 
     GameData::GameRend* m_gameRend{};
+    GameData::Camera savedCameraState{};
 
     float speed = 10.0f;
     float3 velocity = float3(0);
@@ -104,6 +117,9 @@ private:
 
     static constexpr float MIN_FOV = 0.000126f;
     static constexpr float MAX_FOV = 3.13f;
+
+    void EnableCamera(GameData::GameRend* rend);
+    void DisableCamera(GameData::GameRend* rend);
 
     void UpdatePosition(GameData::Camera* camera, float dt);
     void UpdateRotation(GameData::Camera* freeCamera, float dt);
