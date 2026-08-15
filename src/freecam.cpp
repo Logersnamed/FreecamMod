@@ -214,15 +214,17 @@ void Freecam::Update(GameData::GameRend* gameRend) {
     }
 
     float deltaTime = std::clamp(Time::DeltaTime(), 0.0f, 0.4f);
-    input.UpdateGamepad();
-    ProcessInput(gameRend, deltaTime);
-
     freeCamera.LoadCameraState(gameRend);
-    timeline.Update(gameRend, deltaTime);
-    freeCamera.Update(gameRend, deltaTime);
-    freeCamera.SaveCameraState(gameRend);
+    {
+        input.UpdateGamepad();
+        ProcessInput(gameRend, deltaTime);
 
-    if (!Overlay::IsInitialized()) input.Reset();
+        timeline.Update(gameRend, deltaTime);
+        freeCamera.Update(gameRend, deltaTime);
+
+        if (!Overlay::IsInitialized()) input.Reset();
+    }
+    freeCamera.SaveCameraState(gameRend);
 }
 
 void __fastcall Freecam::hkUpdateCameraMatrix(GameData::GameRend* gameRend, void* rdx, void* r8, void* r9) {

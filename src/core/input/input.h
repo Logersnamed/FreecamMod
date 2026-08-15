@@ -35,6 +35,7 @@ class Input {
 
     ConVar<bool> disableController{ "input", "disable_controller", false };
     ConVar<bool> disableKeyboard{ "input", "disable_keyboard", false };
+    ConVar<float> gamepadDeadzone{ "input", "gamepad_deadzone", 0.15f, 0.0f, 1.0f };
 
 public:
     static constexpr int NUM_KEYS_COUNT = 10;
