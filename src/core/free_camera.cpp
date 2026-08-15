@@ -63,9 +63,7 @@ void FreeCamera::Update(GameData::GameRend* gameRend, float deltaTime) {
     UpdateVelocity(deltaTime);
     UpdateZoomVelocity(deltaTime);
 
-    if (pathRecorder.IsRecording()) pathRecorder.RecordFrame(freeCamera);
-    if (pathRecorder.IsPlaying()) pathRecorder.PlayNextFrame(freeCamera);
-
+    pathRecorder.Update(freeCamera);
     frameStepper.Update();
 
     cameraStateManager.Update(freeCamera, &rotation, deltaTime);

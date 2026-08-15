@@ -233,7 +233,7 @@ namespace Overlay {
         D3D12_RESOURCE_BARRIER barrier = {};
         barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
         barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-        barrier.Transition.pResource = g_frame_contexts[back_buffer_idx].render_target.Get();
+        barrier.Transition.pResource = frame_context->render_target.Get();
         barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
         barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
         barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
@@ -241,8 +241,9 @@ namespace Overlay {
         ID3D12DescriptorHeap* heaps[] = { g_srv_heap.Get() };
         g_command_list->Reset(frame_context->command_allocator.Get(), nullptr);
         g_command_list->ResourceBarrier(1, &barrier);
-        g_command_list->OMSetRenderTargets(1, &g_frame_contexts[back_buffer_idx].render_target_descriptor, FALSE, nullptr);
+        g_command_list->OMSetRenderTargets(1, &frame_context->render_target_descriptor, FALSE, nullptr);
         g_command_list->SetDescriptorHeaps(1, heaps);
+
         ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), g_command_list.Get());
 
         barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;

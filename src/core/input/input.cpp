@@ -76,7 +76,7 @@ void Input::UpdateGamepad() {
     if (XInputGetState(0, &state) != ERROR_SUCCESS) return;
 
     auto normalizeTrigger = [](BYTE trigger) -> float { return trigger / 255.0f; };
-    auto normalizeStick = [this](float2 stick, float deadzone) -> float2 {
+    auto normalizeStick = [](float2 stick, float deadzone) -> float2 {
         stick = stick / 32767.0f;
 
         const float lenght = stick.length();

@@ -60,7 +60,16 @@ class PathRecorder {
     bool isRecording = false;
     bool isPlaying = false;
 
+    void RecordFrame(const GameData::Camera* camera);
+    void PlayNextFrame(GameData::Camera* camera);
+    void Clear();
+
 public:
+    void Update(GameData::Camera* camera) {
+        if (isRecording) RecordFrame(camera);
+        if (isPlaying) PlayNextFrame(camera);
+    }
+
     void Record();
     void PlayRecord();
     void StartRecord();
@@ -73,8 +82,4 @@ public:
 
     int GetFramesRecorded() const { return framesRecorded; }
     int GetFramesPlayed() const { return framesPlayed; }
-
-    void RecordFrame(const GameData::Camera* camera);
-    void PlayNextFrame(GameData::Camera* camera);
-    void Clear();
 };
