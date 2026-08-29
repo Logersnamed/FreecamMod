@@ -38,17 +38,17 @@ Full list of all possible keys can be found in [documentation](https://github.co
    - For **EldenModLoader**: `...\steamapps\common\ELDEN RING\Game\mods`
    - For **me2/me3**: Specify the path in your profile configuration.
    - For other loaders, refer to their documentation.
-5. Launch the game.
+4. Launch the game.
 
 ## Build
 ### Using CMake
 ```bash
-git clone --recurse-submodule https://github.com/Logersnamed/FreecamMod.git
+git clone --recurse-submodules https://github.com/Logersnamed/FreecamMod.git
 cd FreecamMod
 ```
-Configure the project. Optionally you can specify a DLL output folder using DGAME_DIR variable:
+Configure the project. Optionally you can specify a DLL output folder using DLL_OUTPUT_DIR variable:
 ```bash
-cmake -S . -B build -G "Visual Studio 17 2022" [-DGAME_DIR="path/to/modflolder/"]
+cmake -S . -B build -G "Visual Studio 17 2022" [-DDLL_OUTPUT_DIR="path/to/modfolder/"]
 ```
 Build the project:
 ```bash
@@ -62,6 +62,7 @@ The built DLL will be located in: `build/Release/FreecamMod.dll`
 [DX12 ImGui Overlay](https://github.com/kacejot/dx12-imgui-overlay) – Reference  
 [Techiew ModUtils](https://github.com/techiew/EldenRingMods/blob/master/ModUtils.h) - Elden ring mod utils  
 [Techiew EldenRingMods](https://github.com/techiew/EldenRingMods) - Reference and partial code usage   
+[fromsoftware-rs](https://github.com/vswarte/fromsoftware-rs) - Rust bindings
 [The Grand Archives](https://github.com/The-Grand-Archives/Elden-Ring-CT-TGA) - Cheat Table  
 [Elden Ring Ultimate Cheat Engine Table](https://www.nexusmods.com/eldenring/mods/48) - Cheat Table  
 [Universal-WndProc-Hook](https://github.com/M0rtale/Universal-WndProc-Hook) – WndProc hooking library  
