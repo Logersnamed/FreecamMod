@@ -62,7 +62,7 @@ The built DLL will be located in: `build/Release/FreecamMod.dll`
 [DX12 ImGui Overlay](https://github.com/kacejot/dx12-imgui-overlay) – Reference  
 [Techiew ModUtils](https://github.com/techiew/EldenRingMods/blob/master/ModUtils.h) - Elden ring mod utils  
 [Techiew EldenRingMods](https://github.com/techiew/EldenRingMods) - Reference and partial code usage   
-[fromsoftware-rs](https://github.com/vswarte/fromsoftware-rs) - Rust bindings
+[fromsoftware-rs](https://github.com/vswarte/fromsoftware-rs) - Rust bindings  
 [The Grand Archives](https://github.com/The-Grand-Archives/Elden-Ring-CT-TGA) - Cheat Table  
 [Elden Ring Ultimate Cheat Engine Table](https://www.nexusmods.com/eldenring/mods/48) - Cheat Table  
 [Universal-WndProc-Hook](https://github.com/M0rtale/Universal-WndProc-Hook) – WndProc hooking library  
