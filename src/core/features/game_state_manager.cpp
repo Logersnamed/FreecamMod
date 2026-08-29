@@ -48,6 +48,14 @@ void GameStateManager::FreezePlayer(bool enabled) {
 	}
 }
 
+void GameStateManager::RemoveVignette(bool enabled) {
+	GameDataManager::RemoveVignette(enabled);
+}
+
+void GameStateManager::RemoveChromaticAberration(bool enabled) {
+	GameDataManager::RemoveChromaticAberration(enabled);
+}
+
 void GameStateManager::FreezeEntity(GameData::ChrIns* entity, bool enabled) {
 	if (!entity) return;
 

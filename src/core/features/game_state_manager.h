@@ -14,13 +14,16 @@ public:
 	void FreezeGame(bool enabled);
 	void FreezeEntities(bool enabled);
 	void FreezePlayer(bool enabled);
-	void FreezeEntity(GameData::ChrIns* entity, bool enabled);
+	void RemoveVignette(bool enabled);
+	void RemoveChromaticAberration(bool enabled);
 
 	bool IsGameFrozen() const { return isGameFrozen; }
 	bool AreEntitesFrozen() const { return areEntitiesFrozen; }
 	bool IsPlayerFrozen() const { return isPlayerFrozen; }
 
 private:
+	void FreezeEntity(GameData::ChrIns* entity, bool enabled);
+
 	struct Option {
         constexpr explicit Option(OptionType type) : type(type) {}
 

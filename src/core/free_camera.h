@@ -17,6 +17,8 @@ class FreeCamera {
     ConVar<bool>  hideHud                { "game_options", "hide_hud",                true  };
     ConVar<bool>  disableAntiAliasing    { "game_options", "disable_anti_aliasing",   false };
     ConVar<bool>  disableMotionBlur      { "game_options", "disable_motion_blur",     false };
+    ConVar<bool>  removeVignette         { "game_options", "remove_vignette",         false };
+    ConVar<bool>  removeChromaticAberration { "game_options", "remove_chromatic_aberration", false };
 
     ConVar<float> sensitivity            { "camera_settings", "sensitivity",          1.0f  };
     ConVar<float> defaultSpeed           { "camera_settings", "default_speed",        10.0f, 0.0f };

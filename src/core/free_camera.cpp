@@ -235,6 +235,8 @@ void FreeCamera::ApplyGameOptions(bool enabled) {
     gameStateManager.DisableOption(OptionType::HUD, enabled && hideHud);
     gameStateManager.DisableOption(OptionType::AA, enabled && disableAntiAliasing);
     gameStateManager.DisableOption(OptionType::MotionBlur, enabled && disableMotionBlur);
+    gameStateManager.RemoveVignette(enabled && removeVignette);
+    gameStateManager.RemoveChromaticAberration(enabled && removeChromaticAberration);
 }
 
 void FreeCamera::RestorePendingOptions() {

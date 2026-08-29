@@ -446,6 +446,16 @@ namespace ModUtils
 		return true;
 	}
 
+	static bool ReplaceBytesAtAddress(uintptr_t address, std::string newBytes) {
+		if (!VerifyAob(newBytes)) {
+			return false;
+		}
+
+		std::vector<unsigned char> rawNewBytes = StringAobToRawAob(newBytes);
+		MemCopy(address, (uintptr_t)&rawNewBytes[0], rawNewBytes.size());
+		return true;
+	}
+
 	static bool ReplaceExpectedBytesAtAddress(uintptr_t address, std::string expectedBytes, std::string newBytes)
 	{
 		if (!VerifyAobs({ expectedBytes, newBytes }))
