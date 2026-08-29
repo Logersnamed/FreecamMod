@@ -5,6 +5,7 @@
 
 #include "imgui.h"
 
+#include "build_info.h"
 #include "core/config/config.h"
 #include "core/free_camera.h"
 #include "core/features/speedhack.h"
@@ -41,8 +42,7 @@ void MenuWindow::Render() {
     if (!is_visible) return;
 
     ImGui::SetNextWindowSize(ImVec2(420, 360), ImGuiCond_FirstUseEver);
-    ImGui::Begin("Freecam v2.0.0", &is_visible, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-
+    ImGui::Begin(std::format("Freecam {}", MOD_VERSION).c_str(), &is_visible, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
     if (ImGui::BeginTabBar("##tabs")) {
         infoTab.Render();
         featuresTab.Render();
@@ -71,7 +71,7 @@ void MenuWindow::InfoTab::Render() {
             ImGui::Spacing();
             ImGui::SeparatorText("About");
 
-            ImGui::BulletText("Freecam v2.0.0");
+            ImGui::BulletText("Freecam %s, commit: %s", MOD_VERSION, MOD_GIT_HASH);
             ImGui::BulletText("Build date: %s", __DATE__);
             
             ImGui::BulletText("Wiki & docs: ");

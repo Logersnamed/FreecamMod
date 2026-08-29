@@ -34,3 +34,15 @@ if(GAME_DIR)
         "${GAME_DIR}"
     )
 endif()
+
+add_custom_target(GenerateBuildInfoHeader ALL
+    COMMAND ${CMAKE_COMMAND}
+        -DSRC_DIR=${CMAKE_SOURCE_DIR}
+        -DDST_DIR=${CMAKE_BINARY_DIR}/generated
+        -P ${CMAKE_SOURCE_DIR}/cmake/generate_build_info.cmake
+    BYPRODUCTS ${CMAKE_BINARY_DIR}/generated/build_info.h
+    COMMENT "Generating build_info.h"
+)
+
+add_dependencies(${PROJECT_NAME} GenerateBuildInfoHeader)
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/generated)
