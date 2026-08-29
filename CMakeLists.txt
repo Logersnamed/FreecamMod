@@ -26,12 +26,12 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Shell32
 )
 
-set(GAME_DIR "" CACHE PATH "Path to game folder")
-if(GAME_DIR)
+set(DLL_OUTPUT_DIR "" CACHE PATH "Directory to copy the built DLL to (e.g. mods folder)")
+if(DLL_OUTPUT_DIR)
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         $<TARGET_FILE:${PROJECT_NAME}>
-        "${GAME_DIR}"
+        "${DLL_OUTPUT_DIR}"
     )
 endif()
 
