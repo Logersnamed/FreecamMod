@@ -56,9 +56,9 @@ namespace GameData {
 	struct ChrIns {
 		char pad1[0x190];
 		ChrModules* chrModules;				// 0x190
-		char pad2[0x398];
-		ChrFlags1 flags1;					// 0x530
-		ChrFlags2 flags2;					// 0x531
+		char pad2[0x3A0];
+		ChrFlags1 flags1;					// 0x538
+		ChrFlags2 flags2;					// 0x539
 	};
 
 	struct Players {
@@ -89,8 +89,8 @@ namespace GameData {
 	ASSERT_SIZE(ChrFlags2, 1);
  
 	ASSERT_OFFSET(ChrIns, chrModules, 0x190);
-	ASSERT_OFFSET(ChrIns, flags1, 0x530);
-	ASSERT_OFFSET(ChrIns, flags2, 0x531);
+	ASSERT_OFFSET(ChrIns, flags1, 0x538);
+	ASSERT_OFFSET(ChrIns, flags2, 0x539);
 
 	ASSERT_OFFSET(Players, player0, 0x00);
 	ASSERT_OFFSET(Players, player1, 0x10);
