@@ -72,9 +72,9 @@ namespace GameData {
 	struct WorldChrMan {
 		char pad1[0x10EF8];
 		Players* players;					// 0x10EF8
-		char pad2[0xE2B8];
-		ChrIns** begin;						// 0x1F1B8
-		ChrIns** end;						// 0x1F1C0
+		char pad2[0xE2C8];
+		ChrIns** begin;						// 0x1F1C8
+		ChrIns** end;						// 0x1F1D0
 
 		size_t GetEntityListLength() const { return end - begin; }
 	};
@@ -96,6 +96,6 @@ namespace GameData {
 	ASSERT_OFFSET(Players, player1, 0x10);
 
 	ASSERT_OFFSET(WorldChrMan, players, 0x10EF8);
-	ASSERT_OFFSET(WorldChrMan, begin, 0x1F1B8);
-	ASSERT_OFFSET(WorldChrMan, end, 0x1F1C0);
+	ASSERT_OFFSET(WorldChrMan, begin, 0x1F1C8);
+	ASSERT_OFFSET(WorldChrMan, end, 0x1F1D0);
 }
